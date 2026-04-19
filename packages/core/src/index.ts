@@ -14,3 +14,4 @@ export { PolicyEngine, buildAuditEvent, type EmitPolicy, type PolicyEngineOption
 export { DefaultLockPolicy } from './policies/lock.js';
 export { DefaultScopePolicy } from './policies/scope.js';
 export { DefaultDraftPolicy } from './policies/draft.js';
+export { ConsoleSink, NoOpSink, MultiSink } from './sinks.js';
