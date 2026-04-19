@@ -5,7 +5,8 @@
   "description": "Bounded — a policy kernel for bounded-autonomy LLM agents (monorepo root).",
   "license": "MIT",
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "examples/*"
   ],
   "scripts": {
     "build": "npm run build --workspaces --if-present",

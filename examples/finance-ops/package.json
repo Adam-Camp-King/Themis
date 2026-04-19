@@ -1,0 +1,15 @@
+{
+  "name": "@bounded/example-finance-ops",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Example: wire-transfer agent with lock + scope + approval gate.",
+  "type": "module",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "test": "tsx --test src/scenario.test.ts"
+  },
+  "dependencies": {
+    "@bounded/core": "*",
+    "@bounded/anthropic": "*"
+  }
+}
