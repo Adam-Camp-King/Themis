@@ -1,0 +1,39 @@
+{
+  "name": "@bounded/core",
+  "version": "0.0.1",
+  "description": "Policy kernel for bounded-autonomy LLM agents. Locks, drafts, scopes, audit — one engine, pluggable policies.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "tsx --test test/**/*.test.ts",
+    "clean": "rm -rf dist *.tsbuildinfo"
+  },
+  "keywords": [
+    "llm",
+    "agents",
+    "policy",
+    "safety",
+    "alignment",
+    "bounded-autonomy",
+    "multi-tenant",
+    "audit"
+  ],
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "name": "bounded-workspace",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Bounded — a policy kernel for bounded-autonomy LLM agents (monorepo root).",
+  "license": "MIT",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "@types/node": "22.9.0",
+    "tsx": "^4.19.2",
+    "typescript": "5.6.3"
+  }
+}
