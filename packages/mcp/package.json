@@ -1,0 +1,33 @@
+{
+  "name": "@bounded/mcp",
+  "version": "0.0.1",
+  "description": "Bounded policy kernel adapter for MCP (Model Context Protocol) tool calls.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "tsx --test \"test/**/*.test.ts\"",
+    "clean": "rm -rf dist *.tsbuildinfo"
+  },
+  "keywords": ["bounded", "mcp", "policy", "agent", "safety"],
+  "dependencies": {
+    "@bounded/core": "*"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
