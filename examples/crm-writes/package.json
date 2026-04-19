@@ -1,0 +1,15 @@
+{
+  "name": "@bounded/example-crm-writes",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Example: page-update agent with drafts-by-default redirect.",
+  "type": "module",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "test": "tsx --test src/scenario.test.ts"
+  },
+  "dependencies": {
+    "@bounded/core": "*",
+    "@bounded/anthropic": "*"
+  }
+}
