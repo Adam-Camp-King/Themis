@@ -1,7 +1,7 @@
 {
-  "name": "@bounded/anthropic",
+  "name": "@themis/anthropic",
   "version": "0.0.1",
-  "description": "Bounded policy kernel adapter for Anthropic SDK tool_use.",
+  "description": "Themis policy kernel adapter for Anthropic SDK tool_use.",
   "license": "Apache-2.0",
   "type": "module",
   "main": "./dist/index.js",
@@ -25,7 +25,7 @@
   },
   "keywords": ["bounded", "anthropic", "claude", "tool-use", "policy", "agent", "safety"],
   "dependencies": {
-    "@bounded/core": "*"
+    "@themis/core": "*"
   },
   "engines": {
     "node": ">=20"

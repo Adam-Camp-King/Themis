@@ -1,7 +1,7 @@
 {
-  "name": "@bounded/policy-dsl",
+  "name": "@themis/policy-dsl",
   "version": "0.0.1",
-  "description": "Declarative YAML DSL that compiles to a @bounded/core PolicyEngine.",
+  "description": "Declarative YAML DSL that compiles to a @themis/core PolicyEngine.",
   "license": "Apache-2.0",
   "type": "module",
   "main": "./dist/index.js",
@@ -21,7 +21,7 @@
   },
   "keywords": ["bounded", "policy", "dsl", "yaml"],
   "dependencies": {
-    "@bounded/core": "*",
+    "@themis/core": "*",
     "yaml": "^2.6.0"
   },
   "engines": { "node": ">=20" }

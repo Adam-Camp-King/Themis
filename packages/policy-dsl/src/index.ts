@@ -2,14 +2,14 @@
 // Copyright 2026 Adam Campbell
 
 /**
- * @bounded/policy-dsl — YAML → @bounded/core PolicyEngine compiler.
+ * @themis/policy-dsl — YAML → @themis/core PolicyEngine compiler.
  *
  * Grammar lives in `spec/policy-dsl.md`. The DSL covers the 80% common
  * case (scopes / locks / drafts / approvals). Custom code policies are
  * registered alongside the DSL-compiled ones.
  *
  * Usage:
- *   import { compilePolicyYaml } from '@bounded/policy-dsl';
+ *   import { compilePolicyYaml } from '@themis/policy-dsl';
  *
  *   const bundle = compilePolicyYaml(fs.readFileSync('policies.yaml', 'utf8'));
  *   // bundle.engine is a PolicyEngine with scope/lock/draft + approval policies
@@ -21,13 +21,13 @@ import type {
   IPolicy,
   IPolicyContext,
   IPolicyDecision,
-} from '@bounded/core';
+} from '@themis/core';
 import {
   DefaultDraftPolicy,
   DefaultLockPolicy,
   DefaultScopePolicy,
   PolicyEngine,
-} from '@bounded/core';
+} from '@themis/core';
 import { parse as parseYaml } from 'yaml';
 
 // ============================================================================

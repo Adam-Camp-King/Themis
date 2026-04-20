@@ -1,7 +1,7 @@
 {
-  "name": "@bounded/openai",
+  "name": "@themis/openai",
   "version": "0.0.1",
-  "description": "Bounded policy kernel adapter for OpenAI function calls / tool calls.",
+  "description": "Themis policy kernel adapter for OpenAI function calls / tool calls.",
   "license": "Apache-2.0",
   "type": "module",
   "main": "./dist/index.js",
@@ -20,6 +20,6 @@
     "clean": "rm -rf dist *.tsbuildinfo"
   },
   "keywords": ["bounded", "openai", "function-calling", "tool", "policy", "agent"],
-  "dependencies": { "@bounded/core": "*" },
+  "dependencies": { "@themis/core": "*" },
   "engines": { "node": ">=20" }
 }

@@ -16,14 +16,14 @@
  * crm-writes (draft redirect) did not exercise.
  */
 
-import type { ILockableEntity, IRequestor } from '@bounded/core';
+import type { ILockableEntity, IRequestor } from '@themis/core';
 import {
   ConsoleSink,
   DefaultLockPolicy,
   DefaultScopePolicy,
   PolicyEngine,
-} from '@bounded/core';
-import { gateToolHandlers, type ToolUseBlock } from '@bounded/anthropic';
+} from '@themis/core';
+import { gateToolHandlers, type ToolUseBlock } from '@themis/anthropic';
 
 // ----------------------------------------------------------------------------
 // In-memory "CMS" — pages with agency ownership + lock state
@@ -70,7 +70,7 @@ function loadAsLockable(id: number): ILockableEntity {
 }
 
 // ----------------------------------------------------------------------------
-// Handler — the live delete path. Only runs if Bounded allows.
+// Handler — the live delete path. Only runs if Themis allows.
 // ----------------------------------------------------------------------------
 
 async function deletePage(

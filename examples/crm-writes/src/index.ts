@@ -16,14 +16,14 @@
 import type {
   IDraftableEntity,
   IRequestor,
-} from '@bounded/core';
+} from '@themis/core';
 import {
   ConsoleSink,
   DefaultDraftPolicy,
   DefaultScopePolicy,
   PolicyEngine,
-} from '@bounded/core';
-import { gateToolHandlers, type ToolUseBlock } from '@bounded/anthropic';
+} from '@themis/core';
+import { gateToolHandlers, type ToolUseBlock } from '@themis/anthropic';
 
 // ----------------------------------------------------------------------------
 // In-memory store — simulates the CMS backend
@@ -62,7 +62,7 @@ function loadPage(id: number): IDraftableEntity {
 }
 
 // ----------------------------------------------------------------------------
-// Handler — live update path. Runs only if Bounded allows.
+// Handler — live update path. Runs only if Themis allows.
 // ----------------------------------------------------------------------------
 
 async function updatePage(
@@ -83,7 +83,7 @@ async function updatePage(
 
 // ----------------------------------------------------------------------------
 // Draft persistence — the REDIRECT handler. Called by the app when it
-// observes a bounded_redirect envelope.
+// observes a themis_redirect envelope.
 // ----------------------------------------------------------------------------
 
 export function persistDraft(
@@ -146,7 +146,7 @@ export function buildGate(engine: PolicyEngine, requestor: IRequestor) {
 }
 
 /**
- * Surface the bounded_redirect envelope — the caller's job is to persist
+ * Surface the themis_redirect envelope — the caller's job is to persist
  * the draft and return a tool_result that tells the agent what happened.
  */
 export async function executeWithDraftRouting(
@@ -158,7 +158,7 @@ export async function executeWithDraftRouting(
     return { outcome: 'error', content: result.content as string };
   }
   const parsed = JSON.parse(result.content as string);
-  if (parsed?.bounded_redirect === true) {
+  if (parsed?.themis_redirect === true) {
     const args = toolUse.input as { page_id: number };
     persistDraft(args.page_id, parsed.payload);
     return {

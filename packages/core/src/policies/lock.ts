@@ -7,7 +7,7 @@
  * Decides whether a requestor may mutate a given area on an entity.
  *
  * Ported from Solid# `solid-backend/middleware/agency_lock.py:75-130`.
- * Conforms to Bounded RFC v0 § 5.1.
+ * Conforms to Themis RFC v0 § 5.1.
  *
  * Decision rule (evaluated top-to-bottom; first match wins):
  *

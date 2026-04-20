@@ -1,9 +1,9 @@
-# Bounded Policy DSL — v0 Design
+# Themis Policy DSL — v0 Design
 
 > Status: draft v0
 > Date: 2026-04-19
-> Part of: Bounded RFC v0
-> Implements sprint task #9; implemented by task #13 (`@bounded/policy-dsl` parser)
+> Part of: Themis RFC v0
+> Implements sprint task #9; implemented by task #13 (`@themis/policy-dsl` parser)
 
 ## Problem
 
@@ -126,7 +126,7 @@ locks:
 locks = { declare_areas: [str], defaults: [{ area: str, locked_by_default: bool }] }
 ```
 
-Bounded's core does not persist these defaults — they're metadata for an implementing `ILockStore` to apply at entity creation time. The DSL parser exposes them via `compiled.locks.defaults` for a storage adapter to consume.
+Themis's core does not persist these defaults — they're metadata for an implementing `ILockStore` to apply at entity creation time. The DSL parser exposes them via `compiled.locks.defaults` for a storage adapter to consume.
 
 **Compilation:**
 
@@ -275,7 +275,7 @@ These are deliberate omissions to keep the DSL readable and auditable. Any of th
 
 ## Implementation plan (sprint task #13)
 
-1. Add `yaml` dependency to `@bounded/policy-dsl` package.
+1. Add `yaml` dependency to `@themis/policy-dsl` package.
 2. Write a parser module: `parse(source) → ValidatedDSL`.
 3. Write a compiler module: `compile(validatedDSL, coreOpts) → CompiledPolicyBundle`.
 4. Ship round-trip tests: every worked example above gets an end-to-end test that compiles, evaluates canonical scenarios, and asserts the same decisions as hand-coded equivalents.

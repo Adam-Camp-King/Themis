@@ -2,12 +2,12 @@
 // Copyright 2026 Adam Campbell
 
 /**
- * @bounded/anthropic — adapter that gates Claude's tool_use blocks through
- * Bounded.
+ * @themis/anthropic — adapter that gates Claude's tool_use blocks through
+ * Themis.
  *
  * Pattern: the Claude SDK emits tool_use blocks; applications run the named
  * handler; a tool_result block is returned to Claude. This adapter wraps
- * that pipeline with a Bounded policy engine.
+ * that pipeline with a Themis policy engine.
  *
  * Shape compatibility: we do NOT import the Anthropic SDK. We accept the
  * public tool_use shape (`type: 'tool_use'`, `id`, `name`, `input`) and
@@ -17,7 +17,7 @@
  * Primary usage:
  *
  *   import Anthropic from '@anthropic-ai/sdk';
- *   import { gateToolHandlers } from '@bounded/anthropic';
+ *   import { gateToolHandlers } from '@themis/anthropic';
  *
  *   const gated = gateToolHandlers(
  *     {
@@ -51,8 +51,8 @@ import type {
   IPolicyContext,
   IPolicyEngine,
   IRequestor,
-} from '@bounded/core';
-import { isAllow, isDeny, isRedirect, isRequireApproval } from '@bounded/core';
+} from '@themis/core';
+import { isAllow, isDeny, isRedirect, isRequireApproval } from '@themis/core';
 
 // ----------------------------------------------------------------------------
 // Public types — mirror the public Anthropic tool-use shape without
@@ -96,7 +96,7 @@ export interface GatedHandlers {
 }
 
 /**
- * Wrap a map of tool handlers with Bounded policy evaluation. Returns an
+ * Wrap a map of tool handlers with Themis policy evaluation. Returns an
  * object with `execute(toolUse)` that produces Anthropic-shaped
  * tool_result blocks.
  */
@@ -111,7 +111,7 @@ export function gateToolHandlers(
     // retry the call or crash the loop.
     const handler = handlers[toolUse.name];
     if (!handler) {
-      return errorResult(toolUse.id, `[bounded] unknown tool '${toolUse.name}'`);
+      return errorResult(toolUse.id, `[themis] unknown tool '${toolUse.name}'`);
     }
 
     const requestor = opts.requestorFrom(toolUse);
@@ -143,14 +143,14 @@ export function gateToolHandlers(
 
     if (isDeny(decision)) {
       const msg = decision.message
-        ? `[bounded] ${decision.policy}: ${decision.message}`
-        : `[bounded] ${decision.policy}: ${decision.reason}`;
+        ? `[themis] ${decision.policy}: ${decision.message}`
+        : `[themis] ${decision.policy}: ${decision.reason}`;
       return errorResult(toolUse.id, msg);
     }
 
     if (isRedirect(decision)) {
       return okResult(toolUse.id, {
-        bounded_redirect: true as const,
+        themis_redirect: true as const,
         policy: decision.policy,
         target: decision.target,
         payload: decision.payload,
@@ -161,7 +161,7 @@ export function gateToolHandlers(
 
     if (isRequireApproval(decision)) {
       return okResult(toolUse.id, {
-        bounded_approval_pending: true as const,
+        themis_approval_pending: true as const,
         policy: decision.policy,
         approval_ref: decision.approval_ref,
         message:
@@ -171,7 +171,7 @@ export function gateToolHandlers(
     }
 
     // Exhaustiveness guard
-    return errorResult(toolUse.id, '[bounded] unknown policy decision kind');
+    return errorResult(toolUse.id, '[themis] unknown policy decision kind');
   }
 
   return { execute };

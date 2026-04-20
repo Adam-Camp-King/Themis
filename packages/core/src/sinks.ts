@@ -2,9 +2,9 @@
 // Copyright 2026 Adam Campbell
 
 /**
- * Default audit sinks for @bounded/core.
+ * Default audit sinks for @themis/core.
  *
- * Conforms to Bounded RFC v0 §7.3 and §9.4 (sink failure MUST NOT fail
+ * Conforms to Themis RFC v0 §7.3 and §9.4 (sink failure MUST NOT fail
  * evaluation — the engine catches; sinks SHOULD still try not to throw).
  *
  * Reference sinks shipped here:

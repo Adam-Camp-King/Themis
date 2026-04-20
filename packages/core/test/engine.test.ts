@@ -5,7 +5,7 @@
  * PolicyEngine — orchestration tests.
  *
  * The engine is the kernel. A wrong decision here (wrong short-circuit,
- * missing audit, tenancy slip) would break EVERY Bounded deployment.
+ * missing audit, tenancy slip) would break EVERY Themis deployment.
  * Covers all evaluation rules from RFC v0 § 6.2.
  */
 

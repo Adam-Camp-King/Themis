@@ -9,8 +9,8 @@ import type {
   IPolicyContext,
   IPolicyDecision,
   IRequestor,
-} from '@bounded/core';
-import { PolicyEngine } from '@bounded/core';
+} from '@themis/core';
+import { PolicyEngine } from '@themis/core';
 import { gateToolCalls, type OpenAIToolCall } from '../src/index.js';
 
 function mkPolicy(
@@ -138,7 +138,7 @@ test('deny: tool message contains reason; handler NOT called', async () => {
   assert.equal(called, false);
 });
 
-test('redirect: tool message content is JSON with bounded_redirect=true', async () => {
+test('redirect: tool message content is JSON with themis_redirect=true', async () => {
   const engine = new PolicyEngine();
   engine.addPolicy(mkPolicy('draft', () => ({
     kind: 'redirect',
@@ -158,13 +158,13 @@ test('redirect: tool message content is JSON with bounded_redirect=true', async 
   );
   const msg = await gate.execute(mkToolCall());
   const parsed = JSON.parse(msg.content);
-  assert.equal(parsed.bounded_redirect, true);
+  assert.equal(parsed.themis_redirect, true);
   assert.equal(parsed.target, 'draft');
   assert.deepEqual(parsed.payload, { amount: 100 });
   assert.equal(called, false);
 });
 
-test('require_approval: content is JSON with bounded_approval_pending=true + approval_ref', async () => {
+test('require_approval: content is JSON with themis_approval_pending=true + approval_ref', async () => {
   const engine = new PolicyEngine();
   engine.addPolicy(mkPolicy('approval', () => ({
     kind: 'require_approval',
@@ -178,7 +178,7 @@ test('require_approval: content is JSON with bounded_approval_pending=true + app
   );
   const msg = await gate.execute(mkToolCall());
   const parsed = JSON.parse(msg.content);
-  assert.equal(parsed.bounded_approval_pending, true);
+  assert.equal(parsed.themis_approval_pending, true);
   assert.equal(parsed.approval_ref, 'pending-xyz');
 });
 

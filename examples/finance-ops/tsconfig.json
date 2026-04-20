@@ -4,8 +4,8 @@
     "baseUrl": ".",
     "types": ["node"],
     "paths": {
-      "@bounded/core": ["../../packages/core/src/index.ts"],
-      "@bounded/anthropic": ["../../packages/anthropic/src/index.ts"]
+      "@themis/core": ["../../packages/core/src/index.ts"],
+      "@themis/anthropic": ["../../packages/anthropic/src/index.ts"]
     }
   },
   "include": ["src/**/*"]

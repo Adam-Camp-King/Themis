@@ -2,11 +2,11 @@
 // Copyright 2026 Adam Campbell
 
 /**
- * @bounded/mcp — adapter that gates MCP tool invocations through Bounded.
+ * @themis/mcp — adapter that gates MCP tool invocations through Themis.
  *
  * MCP (Model Context Protocol) tools are functions an LLM agent calls to
  * take action. This adapter wraps any MCP tool handler so every invocation
- * goes through a Bounded policy engine first.
+ * goes through a Themis policy engine first.
  *
  * SDK-agnostic by design: works with the official @modelcontextprotocol/sdk,
  * Lastmile's mcp-agent, custom MCP servers, or any function-call interface
@@ -14,9 +14,9 @@
  *
  * Usage:
  *
- *   import { withBounded } from '@bounded/mcp';
+ *   import { withThemis } from '@themis/mcp';
  *
- *   const gatedTool = withBounded(sendInvoiceTool, {
+ *   const gatedTool = withThemis(sendInvoiceTool, {
  *     engine,
  *     requestorFrom: (mcpCall) => ({
  *       id: mcpCall.agent_id,
@@ -37,10 +37,10 @@
  *
  *   allow              -> tool executes, result returned
  *   deny               -> throws MCPPolicyDenied (or returns per `onDenial`)
- *   redirect           -> returns { bounded_redirect: true, target, payload }
+ *   redirect           -> returns { themis_redirect: true, target, payload }
  *                         without executing the tool (storage-agnostic; the
  *                         caller persists to drafts via IDraftStore)
- *   require_approval   -> returns { bounded_approval_pending: true, approval_ref }
+ *   require_approval   -> returns { themis_approval_pending: true, approval_ref }
  */
 
 import type {
@@ -48,8 +48,8 @@ import type {
   IPolicyContext,
   IPolicyEngine,
   IRequestor,
-} from '@bounded/core';
-import { isAllow, isDeny, isRedirect, isRequireApproval } from '@bounded/core';
+} from '@themis/core';
+import { isAllow, isDeny, isRedirect, isRequireApproval } from '@themis/core';
 
 /**
  * Generic MCP tool shape. Input and output are opaque — adapters work with
@@ -57,7 +57,7 @@ import { isAllow, isDeny, isRedirect, isRequireApproval } from '@bounded/core';
  */
 export type MCPTool<Input, Output> = (input: Input) => Promise<Output> | Output;
 
-export interface WithBoundedOptions<Input> {
+export interface WithThemisOptions<Input> {
   readonly engine: IPolicyEngine;
 
   /** Build an IRequestor from the tool invocation input. */
@@ -94,7 +94,7 @@ export class MCPPolicyDenied extends Error {
     reason: string,
     detail?: Readonly<Record<string, unknown>>,
   ) {
-    super(`[bounded] ${policy}: ${reason}`);
+    super(`[themis] ${policy}: ${reason}`);
     this.name = 'MCPPolicyDenied';
     this.policy = policy;
     this.reason = reason;
@@ -107,8 +107,8 @@ export class MCPPolicyDenied extends Error {
  * caller (MCP server framework) decides how to surface this — typically as
  * a tool result with a "would execute" shape.
  */
-export interface BoundedRedirectEnvelope {
-  readonly bounded_redirect: true;
+export interface ThemisRedirectEnvelope {
+  readonly themis_redirect: true;
   readonly policy: string;
   readonly target: 'draft';
   readonly payload: unknown;
@@ -119,22 +119,22 @@ export interface BoundedRedirectEnvelope {
  * approval. The caller passes `approval_ref` to the approval system and
  * retries once the approval lands.
  */
-export interface BoundedApprovalEnvelope {
-  readonly bounded_approval_pending: true;
+export interface ThemisApprovalEnvelope {
+  readonly themis_approval_pending: true;
   readonly policy: string;
   readonly approval_ref: string;
   readonly message?: string;
 }
 
 /**
- * Wrap an MCP tool with Bounded policy evaluation. The wrapped function has
+ * Wrap an MCP tool with Themis policy evaluation. The wrapped function has
  * the same signature as the original tool, but returns either the original
- * tool's output OR a Bounded envelope (redirect/approval).
+ * tool's output OR a Themis envelope (redirect/approval).
  */
-export function withBounded<Input, Output>(
+export function withThemis<Input, Output>(
   tool: MCPTool<Input, Output>,
-  opts: WithBoundedOptions<Input>,
-): MCPTool<Input, Output | BoundedRedirectEnvelope | BoundedApprovalEnvelope> {
+  opts: WithThemisOptions<Input>,
+): MCPTool<Input, Output | ThemisRedirectEnvelope | ThemisApprovalEnvelope> {
   const now = opts.now ?? Date.now;
   return async (input: Input) => {
     const requestor = opts.requestorFrom(input);
@@ -163,8 +163,8 @@ export function withBounded<Input, Output>(
       throw new MCPPolicyDenied(decision.policy, decision.reason, decision.detail);
     }
     if (isRedirect(decision)) {
-      const envelope: BoundedRedirectEnvelope = {
-        bounded_redirect: true,
+      const envelope: ThemisRedirectEnvelope = {
+        themis_redirect: true,
         policy: decision.policy,
         target: decision.target,
         payload: decision.payload,
@@ -172,8 +172,8 @@ export function withBounded<Input, Output>(
       return envelope;
     }
     if (isRequireApproval(decision)) {
-      const envelope: BoundedApprovalEnvelope = {
-        bounded_approval_pending: true,
+      const envelope: ThemisApprovalEnvelope = {
+        themis_approval_pending: true,
         policy: decision.policy,
         approval_ref: decision.approval_ref,
         message: decision.message,

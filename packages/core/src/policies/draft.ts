@@ -9,8 +9,8 @@
  * without authentication.
  *
  * Ported from Solid# `solid-backend/controllers/cms_pages.py:1193` (decision),
- * and the preview-token audit in `bounded-extraction-notes/02-t12-audit.md`.
- * Conforms to Bounded RFC v0 § 5.2 + § 9.3 (preview token MUSTs).
+ * and the preview-token audit in `themis-extraction-notes/02-t12-audit.md`.
+ * Conforms to Themis RFC v0 § 5.2 + § 9.3 (preview token MUSTs).
  *
  * Decision rule (evaluate):
  *

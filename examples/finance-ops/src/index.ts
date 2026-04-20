@@ -4,9 +4,9 @@
 /**
  * examples/finance-ops — "don't wire money without approval."
  *
- * Demonstrates the full Bounded stack end-to-end:
- *   - @bounded/core            — PolicyEngine, DefaultScopePolicy, ConsoleSink
- *   - @bounded/anthropic       — gateToolHandlers for Claude tool_use blocks
+ * Demonstrates the full Themis stack end-to-end:
+ *   - @themis/core            — PolicyEngine, DefaultScopePolicy, ConsoleSink
+ *   - @themis/anthropic       — gateToolHandlers for Claude tool_use blocks
  *   - A custom ThresholdApprovalPolicy — require approval on amounts > $10k
  *
  * This is not a production system. It exists to show:
@@ -21,16 +21,16 @@ import type {
   IPolicyContext,
   IPolicyDecision,
   IRequestor,
-} from '@bounded/core';
+} from '@themis/core';
 import {
   ConsoleSink,
   DefaultScopePolicy,
   PolicyEngine,
-} from '@bounded/core';
+} from '@themis/core';
 import {
   gateToolHandlers,
   type ToolUseBlock,
-} from '@bounded/anthropic';
+} from '@themis/anthropic';
 
 // ----------------------------------------------------------------------------
 // Domain — pretend wire-transfer handler

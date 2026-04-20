@@ -1,11 +1,11 @@
-# Bounded + Claude — Reference Architecture
+# Themis + Claude — Reference Architecture
 
-> **One-page architecture for deploying Claude-powered agents with Bounded as the run-time safety layer.**
+> **One-page architecture for deploying Claude-powered agents with Themis as the run-time safety layer.**
 >
-> Status: v0 draft. Bounded itself is pre-alpha.
+> Status: v0 draft. Themis itself is pre-alpha.
 > Audience: engineers building Claude agents for production; Anthropic BD / research.
 
-## The problem Bounded solves for Claude
+## The problem Themis solves for Claude
 
 Anthropic ships Claude with tool use. Applications give Claude a list of tools (`name`, `description`, `input_schema`). Claude emits `tool_use` blocks; the application runs them; results go back as `tool_result` blocks. This loop is well-documented and works today.
 
@@ -17,7 +17,7 @@ What the loop does NOT answer:
 - *Is this agent operating inside the correct tenant?*
 - *Where is the structured audit trail of every attempted action, denial, redirect, and approval?*
 
-Every production Claude deployment answers these four questions with bespoke, inconsistent middleware. Bounded formalizes the answers into a single pluggable kernel.
+Every production Claude deployment answers these four questions with bespoke, inconsistent middleware. Themis formalizes the answers into a single pluggable kernel.
 
 ## The picture (textual diagram)
 
@@ -36,7 +36,7 @@ Every production Claude deployment answers these four questions with bespoke, in
 │              │                                                       │
 │              ▼                                                       │
 │   ┌──────────────────────────────────────────────┐                   │
-│   │  @bounded/anthropic.gateToolHandlers         │                   │
+│   │  @themis/anthropic.gateToolHandlers         │                   │
 │   │   ├─ requestorFrom  → IRequestor             │                   │
 │   │   ├─ actionFrom     → IAction                │                   │
 │   │   └─ engine.evaluate(ctx)                    │                   │
@@ -44,7 +44,7 @@ Every production Claude deployment answers these four questions with bespoke, in
 │                      │                                               │
 │                      ▼                                               │
 │   ┌──────────────────────────────────────────────┐                   │
-│   │  @bounded/core PolicyEngine                  │                   │
+│   │  @themis/core PolicyEngine                  │                   │
 │   │   1. tenancy gate                            │                   │
 │   │   2. scope policy      ─────┐                │                   │
 │   │   3. lock policy       ─── (in order)        │                   │
@@ -72,8 +72,8 @@ import {
   DefaultLockPolicy,
   DefaultScopePolicy,
   PolicyEngine,
-} from '@bounded/core';
-import { gateToolHandlers } from '@bounded/anthropic';
+} from '@themis/core';
+import { gateToolHandlers } from '@themis/anthropic';
 
 // 1. Build an engine with the three default policies
 const engine = new PolicyEngine({ auditSink: new ConsoleSink() });
@@ -117,36 +117,36 @@ That's it. Every tool call now produces an audit event. Denials, redirects, and 
 
 | Policy | Decision | Tool-result shape Claude sees |
 |--------|----------|-------------------------------|
-| **Scope** | `allow` / `deny` | `is_error: true, content: "[bounded] scope: Missing required scope 'payments:write'."` |
-| **Lock** | `allow` / `deny` | `is_error: true, content: "[bounded] lock: Area 'pages' is locked by the agency."` |
-| **Draft** | `allow` (direct write) / `redirect` | `content: {"bounded_redirect": true, "target": "draft", "payload": {...}}` — Claude sees the redirect and can surface the preview URL to the user |
-| **Custom threshold** | `allow` / `require_approval` | `content: {"bounded_approval_pending": true, "approval_ref": "approval-xyz"}` — Claude can tell the user an approval was requested |
+| **Scope** | `allow` / `deny` | `is_error: true, content: "[themis] scope: Missing required scope 'payments:write'."` |
+| **Lock** | `allow` / `deny` | `is_error: true, content: "[themis] lock: Area 'pages' is locked by the agency."` |
+| **Draft** | `allow` (direct write) / `redirect` | `content: {"themis_redirect": true, "target": "draft", "payload": {...}}` — Claude sees the redirect and can surface the preview URL to the user |
+| **Custom threshold** | `allow` / `require_approval` | `content: {"themis_approval_pending": true, "approval_ref": "approval-xyz"}` — Claude can tell the user an approval was requested |
 
 Claude **sees** every denial, redirect, and approval. This is critical: the model isn't blind to the safety layer. It can explain to the user *why* an action didn't execute, and suggest the right follow-up (e.g., "I tried to send the wire but the system requires approval for amounts over $10k — I've queued it").
 
 ## Why this fits Anthropic's deployment story
 
-Anthropic's messaging around Claude emphasizes helpful, harmless, honest. Constitutional AI (training-time) covers *harmless*. Bounded (deploy-time) covers what Constitutional AI can't structurally guarantee: **that a model which might still "want" to do the wrong thing cannot actually do it** in a multi-tenant production system.
+Anthropic's messaging around Claude emphasizes helpful, harmless, honest. Constitutional AI (training-time) covers *harmless*. Themis (deploy-time) covers what Constitutional AI can't structurally guarantee: **that a model which might still "want" to do the wrong thing cannot actually do it** in a multi-tenant production system.
 
-- Bounded is **run-time constitutional AI** — the same principle, enforced at the action layer.
-- Bounded is **off-by-default** in the sense that no adoption is required to use Claude. It's *drop-in* for teams that want it — same shape as the existing tool-use pattern, just wrapped.
-- Bounded is **framework-shaped** — Anthropic's own internal tools can wrap their tool-use handlers with `@bounded/anthropic` without rewriting agents.
-- Bounded's **audit schema** captures every policy denial as structured, machine-labeled training data. This is the single most scarce corpus for alignment research: real bounded-autonomy decisions with outcomes.
+- Themis is **run-time constitutional AI** — the same principle, enforced at the action layer.
+- Themis is **off-by-default** in the sense that no adoption is required to use Claude. It's *drop-in* for teams that want it — same shape as the existing tool-use pattern, just wrapped.
+- Themis is **framework-shaped** — Anthropic's own internal tools can wrap their tool-use handlers with `@themis/anthropic` without rewriting agents.
+- Themis's **audit schema** captures every policy denial as structured, machine-labeled training data. This is the single most scarce corpus for alignment research: real bounded-autonomy decisions with outcomes.
 
 ## Solid# as the reference deployment
 
-Bounded runs in production inside [Solid#](https://solidnumber.com), a multi-tenant AI business-operations platform. The four primitives Bounded packages (agency locks, drafts-by-default, scoped API keys, structured audit) ran there for ~12 months before extraction. Solid# has:
+Themis runs in production inside [Solid#](https://solidnumber.com), a multi-tenant AI business-operations platform. The four primitives Themis packages (agency locks, drafts-by-default, scoped API keys, structured audit) ran there for ~12 months before extraction. Solid# has:
 
 - Agency locks on 6 resource categories across thousands of tenants
 - Drafts-by-default on every CMS write from an AI agent
 - 43 canonical scopes enforced on every API-key-authenticated request
-- Policy-denial audit events as first-class `IAuditEvent` rows (the gap Bounded fills in Solid#'s internal corpus)
+- Policy-denial audit events as first-class `IAuditEvent` rows (the gap Themis fills in Solid#'s internal corpus)
 
-Solid# is public-source (Tier 2 licensing for CLI/SDK; Tier 1 proprietary for the product itself). Bounded is the extracted Tier 3 "bait layer" — Apache-2.0, no commercial restriction, designed for wide adoption.
+Solid# is public-source (Tier 2 licensing for CLI/SDK; Tier 1 proprietary for the product itself). Themis is the extracted Tier 3 "bait layer" — Apache-2.0, no commercial restriction, designed for wide adoption.
 
 ## Deployment profiles
 
-| Profile | How Bounded runs | Audit sink |
+| Profile | How Themis runs | Audit sink |
 |---------|------------------|------------|
 | Solo dev / prototype | In-process, `DefaultScopePolicy` + `ConsoleSink` | stdout NDJSON |
 | Single-tenant SaaS | In-process, all three policies, SQL sink | table in app DB |
@@ -156,17 +156,17 @@ Solid# is public-source (Tier 2 licensing for CLI/SDK; Tier 1 proprietary for th
 
 ## What's next
 
-- `@bounded/policy-dsl` — YAML declarations for the 80% common case (scopes + locks + drafts + approvals)
-- `@bounded/approvals` — the approval workflow state machine companion to `require_approval`
-- `@bounded/observe` — OpenTelemetry-compatible audit sink
-- Official MCP reference integration showing every `solid-mcp-server` tool gated by Bounded (Solid#'s dogfood loop)
+- `@themis/policy-dsl` — YAML declarations for the 80% common case (scopes + locks + drafts + approvals)
+- `@themis/approvals` — the approval workflow state machine companion to `require_approval`
+- `@themis/observe` — OpenTelemetry-compatible audit sink
+- Official MCP reference integration showing every `solid-mcp-server` tool gated by Themis (Solid#'s dogfood loop)
 
 ## License
 
 Apache-2.0. See `LICENSE` in the repo root.
 
-> Bounded is deliberately permissive. Adopt it in commercial products, fork it, embed it in frameworks. The *permission* is free; the *scale* is where Solid#'s hosted platform becomes the natural home (multi-region audit retention, approval dashboards, cross-tenant collective intelligence, partner-grade SLAs). License-as-strategy, not license-as-surveillance.
+> Themis is deliberately permissive. Adopt it in commercial products, fork it, embed it in frameworks. The *permission* is free; the *scale* is where Solid#'s hosted platform becomes the natural home (multi-region audit retention, approval dashboards, cross-tenant collective intelligence, partner-grade SLAs). License-as-strategy, not license-as-surveillance.
 
 ---
 
-**Contact:** `adam@solidnumber.com` · **Repo (pending public):** `github.com/Adam-Camp-King/bounded` · **RFC:** `spec/RFC-bounded-v0.md`
+**Contact:** `adam@solidnumber.com` · **Repo (pending public):** `github.com/Adam-Camp-King/themis` · **RFC:** `spec/RFC-bounded-v0.md`

@@ -2,7 +2,7 @@
 // Copyright 2026 Adam Campbell
 
 /**
- * @bounded/mcp — withBounded() wrapper tests.
+ * @themis/mcp — withThemis() wrapper tests.
  *
  * The adapter is the interface between "what the LLM wants to do" and
  * "what the policy engine permits." Mis-mapping a decision here would be
@@ -17,13 +17,13 @@ import type {
   IPolicyContext,
   IPolicyDecision,
   IRequestor,
-} from '@bounded/core';
-import { PolicyEngine } from '@bounded/core';
+} from '@themis/core';
+import { PolicyEngine } from '@themis/core';
 import type {
-  BoundedApprovalEnvelope,
-  BoundedRedirectEnvelope,
+  ThemisApprovalEnvelope,
+  ThemisRedirectEnvelope,
 } from '../src/index.js';
-import { MCPPolicyDenied, withBounded } from '../src/index.js';
+import { MCPPolicyDenied, withThemis } from '../src/index.js';
 
 // --- helpers ---------------------------------------------------------
 
@@ -64,7 +64,7 @@ test('allow decision: tool executes, result returned unchanged', async () => {
   const engine = new PolicyEngine();
   engine.addPolicy(mkPolicy('a', () => ({ kind: 'allow' })));
   const inner = async (input: ToolInput) => ({ ok: true, amount: input.args.amount });
-  const wrapped = withBounded(inner, {
+  const wrapped = withThemis(inner, {
     engine,
     requestorFrom: mkRequestorFrom,
     actionFrom: mkActionFrom,
@@ -81,7 +81,7 @@ test('allow: inner tool is called exactly once with the original input', async (
     calls.push(input);
     return 'ok';
   };
-  const wrapped = withBounded(inner, {
+  const wrapped = withThemis(inner, {
     engine,
     requestorFrom: mkRequestorFrom,
     actionFrom: mkActionFrom,
@@ -109,7 +109,7 @@ test('deny decision: throws MCPPolicyDenied by default; inner tool NOT called', 
     called = true;
     return 'should-not-run';
   };
-  const wrapped = withBounded(inner, {
+  const wrapped = withThemis(inner, {
     engine,
     requestorFrom: mkRequestorFrom,
     actionFrom: mkActionFrom,
@@ -137,7 +137,7 @@ test('deny: onDenial override returns custom value instead of throwing', async (
       reason: 'missing_scope',
     })),
   );
-  const wrapped = withBounded(async () => 'executed', {
+  const wrapped = withThemis(async () => 'executed', {
     engine,
     requestorFrom: mkRequestorFrom,
     actionFrom: mkActionFrom,
@@ -149,7 +149,7 @@ test('deny: onDenial override returns custom value instead of throwing', async (
 
 // --- redirect ------------------------------------------------------
 
-test('redirect: returns BoundedRedirectEnvelope; inner tool NOT called', async () => {
+test('redirect: returns ThemisRedirectEnvelope; inner tool NOT called', async () => {
   const engine = new PolicyEngine();
   engine.addPolicy(
     mkPolicy('draft', () => ({
@@ -164,7 +164,7 @@ test('redirect: returns BoundedRedirectEnvelope; inner tool NOT called', async (
     called = true;
     return 'executed';
   };
-  const wrapped = withBounded(inner, {
+  const wrapped = withThemis(inner, {
     engine,
     requestorFrom: mkRequestorFrom,
     actionFrom: mkActionFrom,
@@ -173,9 +173,9 @@ test('redirect: returns BoundedRedirectEnvelope; inner tool NOT called', async (
     tenant_id: 7,
     agent_id: 1,
     args: { amount: 1 },
-  })) as BoundedRedirectEnvelope;
+  })) as ThemisRedirectEnvelope;
   assert.equal(called, false);
-  assert.equal(out.bounded_redirect, true);
+  assert.equal(out.themis_redirect, true);
   assert.equal(out.policy, 'draft');
   assert.equal(out.target, 'draft');
   assert.deepEqual(out.payload, { title: 'draft' });
@@ -183,7 +183,7 @@ test('redirect: returns BoundedRedirectEnvelope; inner tool NOT called', async (
 
 // --- require_approval ---------------------------------------------
 
-test('require_approval: returns BoundedApprovalEnvelope; inner tool NOT called', async () => {
+test('require_approval: returns ThemisApprovalEnvelope; inner tool NOT called', async () => {
   const engine = new PolicyEngine();
   engine.addPolicy(
     mkPolicy('approval', () => ({
@@ -198,7 +198,7 @@ test('require_approval: returns BoundedApprovalEnvelope; inner tool NOT called',
     called = true;
     return 'executed';
   };
-  const wrapped = withBounded(inner, {
+  const wrapped = withThemis(inner, {
     engine,
     requestorFrom: mkRequestorFrom,
     actionFrom: mkActionFrom,
@@ -207,9 +207,9 @@ test('require_approval: returns BoundedApprovalEnvelope; inner tool NOT called',
     tenant_id: 7,
     agent_id: 1,
     args: { amount: 1 },
-  })) as BoundedApprovalEnvelope;
+  })) as ThemisApprovalEnvelope;
   assert.equal(called, false);
-  assert.equal(out.bounded_approval_pending, true);
+  assert.equal(out.themis_approval_pending, true);
   assert.equal(out.approval_ref, 'pending-123');
   assert.equal(out.message, 'admin must approve');
 });
@@ -225,7 +225,7 @@ test('entityFrom is consulted when provided', async () => {
       return { kind: 'allow' };
     }),
   );
-  const wrapped = withBounded(async () => 'ok', {
+  const wrapped = withThemis(async () => 'ok', {
     engine,
     requestorFrom: mkRequestorFrom,
     actionFrom: mkActionFrom,
@@ -253,7 +253,7 @@ test('correlationIdFrom override is passed into context', async () => {
       return { kind: 'allow' };
     }),
   );
-  const wrapped = withBounded(async () => 'ok', {
+  const wrapped = withThemis(async () => 'ok', {
     engine,
     requestorFrom: mkRequestorFrom,
     actionFrom: mkActionFrom,
@@ -272,7 +272,7 @@ test('default correlation ID is a 32-char hex string', async () => {
       return { kind: 'allow' };
     }),
   );
-  const wrapped = withBounded(async () => 'ok', {
+  const wrapped = withThemis(async () => 'ok', {
     engine,
     requestorFrom: mkRequestorFrom,
     actionFrom: mkActionFrom,
@@ -291,7 +291,7 @@ test('now override is used for context.now', async () => {
       return { kind: 'allow' };
     }),
   );
-  const wrapped = withBounded(async () => 'ok', {
+  const wrapped = withThemis(async () => 'ok', {
     engine,
     requestorFrom: mkRequestorFrom,
     actionFrom: mkActionFrom,
@@ -306,7 +306,7 @@ test('now override is used for context.now', async () => {
 test('tenancy mismatch between requestor and action is caught by engine', async () => {
   const engine = new PolicyEngine();
   // No policy registered — engine's own tenancy gate fires.
-  const wrapped = withBounded(async () => 'ok', {
+  const wrapped = withThemis(async () => 'ok', {
     engine,
     requestorFrom: () => ({ id: 1, kind: 'agent', tenant_id: 1, scopes: [] }),
     actionFrom: () => ({ verb: 'invoke', resource_type: 'x', tenant_id: 2 }),

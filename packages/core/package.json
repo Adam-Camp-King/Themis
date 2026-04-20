@@ -1,5 +1,5 @@
 {
-  "name": "@bounded/core",
+  "name": "@themis/core",
   "version": "0.0.1",
   "description": "Policy kernel for bounded-autonomy LLM agents. Locks, drafts, scopes, audit — one engine, pluggable policies.",
   "license": "Apache-2.0",

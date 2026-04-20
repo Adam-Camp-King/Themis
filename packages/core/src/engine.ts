@@ -2,12 +2,12 @@
 // Copyright 2026 Adam Campbell
 
 /**
- * PolicyEngine — the Bounded kernel.
+ * PolicyEngine — the Themis kernel.
  *
  * Orchestrates policies, enforces the tenancy gate, short-circuits on denial,
  * and emits one IAuditEvent per evaluation.
  *
- * Conforms to Bounded RFC v0 § 6.
+ * Conforms to Themis RFC v0 § 6.
  *
  * Evaluation rules (normative):
  *

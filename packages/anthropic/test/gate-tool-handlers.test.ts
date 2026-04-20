@@ -2,9 +2,9 @@
 // Copyright 2026 Adam Campbell
 
 /**
- * @bounded/anthropic — gateToolHandlers() tests.
+ * @themis/anthropic — gateToolHandlers() tests.
  *
- * Verifies Bounded policy decisions map correctly onto Anthropic's
+ * Verifies Themis policy decisions map correctly onto Anthropic's
  * tool_result block shape. A wrong mapping here silently lets Claude
  * proceed as if a denial didn't happen.
  */
@@ -17,8 +17,8 @@ import type {
   IPolicyContext,
   IPolicyDecision,
   IRequestor,
-} from '@bounded/core';
-import { PolicyEngine } from '@bounded/core';
+} from '@themis/core';
+import { PolicyEngine } from '@themis/core';
 import { gateToolHandlers, type ToolUseBlock } from '../src/index.js';
 
 function mkPolicy(
@@ -149,7 +149,7 @@ test('deny with no message falls back to the reason', async () => {
 
 // --- redirect -------------------------------------------------------
 
-test('redirect: handler NOT called; tool_result carries bounded_redirect envelope (is_error unset)', async () => {
+test('redirect: handler NOT called; tool_result carries themis_redirect envelope (is_error unset)', async () => {
   const engine = new PolicyEngine();
   engine.addPolicy(
     mkPolicy('draft', () => ({
@@ -173,7 +173,7 @@ test('redirect: handler NOT called; tool_result carries bounded_redirect envelop
   assert.equal(called, false);
   assert.equal(result.is_error, undefined);
   const parsed = JSON.parse(result.content as string);
-  assert.equal(parsed.bounded_redirect, true);
+  assert.equal(parsed.themis_redirect, true);
   assert.equal(parsed.target, 'draft');
   assert.deepEqual(parsed.payload, { amount: 100 });
 });
@@ -203,7 +203,7 @@ test('require_approval: handler NOT called; tool_result carries approval_ref', a
   const result = await gate.execute(mkToolUse());
   assert.equal(called, false);
   const parsed = JSON.parse(result.content as string);
-  assert.equal(parsed.bounded_approval_pending, true);
+  assert.equal(parsed.themis_approval_pending, true);
   assert.equal(parsed.approval_ref, 'pending-abc');
   assert.equal(parsed.message, 'admin must approve');
 });

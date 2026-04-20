@@ -9,8 +9,8 @@ import type {
   IPolicyContext,
   IPolicyDecision,
   IRequestor,
-} from '@bounded/core';
-import { PolicyEngine } from '@bounded/core';
+} from '@themis/core';
+import { PolicyEngine } from '@themis/core';
 import { gateTool, LangChainPolicyDenied, type LangChainToolLike } from '../src/index.js';
 
 function mkPolicy(
@@ -164,9 +164,9 @@ test('redirect: returns envelope; tool NOT invoked', async () => {
     requestorFrom: mkRequestor,
     actionFrom: (_a, n) => mkAction(n),
   });
-  const out = (await gated.call({})) as { bounded_redirect: boolean };
+  const out = (await gated.call({})) as { themis_redirect: boolean };
   assert.equal(called, false);
-  assert.equal(out.bounded_redirect, true);
+  assert.equal(out.themis_redirect, true);
 });
 
 test('require_approval: returns envelope; tool NOT invoked', async () => {
@@ -182,8 +182,8 @@ test('require_approval: returns envelope; tool NOT invoked', async () => {
     requestorFrom: mkRequestor,
     actionFrom: (_a, n) => mkAction(n),
   });
-  const out = (await gated.call({})) as { bounded_approval_pending: boolean; approval_ref: string };
-  assert.equal(out.bounded_approval_pending, true);
+  const out = (await gated.call({})) as { themis_approval_pending: boolean; approval_ref: string };
+  assert.equal(out.themis_approval_pending, true);
   assert.equal(out.approval_ref, 'ref-abc');
 });
 

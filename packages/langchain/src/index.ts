@@ -2,7 +2,7 @@
 // Copyright 2026 Adam Campbell
 
 /**
- * @bounded/langchain — adapter for LangChain Tools (and anything that
+ * @themis/langchain — adapter for LangChain Tools (and anything that
  * looks like one: a named object with an async call/invoke/func method).
  *
  * LangChain's Tool abstraction is duck-typed in practice — different
@@ -13,7 +13,7 @@
  * Usage:
  *
  *   import { DynamicTool } from '@langchain/core/tools';
- *   import { gateTool } from '@bounded/langchain';
+ *   import { gateTool } from '@themis/langchain';
  *
  *   const raw = new DynamicTool({
  *     name: 'send_invoice',
@@ -38,8 +38,8 @@ import type {
   IPolicyContext,
   IPolicyEngine,
   IRequestor,
-} from '@bounded/core';
-import { isAllow, isDeny, isRedirect, isRequireApproval } from '@bounded/core';
+} from '@themis/core';
+import { isAllow, isDeny, isRedirect, isRequireApproval } from '@themis/core';
 
 /**
  * Minimal LangChain-Tool-ish interface. We read `name` + `call` (or
@@ -75,7 +75,7 @@ export class LangChainPolicyDenied extends Error {
   readonly policy: string;
   readonly reason: string;
   constructor(policy: string, reason: string) {
-    super(`[bounded] ${policy}: ${reason}`);
+    super(`[themis] ${policy}: ${reason}`);
     this.name = 'LangChainPolicyDenied';
     this.policy = policy;
     this.reason = reason;
@@ -83,7 +83,7 @@ export class LangChainPolicyDenied extends Error {
 }
 
 /**
- * Wrap a LangChain tool with Bounded policy gating. Preserves name +
+ * Wrap a LangChain tool with Themis policy gating. Preserves name +
  * description + any untouched methods; replaces the invocation method
  * with a gated version.
  */
@@ -94,7 +94,7 @@ export function gateTool<T extends LangChainToolLike>(
   const invoke = pickInvoke(tool);
   if (!invoke) {
     throw new Error(
-      `[bounded] LangChain tool '${tool.name}' has no call/_call/invoke/func method`,
+      `[themis] LangChain tool '${tool.name}' has no call/_call/invoke/func method`,
     );
   }
   const now = opts.now ?? Date.now;
@@ -128,7 +128,7 @@ export function gateTool<T extends LangChainToolLike>(
     }
     if (isRedirect(decision)) {
       return {
-        bounded_redirect: true as const,
+        themis_redirect: true as const,
         policy: decision.policy,
         target: decision.target,
         payload: decision.payload,
@@ -136,13 +136,13 @@ export function gateTool<T extends LangChainToolLike>(
     }
     if (isRequireApproval(decision)) {
       return {
-        bounded_approval_pending: true as const,
+        themis_approval_pending: true as const,
         policy: decision.policy,
         approval_ref: decision.approval_ref,
         message: decision.message,
       };
     }
-    throw new Error('[bounded] unknown policy decision kind');
+    throw new Error('[themis] unknown policy decision kind');
   };
 
   // Spread original, then force-override `call` with the gated one.

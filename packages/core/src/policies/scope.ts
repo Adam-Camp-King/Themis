@@ -9,7 +9,7 @@
  *
  * Ported from Solid# `solid-backend/middleware/auth.py:376-422` and
  * `solid-backend/models/cli_api_key.py:178-182` (has_scope).
- * Conforms to Bounded RFC v0 § 5.3.
+ * Conforms to Themis RFC v0 § 5.3.
  *
  * Decision rule (first match wins):
  *

@@ -2,7 +2,7 @@
 // Copyright 2026 Adam Campbell
 
 /**
- * @bounded/core — public types.
+ * @themis/core — public types.
  *
  * Twelve interfaces form the complete public API of this package:
  *   Cross-cutting (5) — IRequestor, IAction, IPolicyContext,
@@ -13,7 +13,7 @@
  * Companion entity shapes (ILockableEntity, IDraftableEntity) and helper
  * types (ScopeRuleMatcher, IPolicy, IPolicyConfig) are also exported.
  *
- * Conforms to Bounded RFC v0.
+ * Conforms to Themis RFC v0.
  */
 
 // ============================================================================

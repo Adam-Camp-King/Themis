@@ -4,7 +4,7 @@
     "rootDir": "src",
     "outDir": "dist",
     "paths": {
-      "@bounded/core": ["../core/dist/index.d.ts"]
+      "@themis/core": ["../core/dist/index.d.ts"]
     }
   },
   "include": ["src/**/*"],

@@ -1,4 +1,4 @@
-# @bounded/core
+# @themis/core
 
 Policy kernel for bounded-autonomy LLM agents. Twelve interfaces, four decision variants, zero runtime dependencies.
 
@@ -7,14 +7,14 @@ Policy kernel for bounded-autonomy LLM agents. Twelve interfaces, four decision 
 ## Install
 
 ```bash
-npm install @bounded/core
+npm install @themis/core
 ```
 
 ## Use (once engine lands)
 
 ```ts
-import type { IPolicyContext, IPolicyDecision } from '@bounded/core';
-import { isDeny, isRedirect } from '@bounded/core';
+import type { IPolicyContext, IPolicyDecision } from '@themis/core';
+import { isDeny, isRedirect } from '@themis/core';
 
 // Engine + policies are implemented in upcoming releases. Public types are
 // stable under RFC v0.
@@ -46,7 +46,7 @@ export { isAllow, isDeny, isRedirect, isRequireApproval };
 ## Tests
 
 ```bash
-npm --workspace @bounded/core test
+npm --workspace @themis/core test
 ```
 
 ## License

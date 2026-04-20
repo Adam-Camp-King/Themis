@@ -2,7 +2,7 @@
 // Copyright 2026 Adam Campbell
 
 /**
- * @bounded/openai — adapter for OpenAI function calling / tool calling.
+ * @themis/openai — adapter for OpenAI function calling / tool calling.
  *
  * OpenAI's chat completions emit tool_calls blocks of the form:
  *   { id, type: 'function', function: { name, arguments: <JSON string> } }
@@ -10,7 +10,7 @@
  * Applications execute the named function and return a tool message:
  *   { role: 'tool', tool_call_id: id, content: <JSON string> }
  *
- * This adapter intercepts a tool_call, runs Bounded, and returns the
+ * This adapter intercepts a tool_call, runs Themis, and returns the
  * corresponding OpenAI tool message. The function arguments (JSON string
  * in OpenAI's format) are parsed for policy evaluation but passed back
  * through as-is to the underlying handler on `allow`.
@@ -21,8 +21,8 @@ import type {
   IPolicyContext,
   IPolicyEngine,
   IRequestor,
-} from '@bounded/core';
-import { isAllow, isDeny, isRedirect, isRequireApproval } from '@bounded/core';
+} from '@themis/core';
+import { isAllow, isDeny, isRedirect, isRequireApproval } from '@themis/core';
 
 export interface OpenAIToolCall {
   readonly id: string;
@@ -66,7 +66,7 @@ export function gateToolCalls(
   async function execute(toolCall: OpenAIToolCall): Promise<OpenAIToolMessage> {
     const handler = handlers[toolCall.function.name];
     if (!handler) {
-      return toolMsg(toolCall.id, `[bounded] unknown tool '${toolCall.function.name}'`);
+      return toolMsg(toolCall.id, `[themis] unknown tool '${toolCall.function.name}'`);
     }
 
     let parsedArgs: unknown;
@@ -75,7 +75,7 @@ export function gateToolCalls(
         ? JSON.parse(toolCall.function.arguments)
         : {};
     } catch (err) {
-      return toolMsg(toolCall.id, `[bounded] invalid JSON arguments: ${formatError(err)}`);
+      return toolMsg(toolCall.id, `[themis] invalid JSON arguments: ${formatError(err)}`);
     }
 
     const requestor = opts.requestorFrom(toolCall, parsedArgs);
@@ -104,15 +104,15 @@ export function gateToolCalls(
     }
     if (isDeny(decision)) {
       const msg = decision.message
-        ? `[bounded] ${decision.policy}: ${decision.message}`
-        : `[bounded] ${decision.policy}: ${decision.reason}`;
+        ? `[themis] ${decision.policy}: ${decision.message}`
+        : `[themis] ${decision.policy}: ${decision.reason}`;
       return toolMsg(toolCall.id, msg);
     }
     if (isRedirect(decision)) {
       return toolMsg(
         toolCall.id,
         JSON.stringify({
-          bounded_redirect: true,
+          themis_redirect: true,
           policy: decision.policy,
           target: decision.target,
           payload: decision.payload,
@@ -123,14 +123,14 @@ export function gateToolCalls(
       return toolMsg(
         toolCall.id,
         JSON.stringify({
-          bounded_approval_pending: true,
+          themis_approval_pending: true,
           policy: decision.policy,
           approval_ref: decision.approval_ref,
           message: decision.message,
         }),
       );
     }
-    return toolMsg(toolCall.id, '[bounded] unknown policy decision kind');
+    return toolMsg(toolCall.id, '[themis] unknown policy decision kind');
   }
 
   return { execute };

@@ -1,6 +1,6 @@
-# Contributing to Bounded
+# Contributing to Themis
 
-Thanks for your interest in Bounded. This doc is short on purpose — the project is small, the contract is strict, and we'd rather you read the RFC than the rulebook.
+Thanks for your interest in Themis. This doc is short on purpose — the project is small, the contract is strict, and we'd rather you read the RFC than the rulebook.
 
 ## What to read first
 
@@ -84,14 +84,14 @@ Tests run via [`tsx`](https://tsx.is) directly against `.ts` source — no build
 
 ## Release policy
 
-Bounded is pre-alpha (`0.0.x`). Expect breaking changes between `0.0.x` versions.
+Themis is pre-alpha (`0.0.x`). Expect breaking changes between `0.0.x` versions.
 
 - `0.1.0` is the first public-API-stable release; it goes out once the RFC v0 ships with a public Discussion and at least one non-Solid# adopter validates the shape.
 - Semver applies from `1.0.0` onward.
 
 ## Scope of this project
 
-Bounded packages four primitives: **locks, drafts, scopes, audit**. The scope is deliberately narrow. Proposals to extend into adjacent territory (approval workflow state machines, observability dashboards, admin UIs) are welcome as companion packages but will not land inside `@bounded/core`.
+Themis packages four primitives: **locks, drafts, scopes, audit**. The scope is deliberately narrow. Proposals to extend into adjacent territory (approval workflow state machines, observability dashboards, admin UIs) are welcome as companion packages but will not land inside `@themis/core`.
 
 ## License
 

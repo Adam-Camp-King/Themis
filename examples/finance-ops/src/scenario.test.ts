@@ -4,7 +4,7 @@
 /**
  * End-to-end scenario tests for the finance-ops example.
  *
- * Verifies the full Bounded stack produces the expected tool_result
+ * Verifies the full Themis stack produces the expected tool_result
  * envelopes for the three canonical scenarios (no scope / small allowed /
  * large requires approval).
  */
@@ -46,7 +46,7 @@ test('scoped + small amount -> tool_result with wire_id (handler ran)', async ()
   assert.ok(parsed.wire_id.startsWith('wire-'));
 });
 
-test('scoped + $500k -> tool_result with bounded_approval_pending (handler did NOT run)', async () => {
+test('scoped + $500k -> tool_result with themis_approval_pending (handler did NOT run)', async () => {
   const engine = buildEngine();
   const requestor = buildRequestor(['payments:write']);
   const gate = buildGate(engine, requestor);
@@ -59,7 +59,7 @@ test('scoped + $500k -> tool_result with bounded_approval_pending (handler did N
   });
   assert.equal(result.is_error, undefined);
   const parsed = JSON.parse(result.content as string);
-  assert.equal(parsed.bounded_approval_pending, true);
+  assert.equal(parsed.themis_approval_pending, true);
   assert.ok(parsed.approval_ref.startsWith('approval-'));
   assert.ok(String(parsed.message).includes('500,000'));
 });
@@ -87,5 +87,5 @@ test('scoped + threshold-boundary ($10k) allowed; +$1 requires approval', async 
     input: { amount: 10_001, to: 'v' },
   });
   const overParsed = JSON.parse(over.content as string);
-  assert.equal(overParsed.bounded_approval_pending, true);
+  assert.equal(overParsed.themis_approval_pending, true);
 });

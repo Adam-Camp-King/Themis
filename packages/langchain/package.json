@@ -1,7 +1,7 @@
 {
-  "name": "@bounded/langchain",
+  "name": "@themis/langchain",
   "version": "0.0.1",
-  "description": "Bounded policy kernel adapter for LangChain Tools.",
+  "description": "Themis policy kernel adapter for LangChain Tools.",
   "license": "Apache-2.0",
   "type": "module",
   "main": "./dist/index.js",
@@ -20,6 +20,6 @@
     "clean": "rm -rf dist *.tsbuildinfo"
   },
   "keywords": ["bounded", "langchain", "tool", "policy", "agent"],
-  "dependencies": { "@bounded/core": "*" },
+  "dependencies": { "@themis/core": "*" },
   "engines": { "node": ">=20" }
 }

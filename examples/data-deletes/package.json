@@ -1,5 +1,5 @@
 {
-  "name": "@bounded/example-data-deletes",
+  "name": "@themis/example-data-deletes",
   "version": "0.0.1",
   "private": true,
   "description": "Example: agency-locked delete — agents cannot delete; owners can.",
@@ -9,7 +9,7 @@
     "test": "tsx --test src/scenario.test.ts"
   },
   "dependencies": {
-    "@bounded/core": "*",
-    "@bounded/anthropic": "*"
+    "@themis/core": "*",
+    "@themis/anthropic": "*"
   }
 }

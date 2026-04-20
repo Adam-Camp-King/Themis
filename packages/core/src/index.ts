@@ -2,13 +2,13 @@
 // Copyright 2026 Adam Campbell
 
 /**
- * @bounded/core — public API.
+ * @themis/core — public API.
  *
  * Import types with `import type` to avoid runtime cost; import guards as
  * values.
  *
- *   import type { IPolicyDecision, IRequestor, IAction } from '@bounded/core';
- *   import { isDeny, isRedirect } from '@bounded/core';
+ *   import type { IPolicyDecision, IRequestor, IAction } from '@themis/core';
+ *   import { isDeny, isRedirect } from '@themis/core';
  */
 
 export * from './types.js';

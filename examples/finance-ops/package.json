@@ -1,5 +1,5 @@
 {
-  "name": "@bounded/example-finance-ops",
+  "name": "@themis/example-finance-ops",
   "version": "0.0.1",
   "private": true,
   "description": "Example: wire-transfer agent with lock + scope + approval gate.",
@@ -9,7 +9,7 @@
     "test": "tsx --test src/scenario.test.ts"
   },
   "dependencies": {
-    "@bounded/core": "*",
-    "@bounded/anthropic": "*"
+    "@themis/core": "*",
+    "@themis/anthropic": "*"
   }
 }
