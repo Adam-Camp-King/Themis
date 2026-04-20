@@ -1,0 +1,15 @@
+{
+  "name": "@bounded/example-data-deletes",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Example: agency-locked delete — agents cannot delete; owners can.",
+  "type": "module",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "test": "tsx --test src/scenario.test.ts"
+  },
+  "dependencies": {
+    "@bounded/core": "*",
+    "@bounded/anthropic": "*"
+  }
+}

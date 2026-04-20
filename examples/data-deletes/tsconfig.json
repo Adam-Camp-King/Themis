@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "types": ["node"],
+    "paths": {
+      "@bounded/core": ["../../packages/core/src/index.ts"],
+      "@bounded/anthropic": ["../../packages/anthropic/src/index.ts"]
+    }
+  },
+  "include": ["src/**/*"]
+}
