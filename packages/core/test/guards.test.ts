@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Adam Campbell
+
 /**
  * Tests for the 4 type guards. Decision/classification logic: a wrong verdict
  * would mis-classify a policy outcome — e.g., treat a denial as an allow,

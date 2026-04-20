@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Adam Campbell
+
 /**
  * examples/crm-writes — "draft-review all updates to published pages."
  *

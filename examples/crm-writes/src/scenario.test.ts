@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Adam Campbell
+
 /**
  * crm-writes end-to-end tests.
  *

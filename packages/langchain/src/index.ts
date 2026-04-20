@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Adam Campbell
+
 /**
  * @bounded/langchain — adapter for LangChain Tools (and anything that
  * looks like one: a named object with an async call/invoke/func method).

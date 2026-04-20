@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Adam Campbell
+
 /**
  * DefaultDraftPolicy — branch coverage + HMAC preview token tests.
  *

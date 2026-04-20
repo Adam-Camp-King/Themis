@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Adam Campbell
+
 /**
  * @bounded/anthropic — adapter that gates Claude's tool_use blocks through
  * Bounded.

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Adam Campbell
+
 /**
  * @bounded/mcp — adapter that gates MCP tool invocations through Bounded.
  *
