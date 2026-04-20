@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "description": "Bounded — a policy kernel for bounded-autonomy LLM agents (monorepo root).",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "workspaces": [
     "packages/*",
     "examples/*"

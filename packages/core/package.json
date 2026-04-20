@@ -2,7 +2,7 @@
   "name": "@bounded/core",
   "version": "0.0.1",
   "description": "Policy kernel for bounded-autonomy LLM agents. Locks, drafts, scopes, audit — one engine, pluggable policies.",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

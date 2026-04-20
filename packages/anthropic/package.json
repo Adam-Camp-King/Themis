@@ -2,7 +2,7 @@
   "name": "@bounded/anthropic",
   "version": "0.0.1",
   "description": "Bounded policy kernel adapter for Anthropic SDK tool_use.",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

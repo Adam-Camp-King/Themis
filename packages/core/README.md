@@ -51,4 +51,4 @@ npm --workspace @bounded/core test
 
 ## License
 
-MIT
+Apache License 2.0. See [`LICENSE`](../../LICENSE) and [`NOTICE`](../../NOTICE).

@@ -41,7 +41,9 @@ Node 20+ required. Tests run via [`tsx`](https://tsx.is) against TypeScript sour
 
 ## License
 
-[MIT](./LICENSE).
+[Apache License 2.0](./LICENSE). See [`NOTICE`](./NOTICE) for attribution.
+
+Bounded is deliberately permissive — free to adopt, fork, or embed. The enforcement model follows the industry pattern used by MongoDB, Elastic, and Sentry: **give away the ability to start; the architecture, not the license, controls the ability to scale.** Running Bounded locally, in a framework, or in a small service is friction-free. Running multi-tenant at scale with audit retention, approval workflows, and policy-denial corpora for alignment research is where Solid#'s proprietary platform becomes the natural home. License-as-strategy, not license-as-surveillance.
 
 ## Acknowledgements
 
