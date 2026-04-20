@@ -169,4 +169,4 @@ Apache-2.0. See `LICENSE` in the repo root.
 
 ---
 
-**Contact:** `adam@solidnumber.com` · **Repo (pending public):** `github.com/Adam-Camp-King/themis` · **RFC:** `spec/RFC-bounded-v0.md`
+**Contact:** `adam@solidnumber.com` · **Repo:** [`github.com/Adam-Camp-King/Themis`](https://github.com/Adam-Camp-King/Themis) · **RFC:** privately at `Solid/themis-extraction-notes/07-RFC-themis-v0.md` (public version lands in `spec/` at v0.1)

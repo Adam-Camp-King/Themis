@@ -47,4 +47,4 @@ Themis is deliberately permissive — free to adopt, fork, or embed. The enforce
 
 ## Acknowledgements
 
-Themis was extracted from Solid# (a multi-tenant AI business infrastructure platform) after ~12 months of production operation of the four primitives. See the extraction notes at [`../Solid/themis-extraction-notes/`](https://github.com/) (private) for the source audits.
+Themis was extracted from [Solid#](https://solidnumber.com) — a multi-tenant AI business infrastructure platform — after ~12 months of production operation of the four primitives. Solid# is the reference deployment. Extraction audit notes live in a private repo.
