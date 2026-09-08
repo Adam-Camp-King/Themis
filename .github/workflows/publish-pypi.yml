@@ -26,7 +26,7 @@ jobs:
       id-token: write   # the OIDC token PyPI trusts
       contents: read
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with: { name: dist, path: dist/ }
       - uses: pypa/gh-action-pypi-publish@release/v1
         with: { packages-dir: dist/ }
