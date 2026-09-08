@@ -1,0 +1,14 @@
+version: 2
+updates:
+  # Dev tooling only — the kernel has no runtime dependencies. Monthly, batched.
+  - package-ecosystem: npm
+    directory: /
+    schedule: { interval: monthly }
+    groups:
+      dev-tooling: { patterns: ["*"] }
+  - package-ecosystem: pip
+    directory: /python
+    schedule: { interval: monthly }
+  - package-ecosystem: github-actions
+    directory: /
+    schedule: { interval: monthly }

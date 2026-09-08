@@ -1,5 +1,7 @@
 # Themis
 
+[![ci](https://github.com/Adam-Camp-King/Themis/actions/workflows/ci.yml/badge.svg)](https://github.com/Adam-Camp-King/Themis/actions/workflows/ci.yml) [![npm](https://img.shields.io/npm/v/themis-policy)](https://www.npmjs.com/package/themis-policy) [![PyPI](https://img.shields.io/pypi/v/themis-policy)](https://pypi.org/project/themis-policy/)
+
 > A policy kernel for bounded-autonomy LLM agents.
 > **Status:** pre-alpha. Core types shipping. No public release yet.
 
@@ -59,3 +61,12 @@ Themis is deliberately permissive — free to adopt, fork, or embed. The enforce
 ## Acknowledgements
 
 Themis was extracted from [Solid#](https://solidnumber.com) — a multi-tenant AI business infrastructure platform — after ~12 months of production operation of the four primitives. Solid# is the reference deployment. Extraction audit notes live in a private repo.
+
+## Maintenance posture
+
+Themis is in **maintenance mode with a stable spec**: RFC v0 and the
+conformance vectors are the contract, both implementations stay green in CI,
+dependency bumps land monthly, and releases are cut when there is a reason.
+Bug reports and spec questions are welcome as issues. Pull requests that change
+behaviour need a conformance vector first, so the other implementation moves
+with them. Security reports: see [SECURITY.md](SECURITY.md).
