@@ -1,0 +1,494 @@
+{
+  "version": "v0",
+  "cases": [
+    {
+      "name": "tenancy mismatch denies before any policy runs",
+      "policies": [
+        "lock",
+        {
+          "stub": "deny",
+          "name": "never-reached",
+          "reason": "x"
+        }
+      ],
+      "requestor": {
+        "id": 10,
+        "kind": "user",
+        "tenant_id": 7,
+        "scopes": []
+      },
+      "action": {
+        "verb": "pages.update",
+        "resource_type": "page",
+        "tenant_id": 8,
+        "resource_id": 42
+      },
+      "entity": null,
+      "expect": {
+        "decision": {
+          "kind": "deny",
+          "policy": "engine",
+          "reason": "tenancy_mismatch",
+          "message": "requestor and action belong to different tenants",
+          "detail": {
+            "requestor_tenant": 7,
+            "action_tenant": 8
+          }
+        },
+        "policy_chain": [],
+        "audit": {
+          "requestor": {
+            "id": 10,
+            "kind": "user"
+          },
+          "action": {
+            "verb": "pages.update",
+            "resource_type": "page",
+            "resource_id": 42
+          }
+        }
+      }
+    },
+    {
+      "name": "no policies allows",
+      "policies": [],
+      "requestor": {
+        "id": 10,
+        "kind": "user",
+        "tenant_id": 7,
+        "scopes": []
+      },
+      "action": {
+        "verb": "pages.update",
+        "resource_type": "page",
+        "tenant_id": 7,
+        "resource_id": 42
+      },
+      "entity": null,
+      "expect": {
+        "decision": {
+          "kind": "allow"
+        },
+        "policy_chain": []
+      }
+    },
+    {
+      "name": "all default policies allow with no entity",
+      "policies": [
+        "lock",
+        "scope",
+        "draft"
+      ],
+      "requestor": {
+        "id": 10,
+        "kind": "user",
+        "tenant_id": 7,
+        "scopes": []
+      },
+      "action": {
+        "verb": "pages.update",
+        "resource_type": "page",
+        "tenant_id": 7,
+        "resource_id": 42
+      },
+      "entity": null,
+      "expect": {
+        "decision": {
+          "kind": "allow"
+        },
+        "policy_chain": [
+          "lock",
+          "scope",
+          "draft"
+        ]
+      }
+    },
+    {
+      "name": "deny short-circuits",
+      "policies": [
+        {
+          "stub": "deny",
+          "name": "A",
+          "reason": "nope"
+        },
+        {
+          "stub": "allow",
+          "name": "B"
+        }
+      ],
+      "requestor": {
+        "id": 10,
+        "kind": "user",
+        "tenant_id": 7,
+        "scopes": []
+      },
+      "action": {
+        "verb": "pages.update",
+        "resource_type": "page",
+        "tenant_id": 7,
+        "resource_id": 42
+      },
+      "entity": null,
+      "expect": {
+        "decision": {
+          "kind": "deny",
+          "policy": "A",
+          "reason": "nope"
+        },
+        "policy_chain": [
+          "A"
+        ]
+      }
+    },
+    {
+      "name": "require_approval short-circuits",
+      "policies": [
+        {
+          "stub": "require_approval",
+          "name": "A",
+          "approval_ref": "apr_1"
+        },
+        {
+          "stub": "deny",
+          "name": "B",
+          "reason": "never"
+        }
+      ],
+      "requestor": {
+        "id": 10,
+        "kind": "user",
+        "tenant_id": 7,
+        "scopes": []
+      },
+      "action": {
+        "verb": "pages.update",
+        "resource_type": "page",
+        "tenant_id": 7,
+        "resource_id": 42
+      },
+      "entity": null,
+      "expect": {
+        "decision": {
+          "kind": "require_approval",
+          "policy": "A",
+          "approval_ref": "apr_1"
+        },
+        "policy_chain": [
+          "A"
+        ]
+      }
+    },
+    {
+      "name": "redirect then allow: last redirect wins, chain complete",
+      "policies": [
+        {
+          "stub": "redirect",
+          "name": "A",
+          "payload": {
+            "title": "x"
+          }
+        },
+        {
+          "stub": "allow",
+          "name": "B"
+        }
+      ],
+      "requestor": {
+        "id": 10,
+        "kind": "user",
+        "tenant_id": 7,
+        "scopes": []
+      },
+      "action": {
+        "verb": "pages.update",
+        "resource_type": "page",
+        "tenant_id": 7,
+        "resource_id": 42
+      },
+      "entity": null,
+      "expect": {
+        "decision": {
+          "kind": "redirect",
+          "policy": "A",
+          "target": "draft",
+          "payload": {
+            "title": "x"
+          }
+        },
+        "policy_chain": [
+          "A",
+          "B"
+        ]
+      }
+    },
+    {
+      "name": "redirect then deny: deny wins",
+      "policies": [
+        {
+          "stub": "redirect",
+          "name": "A",
+          "payload": {}
+        },
+        {
+          "stub": "deny",
+          "name": "B",
+          "reason": "blocked"
+        }
+      ],
+      "requestor": {
+        "id": 10,
+        "kind": "user",
+        "tenant_id": 7,
+        "scopes": []
+      },
+      "action": {
+        "verb": "pages.update",
+        "resource_type": "page",
+        "tenant_id": 7,
+        "resource_id": 42
+      },
+      "entity": null,
+      "expect": {
+        "decision": {
+          "kind": "deny",
+          "policy": "B",
+          "reason": "blocked"
+        },
+        "policy_chain": [
+          "A",
+          "B"
+        ]
+      }
+    },
+    {
+      "name": "two redirects: the last one wins",
+      "policies": [
+        {
+          "stub": "redirect",
+          "name": "A",
+          "payload": 1
+        },
+        {
+          "stub": "redirect",
+          "name": "B",
+          "payload": 2
+        }
+      ],
+      "requestor": {
+        "id": 10,
+        "kind": "user",
+        "tenant_id": 7,
+        "scopes": []
+      },
+      "action": {
+        "verb": "pages.update",
+        "resource_type": "page",
+        "tenant_id": 7,
+        "resource_id": 42
+      },
+      "entity": null,
+      "expect": {
+        "decision": {
+          "kind": "redirect",
+          "policy": "B",
+          "target": "draft",
+          "payload": 2
+        },
+        "policy_chain": [
+          "A",
+          "B"
+        ]
+      }
+    },
+    {
+      "name": "redirect then require_approval: approval wins and short-circuits",
+      "policies": [
+        {
+          "stub": "redirect",
+          "name": "A",
+          "payload": 1
+        },
+        {
+          "stub": "require_approval",
+          "name": "B",
+          "approval_ref": "apr_2",
+          "message": "confirm"
+        },
+        {
+          "stub": "allow",
+          "name": "C"
+        }
+      ],
+      "requestor": {
+        "id": 10,
+        "kind": "user",
+        "tenant_id": 7,
+        "scopes": []
+      },
+      "action": {
+        "verb": "pages.update",
+        "resource_type": "page",
+        "tenant_id": 7,
+        "resource_id": 42
+      },
+      "entity": null,
+      "expect": {
+        "decision": {
+          "kind": "require_approval",
+          "policy": "B",
+          "approval_ref": "apr_2",
+          "message": "confirm"
+        },
+        "policy_chain": [
+          "A",
+          "B"
+        ]
+      }
+    },
+    {
+      "name": "audit: requestor scopes and role denormalized, empty scopes omitted",
+      "policies": [
+        "scope"
+      ],
+      "requestor": {
+        "id": "key_9",
+        "kind": "api_key",
+        "tenant_id": 7,
+        "scopes": [
+          "pages:read",
+          "kb:write"
+        ],
+        "role": "employee"
+      },
+      "action": {
+        "verb": "pages.update",
+        "resource_type": "page",
+        "tenant_id": 7,
+        "resource_id": 42,
+        "area": "design",
+        "required_scope": "pages:read"
+      },
+      "entity": null,
+      "expect": {
+        "decision": {
+          "kind": "allow"
+        },
+        "policy_chain": [
+          "scope"
+        ],
+        "audit": {
+          "requestor": {
+            "id": "key_9",
+            "kind": "api_key",
+            "scopes": [
+              "pages:read",
+              "kb:write"
+            ],
+            "role": "employee"
+          },
+          "action": {
+            "verb": "pages.update",
+            "resource_type": "page",
+            "resource_id": 42,
+            "area": "design",
+            "required_scope": "pages:read"
+          }
+        }
+      }
+    },
+    {
+      "name": "emit_policy denials_only: allow emits nothing",
+      "policies": [],
+      "requestor": {
+        "id": 10,
+        "kind": "user",
+        "tenant_id": 7,
+        "scopes": []
+      },
+      "action": {
+        "verb": "pages.update",
+        "resource_type": "page",
+        "tenant_id": 7,
+        "resource_id": 42
+      },
+      "entity": null,
+      "expect": {
+        "decision": {
+          "kind": "allow"
+        },
+        "policy_chain": [],
+        "audit": "none"
+      },
+      "emit_policy": "denials_only"
+    },
+    {
+      "name": "emit_policy denials_only: deny still emits",
+      "policies": [
+        {
+          "stub": "deny",
+          "name": "A",
+          "reason": "nope"
+        }
+      ],
+      "requestor": {
+        "id": 10,
+        "kind": "user",
+        "tenant_id": 7,
+        "scopes": []
+      },
+      "action": {
+        "verb": "pages.update",
+        "resource_type": "page",
+        "tenant_id": 7,
+        "resource_id": 42
+      },
+      "entity": null,
+      "expect": {
+        "decision": {
+          "kind": "deny",
+          "policy": "A",
+          "reason": "nope"
+        },
+        "policy_chain": [
+          "A"
+        ]
+      },
+      "emit_policy": "denials_only"
+    },
+    {
+      "name": "emit_policy off: nothing emitted even on deny",
+      "policies": [
+        {
+          "stub": "deny",
+          "name": "A",
+          "reason": "nope"
+        }
+      ],
+      "requestor": {
+        "id": 10,
+        "kind": "user",
+        "tenant_id": 7,
+        "scopes": []
+      },
+      "action": {
+        "verb": "pages.update",
+        "resource_type": "page",
+        "tenant_id": 7,
+        "resource_id": 42
+      },
+      "entity": null,
+      "expect": {
+        "decision": {
+          "kind": "deny",
+          "policy": "A",
+          "reason": "nope"
+        },
+        "policy_chain": [
+          "A"
+        ],
+        "audit": "none"
+      },
+      "emit_policy": "off"
+    }
+  ]
+}

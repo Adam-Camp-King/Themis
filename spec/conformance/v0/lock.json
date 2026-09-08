@@ -1,0 +1,323 @@
+{
+  "version": "v0",
+  "cases": [
+    {
+      "name": "1. no entity (create) allows",
+      "policies": [
+        "lock"
+      ],
+      "requestor": {
+        "id": 10,
+        "kind": "user",
+        "tenant_id": 7,
+        "scopes": []
+      },
+      "action": {
+        "verb": "pages.update",
+        "resource_type": "page",
+        "tenant_id": 7,
+        "resource_id": 42,
+        "area": "design"
+      },
+      "entity": null,
+      "expect": {
+        "decision": {
+          "kind": "allow"
+        },
+        "policy_chain": [
+          "lock"
+        ]
+      }
+    },
+    {
+      "name": "2. self-serve entity (no agency owner) allows",
+      "policies": [
+        "lock"
+      ],
+      "requestor": {
+        "id": 10,
+        "kind": "user",
+        "tenant_id": 7,
+        "scopes": []
+      },
+      "action": {
+        "verb": "pages.update",
+        "resource_type": "page",
+        "tenant_id": 7,
+        "resource_id": 42,
+        "area": "design"
+      },
+      "entity": {
+        "id": 42,
+        "tenant_id": 7,
+        "agency_owner_id": null,
+        "locks": {
+          "design": true
+        }
+      },
+      "expect": {
+        "decision": {
+          "kind": "allow"
+        },
+        "policy_chain": [
+          "lock"
+        ]
+      }
+    },
+    {
+      "name": "3. super admin bypasses a lock",
+      "policies": [
+        "lock"
+      ],
+      "requestor": {
+        "id": 10,
+        "kind": "user",
+        "tenant_id": 7,
+        "scopes": [],
+        "is_super_admin": true
+      },
+      "action": {
+        "verb": "pages.update",
+        "resource_type": "page",
+        "tenant_id": 7,
+        "resource_id": 42,
+        "area": "design"
+      },
+      "entity": {
+        "id": 42,
+        "tenant_id": 7,
+        "agency_owner_id": 99,
+        "locks": {
+          "design": true
+        }
+      },
+      "expect": {
+        "decision": {
+          "kind": "allow"
+        },
+        "policy_chain": [
+          "lock"
+        ]
+      }
+    },
+    {
+      "name": "4. agency role bypasses a lock",
+      "policies": [
+        "lock"
+      ],
+      "requestor": {
+        "id": 10,
+        "kind": "user",
+        "tenant_id": 7,
+        "scopes": [],
+        "role": "agency"
+      },
+      "action": {
+        "verb": "pages.update",
+        "resource_type": "page",
+        "tenant_id": 7,
+        "resource_id": 42,
+        "area": "design"
+      },
+      "entity": {
+        "id": 42,
+        "tenant_id": 7,
+        "agency_owner_id": 99,
+        "locks": {
+          "design": true
+        }
+      },
+      "expect": {
+        "decision": {
+          "kind": "allow"
+        },
+        "policy_chain": [
+          "lock"
+        ]
+      }
+    },
+    {
+      "name": "5. the agency owner bypasses its own lock",
+      "policies": [
+        "lock"
+      ],
+      "requestor": {
+        "id": 99,
+        "kind": "user",
+        "tenant_id": 7,
+        "scopes": []
+      },
+      "action": {
+        "verb": "pages.update",
+        "resource_type": "page",
+        "tenant_id": 7,
+        "resource_id": 42,
+        "area": "design"
+      },
+      "entity": {
+        "id": 42,
+        "tenant_id": 7,
+        "agency_owner_id": 99,
+        "locks": {
+          "design": true
+        }
+      },
+      "expect": {
+        "decision": {
+          "kind": "allow"
+        },
+        "policy_chain": [
+          "lock"
+        ]
+      }
+    },
+    {
+      "name": "6. no area on the action allows",
+      "policies": [
+        "lock"
+      ],
+      "requestor": {
+        "id": 10,
+        "kind": "user",
+        "tenant_id": 7,
+        "scopes": []
+      },
+      "action": {
+        "verb": "pages.update",
+        "resource_type": "page",
+        "tenant_id": 7,
+        "resource_id": 42
+      },
+      "entity": {
+        "id": 42,
+        "tenant_id": 7,
+        "agency_owner_id": 99,
+        "locks": {
+          "design": true
+        }
+      },
+      "expect": {
+        "decision": {
+          "kind": "allow"
+        },
+        "policy_chain": [
+          "lock"
+        ]
+      }
+    },
+    {
+      "name": "7. area not locked allows",
+      "policies": [
+        "lock"
+      ],
+      "requestor": {
+        "id": 10,
+        "kind": "user",
+        "tenant_id": 7,
+        "scopes": []
+      },
+      "action": {
+        "verb": "pages.update",
+        "resource_type": "page",
+        "tenant_id": 7,
+        "resource_id": 42,
+        "area": "content"
+      },
+      "entity": {
+        "id": 42,
+        "tenant_id": 7,
+        "agency_owner_id": 99,
+        "locks": {
+          "design": true,
+          "content": false
+        }
+      },
+      "expect": {
+        "decision": {
+          "kind": "allow"
+        },
+        "policy_chain": [
+          "lock"
+        ]
+      }
+    },
+    {
+      "name": "8. locked area denies with detail",
+      "policies": [
+        "lock"
+      ],
+      "requestor": {
+        "id": 10,
+        "kind": "user",
+        "tenant_id": 7,
+        "scopes": []
+      },
+      "action": {
+        "verb": "pages.update",
+        "resource_type": "page",
+        "tenant_id": 7,
+        "resource_id": 42,
+        "area": "design"
+      },
+      "entity": {
+        "id": 42,
+        "tenant_id": 7,
+        "agency_owner_id": 99,
+        "locks": {
+          "design": true
+        }
+      },
+      "expect": {
+        "decision": {
+          "kind": "deny",
+          "policy": "lock",
+          "reason": "agency_lock",
+          "message": "Area 'design' is locked by the agency for this resource.",
+          "detail": {
+            "area": "design",
+            "entity_id": 42,
+            "agency_owner_id": 99
+          }
+        },
+        "policy_chain": [
+          "lock"
+        ]
+      }
+    },
+    {
+      "name": "lock is inert on a draftable entity",
+      "policies": [
+        "lock"
+      ],
+      "requestor": {
+        "id": 10,
+        "kind": "user",
+        "tenant_id": 7,
+        "scopes": []
+      },
+      "action": {
+        "verb": "pages.update",
+        "resource_type": "page",
+        "tenant_id": 7,
+        "resource_id": 42,
+        "area": "design"
+      },
+      "entity": {
+        "id": 42,
+        "tenant_id": 7,
+        "is_published": true,
+        "has_pending_draft": false,
+        "draft_updated_at": null,
+        "draft_updated_by": null
+      },
+      "expect": {
+        "decision": {
+          "kind": "allow"
+        },
+        "policy_chain": [
+          "lock"
+        ]
+      }
+    }
+  ]
+}

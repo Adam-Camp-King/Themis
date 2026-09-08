@@ -1,0 +1,316 @@
+{
+  "version": "v0",
+  "cases": [
+    {
+      "name": "1. no entity (create) allows",
+      "policies": [
+        "draft"
+      ],
+      "requestor": {
+        "id": 10,
+        "kind": "user",
+        "tenant_id": 7,
+        "scopes": []
+      },
+      "action": {
+        "verb": "pages.update",
+        "resource_type": "page",
+        "tenant_id": 7,
+        "resource_id": 42,
+        "payload": {
+          "title": "x"
+        }
+      },
+      "entity": null,
+      "expect": {
+        "decision": {
+          "kind": "allow"
+        },
+        "policy_chain": [
+          "draft"
+        ]
+      }
+    },
+    {
+      "name": "2. non-draftable entity is inert",
+      "policies": [
+        "draft"
+      ],
+      "requestor": {
+        "id": 10,
+        "kind": "user",
+        "tenant_id": 7,
+        "scopes": []
+      },
+      "action": {
+        "verb": "pages.update",
+        "resource_type": "page",
+        "tenant_id": 7,
+        "resource_id": 42,
+        "payload": {
+          "title": "x"
+        }
+      },
+      "entity": {
+        "id": 42,
+        "tenant_id": 7,
+        "agency_owner_id": null,
+        "locks": {}
+      },
+      "expect": {
+        "decision": {
+          "kind": "allow"
+        },
+        "policy_chain": [
+          "draft"
+        ]
+      }
+    },
+    {
+      "name": "3. unpublished entity: live write allowed",
+      "policies": [
+        "draft"
+      ],
+      "requestor": {
+        "id": 10,
+        "kind": "user",
+        "tenant_id": 7,
+        "scopes": []
+      },
+      "action": {
+        "verb": "pages.update",
+        "resource_type": "page",
+        "tenant_id": 7,
+        "resource_id": 42,
+        "payload": {
+          "title": "x"
+        }
+      },
+      "entity": {
+        "id": 42,
+        "tenant_id": 7,
+        "is_published": false,
+        "has_pending_draft": false,
+        "draft_updated_at": null,
+        "draft_updated_by": null
+      },
+      "expect": {
+        "decision": {
+          "kind": "allow"
+        },
+        "policy_chain": [
+          "draft"
+        ]
+      }
+    },
+    {
+      "name": "4. explicit publish:true writes live",
+      "policies": [
+        "draft"
+      ],
+      "requestor": {
+        "id": 10,
+        "kind": "user",
+        "tenant_id": 7,
+        "scopes": []
+      },
+      "action": {
+        "verb": "pages.update",
+        "resource_type": "page",
+        "tenant_id": 7,
+        "resource_id": 42,
+        "payload": {
+          "title": "x",
+          "publish": true
+        }
+      },
+      "entity": {
+        "id": 42,
+        "tenant_id": 7,
+        "is_published": true,
+        "has_pending_draft": false,
+        "draft_updated_at": null,
+        "draft_updated_by": null
+      },
+      "expect": {
+        "decision": {
+          "kind": "allow"
+        },
+        "policy_chain": [
+          "draft"
+        ]
+      }
+    },
+    {
+      "name": "5. published entity redirects the payload to draft",
+      "policies": [
+        "draft"
+      ],
+      "requestor": {
+        "id": 10,
+        "kind": "user",
+        "tenant_id": 7,
+        "scopes": []
+      },
+      "action": {
+        "verb": "pages.update",
+        "resource_type": "page",
+        "tenant_id": 7,
+        "resource_id": 42,
+        "payload": {
+          "title": "x"
+        }
+      },
+      "entity": {
+        "id": 42,
+        "tenant_id": 7,
+        "is_published": true,
+        "has_pending_draft": false,
+        "draft_updated_at": null,
+        "draft_updated_by": null
+      },
+      "expect": {
+        "decision": {
+          "kind": "redirect",
+          "policy": "draft",
+          "target": "draft",
+          "payload": {
+            "title": "x"
+          }
+        },
+        "policy_chain": [
+          "draft"
+        ]
+      }
+    },
+    {
+      "name": "published entity with no payload redirects with null payload",
+      "policies": [
+        "draft"
+      ],
+      "requestor": {
+        "id": 10,
+        "kind": "user",
+        "tenant_id": 7,
+        "scopes": []
+      },
+      "action": {
+        "verb": "pages.update",
+        "resource_type": "page",
+        "tenant_id": 7,
+        "resource_id": 42
+      },
+      "entity": {
+        "id": 42,
+        "tenant_id": 7,
+        "is_published": true,
+        "has_pending_draft": false,
+        "draft_updated_at": null,
+        "draft_updated_by": null
+      },
+      "expect": {
+        "decision": {
+          "kind": "redirect",
+          "policy": "draft",
+          "target": "draft",
+          "payload": null
+        },
+        "policy_chain": [
+          "draft"
+        ]
+      }
+    },
+    {
+      "name": "publish:'true' as a string is not a live write",
+      "policies": [
+        "draft"
+      ],
+      "requestor": {
+        "id": 10,
+        "kind": "user",
+        "tenant_id": 7,
+        "scopes": []
+      },
+      "action": {
+        "verb": "pages.update",
+        "resource_type": "page",
+        "tenant_id": 7,
+        "resource_id": 42,
+        "payload": {
+          "publish": "true"
+        }
+      },
+      "entity": {
+        "id": 42,
+        "tenant_id": 7,
+        "is_published": true,
+        "has_pending_draft": false,
+        "draft_updated_at": null,
+        "draft_updated_by": null
+      },
+      "expect": {
+        "decision": {
+          "kind": "redirect",
+          "policy": "draft",
+          "target": "draft",
+          "payload": {
+            "publish": "true"
+          }
+        },
+        "policy_chain": [
+          "draft"
+        ]
+      }
+    },
+    {
+      "name": "combined lock+scope+draft on a published page: redirect with the full chain",
+      "policies": [
+        "lock",
+        "scope",
+        "draft"
+      ],
+      "requestor": {
+        "id": "key_1",
+        "kind": "api_key",
+        "tenant_id": 7,
+        "scopes": [
+          "pages:read"
+        ]
+      },
+      "action": {
+        "verb": "pages.update",
+        "resource_type": "page",
+        "tenant_id": 7,
+        "resource_id": 42,
+        "area": "design",
+        "required_scope": "pages:read",
+        "payload": {
+          "title": "x"
+        }
+      },
+      "entity": {
+        "id": 42,
+        "tenant_id": 7,
+        "is_published": true,
+        "has_pending_draft": false,
+        "draft_updated_at": null,
+        "draft_updated_by": null
+      },
+      "expect": {
+        "decision": {
+          "kind": "redirect",
+          "policy": "draft",
+          "target": "draft",
+          "payload": {
+            "title": "x"
+          }
+        },
+        "policy_chain": [
+          "lock",
+          "scope",
+          "draft"
+        ]
+      }
+    }
+  ]
+}

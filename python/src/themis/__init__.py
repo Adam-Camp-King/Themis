@@ -1,0 +1,30 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Adam Campbell
+"""Themis — a policy kernel for bounded-autonomy LLM agents.
+
+Python reference implementation of Themis RFC v0. Four primitives — locks,
+drafts, scopes, audit — composed by one engine into a single decision per
+attempted action: allow, deny, redirect, or require_approval.
+
+Conformance: ``spec/conformance/v0`` in the Themis repository holds the
+cross-language vectors; this package and ``@themis/core`` pass the same set.
+"""
+from .types import (
+    Action, Allow, AuditEvent, AuditSink, Decision, Deny, DraftableEntity, DraftStore, Entity, Id,
+    LockableEntity, LockStore, Policy, PolicyContext, Redirect, RequireApproval, Requestor, RequestorKind,
+    decision_from_dict,
+)
+from .engine import PolicyEngine, EmitPolicy, build_audit_event
+from .guards import is_allow, is_deny, is_redirect, is_require_approval
+from .sinks import ConsoleSink, MemorySink, MultiSink, NoOpSink
+from .policies import DefaultDraftPolicy, DefaultLockPolicy, DefaultScopePolicy
+
+__version__ = "0.1.0"
+__all__ = [
+    "Action", "Allow", "AuditEvent", "AuditSink", "Decision", "Deny", "DraftableEntity", "DraftStore", "Entity",
+    "Id", "LockableEntity", "LockStore", "Policy", "PolicyContext", "Redirect", "RequireApproval", "Requestor",
+    "RequestorKind", "decision_from_dict", "PolicyEngine", "EmitPolicy", "build_audit_event",
+    "is_allow", "is_deny", "is_redirect", "is_require_approval",
+    "ConsoleSink", "MemorySink", "MultiSink", "NoOpSink",
+    "DefaultDraftPolicy", "DefaultLockPolicy", "DefaultScopePolicy", "__version__",
+]

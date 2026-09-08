@@ -7,6 +7,17 @@ Themis is a small, framework-agnostic policy engine that decides what an LLM age
 
 This is the reference TypeScript implementation. Conforms to [Themis RFC v0](./spec/RFC-bounded-v0.md) (spec lives upstream in the design notes for now).
 
+
+## Implementations and conformance
+
+| Implementation | Language | Package | Status |
+|---|---|---|---|
+| `@themis/core` + adapters | TypeScript | `packages/*` | reference |
+| `themis-policy` | Python 3.11+ | `python/` | reference |
+
+Both run the same [conformance vectors](spec/conformance) in CI. Themis is the
+vectors and the RFC; an implementation conforms when it passes them (RFC § 11).
+
 ## Why
 
 Training-time alignment (RLHF, Constitutional AI) produces a model that *probably* won't do the wrong thing. Themis is the run-time counterpart — the layer that makes the wrong thing *structurally impossible* in a production deployment.

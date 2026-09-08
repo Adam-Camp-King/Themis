@@ -1,0 +1,359 @@
+{
+  "version": "v0",
+  "cases": [
+    {
+      "name": "1. super admin bypasses scopes",
+      "policies": [
+        "scope"
+      ],
+      "requestor": {
+        "id": "key_1",
+        "kind": "api_key",
+        "tenant_id": 7,
+        "scopes": [
+          "pages:read"
+        ],
+        "is_super_admin": true
+      },
+      "action": {
+        "verb": "pages.update",
+        "resource_type": "page",
+        "tenant_id": 7,
+        "resource_id": 42,
+        "required_scope": "pages:write"
+      },
+      "entity": null,
+      "expect": {
+        "decision": {
+          "kind": "allow"
+        },
+        "policy_chain": [
+          "scope"
+        ]
+      }
+    },
+    {
+      "name": "2. wildcard scope allows",
+      "policies": [
+        "scope"
+      ],
+      "requestor": {
+        "id": "key_1",
+        "kind": "api_key",
+        "tenant_id": 7,
+        "scopes": [
+          "*"
+        ]
+      },
+      "action": {
+        "verb": "pages.update",
+        "resource_type": "page",
+        "tenant_id": 7,
+        "resource_id": 42,
+        "required_scope": "pages:write"
+      },
+      "entity": null,
+      "expect": {
+        "decision": {
+          "kind": "allow"
+        },
+        "policy_chain": [
+          "scope"
+        ]
+      }
+    },
+    {
+      "name": "3. session user with no scopes allows",
+      "policies": [
+        "scope"
+      ],
+      "requestor": {
+        "id": 10,
+        "kind": "user",
+        "tenant_id": 7,
+        "scopes": []
+      },
+      "action": {
+        "verb": "pages.update",
+        "resource_type": "page",
+        "tenant_id": 7,
+        "resource_id": 42,
+        "required_scope": "pages:write"
+      },
+      "entity": null,
+      "expect": {
+        "decision": {
+          "kind": "allow"
+        },
+        "policy_chain": [
+          "scope"
+        ]
+      }
+    },
+    {
+      "name": "4. no required scope allows",
+      "policies": [
+        "scope"
+      ],
+      "requestor": {
+        "id": "key_1",
+        "kind": "api_key",
+        "tenant_id": 7,
+        "scopes": [
+          "pages:read"
+        ]
+      },
+      "action": {
+        "verb": "pages.update",
+        "resource_type": "page",
+        "tenant_id": 7,
+        "resource_id": 42
+      },
+      "entity": null,
+      "expect": {
+        "decision": {
+          "kind": "allow"
+        },
+        "policy_chain": [
+          "scope"
+        ]
+      }
+    },
+    {
+      "name": "5. held scope allows",
+      "policies": [
+        "scope"
+      ],
+      "requestor": {
+        "id": "key_1",
+        "kind": "api_key",
+        "tenant_id": 7,
+        "scopes": [
+          "pages:read"
+        ]
+      },
+      "action": {
+        "verb": "pages.update",
+        "resource_type": "page",
+        "tenant_id": 7,
+        "resource_id": 42,
+        "required_scope": "pages:read"
+      },
+      "entity": null,
+      "expect": {
+        "decision": {
+          "kind": "allow"
+        },
+        "policy_chain": [
+          "scope"
+        ]
+      }
+    },
+    {
+      "name": "6. missing scope denies with held list",
+      "policies": [
+        "scope"
+      ],
+      "requestor": {
+        "id": "key_1",
+        "kind": "api_key",
+        "tenant_id": 7,
+        "scopes": [
+          "pages:read"
+        ]
+      },
+      "action": {
+        "verb": "pages.update",
+        "resource_type": "page",
+        "tenant_id": 7,
+        "resource_id": 42,
+        "required_scope": "pages:write"
+      },
+      "entity": null,
+      "expect": {
+        "decision": {
+          "kind": "deny",
+          "policy": "scope",
+          "reason": "missing_scope",
+          "message": "Missing required scope 'pages:write'.",
+          "detail": {
+            "required": "pages:write",
+            "held": [
+              "pages:read"
+            ]
+          }
+        },
+        "policy_chain": [
+          "scope"
+        ]
+      }
+    },
+    {
+      "name": "flat membership: pages:write does not imply pages:read",
+      "policies": [
+        "scope"
+      ],
+      "requestor": {
+        "id": "key_1",
+        "kind": "api_key",
+        "tenant_id": 7,
+        "scopes": [
+          "pages:write"
+        ]
+      },
+      "action": {
+        "verb": "pages.update",
+        "resource_type": "page",
+        "tenant_id": 7,
+        "resource_id": 42,
+        "required_scope": "pages:read"
+      },
+      "entity": null,
+      "expect": {
+        "decision": {
+          "kind": "deny",
+          "policy": "scope",
+          "reason": "missing_scope",
+          "message": "Missing required scope 'pages:read'.",
+          "detail": {
+            "required": "pages:read",
+            "held": [
+              "pages:write"
+            ]
+          }
+        },
+        "policy_chain": [
+          "scope"
+        ]
+      }
+    },
+    {
+      "name": "api_key with no scopes and a requirement denies",
+      "policies": [
+        "scope"
+      ],
+      "requestor": {
+        "id": "key_1",
+        "kind": "api_key",
+        "tenant_id": 7,
+        "scopes": []
+      },
+      "action": {
+        "verb": "pages.update",
+        "resource_type": "page",
+        "tenant_id": 7,
+        "resource_id": 42,
+        "required_scope": "kb:write"
+      },
+      "entity": null,
+      "expect": {
+        "decision": {
+          "kind": "deny",
+          "policy": "scope",
+          "reason": "missing_scope",
+          "message": "Missing required scope 'kb:write'.",
+          "detail": {
+            "required": "kb:write",
+            "held": []
+          }
+        },
+        "policy_chain": [
+          "scope"
+        ]
+      }
+    },
+    {
+      "name": "rule table resolves the requirement from method+path",
+      "policies": [
+        {
+          "name": "scope",
+          "rules": [
+            {
+              "method": "POST",
+              "path": "/api/v1/pages",
+              "required_scope": "pages:write"
+            }
+          ]
+        }
+      ],
+      "requestor": {
+        "id": "key_1",
+        "kind": "api_key",
+        "tenant_id": 7,
+        "scopes": [
+          "pages:read"
+        ]
+      },
+      "action": {
+        "verb": "pages.update",
+        "resource_type": "page",
+        "tenant_id": 7,
+        "resource_id": 42,
+        "metadata": {
+          "method": "post",
+          "path": "/api/v1/pages"
+        }
+      },
+      "entity": null,
+      "expect": {
+        "decision": {
+          "kind": "deny",
+          "policy": "scope",
+          "reason": "missing_scope",
+          "message": "Missing required scope 'pages:write'.",
+          "detail": {
+            "required": "pages:write",
+            "held": [
+              "pages:read"
+            ]
+          }
+        },
+        "policy_chain": [
+          "scope"
+        ]
+      }
+    },
+    {
+      "name": "rule table: no matching rule allows",
+      "policies": [
+        {
+          "name": "scope",
+          "rules": [
+            {
+              "method": "POST",
+              "path": "/api/v1/pages",
+              "required_scope": "pages:write"
+            }
+          ]
+        }
+      ],
+      "requestor": {
+        "id": "key_1",
+        "kind": "api_key",
+        "tenant_id": 7,
+        "scopes": [
+          "pages:read"
+        ]
+      },
+      "action": {
+        "verb": "pages.update",
+        "resource_type": "page",
+        "tenant_id": 7,
+        "resource_id": 42,
+        "metadata": {
+          "method": "GET",
+          "path": "/api/v1/pages"
+        }
+      },
+      "entity": null,
+      "expect": {
+        "decision": {
+          "kind": "allow"
+        },
+        "policy_chain": [
+          "scope"
+        ]
+      }
+    }
+  ]
+}

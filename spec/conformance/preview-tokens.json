@@ -1,0 +1,53 @@
+{
+  "version": "v0",
+  "note": "verify-only vectors; minted by @themis/core DefaultDraftPolicy with secret below. exp_ms 4102444800000 = 2100-01-01; 946684800000 = 2000-01-01.",
+  "secret": "conformance-secret",
+  "cases": [
+    {
+      "name": "valid numeric ids",
+      "token": "djEuNDIuNy40MTAyNDQ0ODAwMDAwLjEzNWVlOWNjZmY0ZmY2NDUxMTMwMzhjNTA4YzljOGI2N2RhMDIzY2Y1NTE4ZTk4MzMzNGFlM2ZlMDQ3NjJmNDM",
+      "expect": {
+        "entity_id": 42,
+        "tenant_id": 7
+      }
+    },
+    {
+      "name": "valid string ids preserved",
+      "token": "djEucGFnZS1hYmMudGVuYW50LXguNDEwMjQ0NDgwMDAwMC5lY2VmMjM2ZGFjZTBmNmRkOWMyYTZmNzRjZWQyMWVlYjUxMTM1NDc1YmMxYmY5OTcxZjkwNTc5ZWVjY2Q5ZTE0",
+      "expect": {
+        "entity_id": "page-abc",
+        "tenant_id": "tenant-x"
+      }
+    },
+    {
+      "name": "expired",
+      "token": "djEuNDIuNy45NDY2ODQ4MDAwMDAuMWJiZGEwNThmNDZkOTg1NDU5Y2FjMWU5NGVlOTRjYjdkYjA5MjM5MjQ3NmQzZGJmZWRmZGZhNjE4MmViMjMyZA",
+      "expect": null
+    },
+    {
+      "name": "wrong secret",
+      "token": "djEuNDIuNy40MTAyNDQ0ODAwMDAwLjJmNmViMzg1NmMzY2NjZTdjMTcxNDJlOWM4NGZhOWM2MDc1NTAxNDViYTViMmFlYzJlYmQyNzJkYjcxZDhhNTI",
+      "expect": null
+    },
+    {
+      "name": "wrong version",
+      "token": "djIuNDIuNy40MTAyNDQ0ODAwMDAwLmFlZmIzYmU4YjhkY2E0YjAxMzgzM2RiMGQwYjc4Y2FlZTY1YTU3NTI4ZTQ1MmM5YjU0ODJmMzViMzE0ODY1YWE",
+      "expect": null
+    },
+    {
+      "name": "tampered mac",
+      "token": "djEuNDIuNy40MTAyNDQ0ODAwMDAwLjEzNWVlOWNjZmY0ZmY2NDUxMTMwMzhjNTA4YzljOGI2N2RhMDIzY2Y1NTE4ZTk4MzMzNGFlM2ZlMDQ3NjJmNDA",
+      "expect": null
+    },
+    {
+      "name": "not base64url",
+      "token": "!!!not-a-token!!!",
+      "expect": null
+    },
+    {
+      "name": "empty token",
+      "token": "",
+      "expect": null
+    }
+  ]
+}

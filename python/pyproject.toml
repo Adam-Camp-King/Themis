@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "themis-policy"
+version = "0.1.0"
+description = "Themis policy kernel for bounded-autonomy LLM agents — locks, drafts, scopes, audit. Python reference implementation of Themis RFC v0."
+readme = "README.md"
+license = { text = "Apache-2.0" }
+authors = [{ name = "Adam Campbell" }]
+requires-python = ">=3.11"
+dependencies = []
+keywords = ["llm", "agents", "policy", "safety", "bounded-autonomy", "multi-tenant", "audit"]
+classifiers = [
+  "License :: OSI Approved :: Apache Software License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Typing :: Typed",
+]
+
+[project.urls]
+Homepage = "https://github.com/Adam-Camp-King/Themis"
+Specification = "https://github.com/Adam-Camp-King/Themis/tree/main/spec"
+
+[project.optional-dependencies]
+test = ["pytest>=8"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+themis = ["py.typed"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
