@@ -26,13 +26,13 @@ PyPI is the Python Package Index — Python's npm. Publishing there is what
 makes `pip install themis-policy` work. (`themis` and `themis-core` are
 already taken by unrelated projects, hence the name.)
 
-1. One-time: create an account at pypi.org, enable 2FA, create an **API
-   token** (Account settings → API tokens → scope "entire account" for the
-   first upload). Optional: do the same on test.pypi.org first.
-2. `pip install twine`
-3. `twine upload python/dist/*` — username `__token__`, password = the token.
-   (Or `TWINE_USERNAME=__token__ TWINE_PASSWORD=pypi-… twine upload python/dist/*`.)
-4. Verify: `pip install themis-policy==0.1.0` in a fresh venv.
+Publishing is credential-free: PyPI trusts this repo's
+`.github/workflows/publish-pypi.yml` (Trusted Publisher / OIDC, environment
+`pypi`). No token exists anywhere.
+
+1. Bump `python/pyproject.toml` version with the npm packages.
+2. Push a `v*` tag, or run `gh workflow run publish-pypi.yml -R Adam-Camp-King/Themis`.
+3. Verify: `pip install themis-policy==<version>` in a fresh venv.
 
 ## After both are live
 
