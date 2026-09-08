@@ -1,0 +1,32 @@
+name: publish-pypi
+# Publishes python/ (themis-policy) to PyPI through a Trusted Publisher
+# (OpenID Connect) — no API token stored anywhere. PyPI is configured with:
+#   owner Adam-Camp-King · repo Themis · workflow publish-pypi.yml · environment pypi
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install build
+      - run: python -m build --outdir dist python
+      - run: pip install dist/*.whl && python -c "import themis; print(themis.__version__)"
+      - uses: actions/upload-artifact@v4
+        with: { name: dist, path: dist/ }
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write   # the OIDC token PyPI trusts
+      contents: read
+    steps:
+      - uses: actions/download-artifact@v4
+        with: { name: dist, path: dist/ }
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with: { packages-dir: dist/ }
