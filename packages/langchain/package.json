@@ -1,6 +1,6 @@
 {
   "name": "themis-policy-langchain",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Gate LangChain tools (and anything tool-shaped) through Themis",
   "license": "Apache-2.0",
   "type": "module",
@@ -31,7 +31,7 @@
     "agent"
   ],
   "dependencies": {
-    "themis-policy": "^0.1.0"
+    "themis-policy": "^0.2.0"
   },
   "engines": {
     "node": ">=20"

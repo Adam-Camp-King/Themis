@@ -13,8 +13,9 @@ from typing import Any
 import pytest
 
 from themis import (
-    Action, Allow, DefaultDraftPolicy, DefaultLockPolicy, DefaultScopePolicy, Deny, DraftableEntity,
-    LockableEntity, MemorySink, PolicyContext, PolicyEngine, Redirect, RequireApproval, Requestor,
+    Action, Allow, DefaultAnomalyPolicy, DefaultDraftPolicy, DefaultLockPolicy, DefaultQuarantinePolicy,
+    DefaultRateLimitPolicy, DefaultScopePolicy, Deny, DraftableEntity, LockableEntity, MemorySink, PolicyContext,
+    PolicyEngine, Redirect, RequireApproval, Requestor,
 )
 
 SPEC = pathlib.Path(__file__).resolve().parents[2] / "spec" / "conformance"
@@ -47,6 +48,12 @@ def _build(spec: Any):
         return DefaultDraftPolicy()
     if spec == "scope":
         return DefaultScopePolicy()
+    if spec == "quarantine":
+        return DefaultQuarantinePolicy()
+    if spec == "rate_limit":
+        return DefaultRateLimitPolicy()
+    if spec == "anomaly":
+        return DefaultAnomalyPolicy()
     if "stub" in spec:
         return _Stub(spec)
     p = DefaultScopePolicy()
@@ -90,12 +97,13 @@ def test_vector(c: dict[str, Any]) -> None:
     r, a = c["requestor"], c["action"]
     ctx = PolicyContext(
         requestor=Requestor(id=r["id"], kind=r["kind"], tenant_id=r["tenant_id"], scopes=tuple(r.get("scopes", [])),
-                            role=r.get("role"), is_super_admin=r.get("is_super_admin")),
+                            role=r.get("role"), is_super_admin=r.get("is_super_admin"), metadata=r.get("metadata")),
         action=Action(verb=a["verb"], resource_type=a["resource_type"], tenant_id=a["tenant_id"], resource_id=a.get("resource_id"),
                       area=a.get("area"), required_scope=a.get("required_scope"), payload=a.get("payload"), metadata=a.get("metadata")),
         entity=_entity(c.get("entity")),
         now=1_700_000_000_000,
         correlation_id=f"conf-{c['name']}",
+        policy_metadata=c.get("policy_metadata"),
     )
     decision = engine.evaluate(ctx)
     assert _canon(decision.to_dict()) == _canon(c["expect"]["decision"])

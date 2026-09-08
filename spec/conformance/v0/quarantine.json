@@ -1,0 +1,193 @@
+{
+  "version": "v0.2",
+  "cases": [
+    {
+      "name": "1. no flag anywhere allows",
+      "policies": [
+        "quarantine"
+      ],
+      "requestor": {
+        "id": 10,
+        "kind": "agent",
+        "tenant_id": 7,
+        "scopes": [],
+        "role": "employee"
+      },
+      "action": {
+        "verb": "pages.update",
+        "resource_type": "page",
+        "tenant_id": 7,
+        "resource_id": 42
+      },
+      "entity": null,
+      "expect": {
+        "decision": {
+          "kind": "allow"
+        },
+        "policy_chain": [
+          "quarantine"
+        ]
+      }
+    },
+    {
+      "name": "2. requestor.metadata.quarantined denies with the identity's reason",
+      "policies": [
+        "quarantine"
+      ],
+      "requestor": {
+        "id": 10,
+        "kind": "agent",
+        "tenant_id": 7,
+        "scopes": [],
+        "role": "employee",
+        "metadata": {
+          "agent_identity_id": 5,
+          "trust_tier": "custom",
+          "quarantined": true,
+          "quarantine_reason": "anomaly: bulk_delete:10_in_10m"
+        }
+      },
+      "action": {
+        "verb": "pages.update",
+        "resource_type": "page",
+        "tenant_id": 7,
+        "resource_id": 42
+      },
+      "entity": null,
+      "expect": {
+        "decision": {
+          "kind": "deny",
+          "policy": "quarantine",
+          "reason": "agent_quarantined",
+          "message": "This agent is quarantined. An owner must release it before it can act again.",
+          "detail": {
+            "quarantine_reason": "anomaly: bulk_delete:10_in_10m"
+          }
+        },
+        "policy_chain": [
+          "quarantine"
+        ]
+      }
+    },
+    {
+      "name": "3. policy_metadata.quarantine denies a surface-level hold",
+      "policies": [
+        "quarantine"
+      ],
+      "requestor": {
+        "id": 10,
+        "kind": "agent",
+        "tenant_id": 7,
+        "scopes": [],
+        "role": "employee"
+      },
+      "action": {
+        "verb": "pages.update",
+        "resource_type": "page",
+        "tenant_id": 7,
+        "resource_id": 42
+      },
+      "entity": null,
+      "policy_metadata": {
+        "quarantine": {
+          "quarantined": true,
+          "quarantine_reason": "manual"
+        }
+      },
+      "expect": {
+        "decision": {
+          "kind": "deny",
+          "policy": "quarantine",
+          "reason": "agent_quarantined",
+          "message": "This agent is quarantined. An owner must release it before it can act again.",
+          "detail": {
+            "quarantine_reason": "manual"
+          }
+        },
+        "policy_chain": [
+          "quarantine"
+        ]
+      }
+    },
+    {
+      "name": "4. quarantined false in both places allows",
+      "policies": [
+        "quarantine"
+      ],
+      "requestor": {
+        "id": 10,
+        "kind": "agent",
+        "tenant_id": 7,
+        "scopes": [],
+        "role": "employee",
+        "metadata": {
+          "quarantined": false
+        }
+      },
+      "action": {
+        "verb": "pages.update",
+        "resource_type": "page",
+        "tenant_id": 7,
+        "resource_id": 42
+      },
+      "entity": null,
+      "policy_metadata": {
+        "quarantine": {
+          "quarantined": false
+        }
+      },
+      "expect": {
+        "decision": {
+          "kind": "allow"
+        },
+        "policy_chain": [
+          "quarantine"
+        ]
+      }
+    },
+    {
+      "name": "5. quarantine runs before lock and short-circuits",
+      "policies": [
+        "quarantine",
+        "lock"
+      ],
+      "requestor": {
+        "id": 10,
+        "kind": "agent",
+        "tenant_id": 7,
+        "scopes": [],
+        "role": "employee",
+        "metadata": {
+          "quarantined": true
+        }
+      },
+      "action": {
+        "verb": "pages.update",
+        "resource_type": "page",
+        "tenant_id": 7,
+        "resource_id": 42,
+        "area": "design"
+      },
+      "entity": {
+        "id": 42,
+        "tenant_id": 7,
+        "agency_owner_id": 99,
+        "locks": {
+          "design": false
+        }
+      },
+      "expect": {
+        "decision": {
+          "kind": "deny",
+          "policy": "quarantine",
+          "reason": "agent_quarantined",
+          "message": "This agent is quarantined. An owner must release it before it can act again.",
+          "detail": {}
+        },
+        "policy_chain": [
+          "quarantine"
+        ]
+      }
+    }
+  ]
+}

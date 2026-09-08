@@ -13,14 +13,14 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { IAuditEvent, IAuditSink, IPolicy, IPolicyContext, IPolicyDecision, IRequestor, IAction } from '../src/index.js';
-import { PolicyEngine, DefaultLockPolicy, DefaultScopePolicy, DefaultDraftPolicy } from '../src/index.js';
+import { PolicyEngine, DefaultLockPolicy, DefaultScopePolicy, DefaultDraftPolicy, DefaultQuarantinePolicy, DefaultRateLimitPolicy, DefaultAnomalyPolicy } from '../src/index.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const VECTORS = join(here, '..', '..', '..', 'spec', 'conformance', 'v0');
 
 interface StubSpec { stub: 'allow' | 'deny' | 'redirect' | 'require_approval'; name: string; [k: string]: unknown }
 interface ScopeSpec { name: 'scope'; rules?: Array<{ method: string; path: string; required_scope: string }> }
-type PolicySpec = 'lock' | 'scope' | 'draft' | StubSpec | ScopeSpec;
+type PolicySpec = 'lock' | 'scope' | 'draft' | 'quarantine' | 'rate_limit' | 'anomaly' | StubSpec | ScopeSpec;
 
 interface Case {
   name: string;
@@ -29,6 +29,7 @@ interface Case {
   requestor: IRequestor;
   action: IAction;
   entity?: Record<string, unknown> | null;
+  policy_metadata?: Record<string, Record<string, unknown>>;
   expect: { decision: IPolicyDecision; policy_chain: string[]; audit?: 'none' | Record<string, unknown> };
 }
 
@@ -52,6 +53,9 @@ function build(spec: PolicySpec): IPolicy {
   if (spec === 'lock') return new DefaultLockPolicy();
   if (spec === 'draft') return new DefaultDraftPolicy();
   if (spec === 'scope') return new DefaultScopePolicy();
+  if (spec === 'quarantine') return new DefaultQuarantinePolicy();
+  if (spec === 'rate_limit') return new DefaultRateLimitPolicy();
+  if (spec === 'anomaly') return new DefaultAnomalyPolicy();
   if ('stub' in spec) return stub(spec);
   const p = new DefaultScopePolicy();
   for (const r of spec.rules ?? []) p.addRule({ method: r.method, path_pattern: r.path }, r.required_scope);
@@ -79,6 +83,7 @@ for (const file of readdirSync(VECTORS).filter((f) => f.endsWith('.json')).sort(
       const ctx: IPolicyContext = {
         requestor: c.requestor, action: c.action, entity: (c.entity ?? null) as IPolicyContext['entity'],
         now: 1_700_000_000_000, correlation_id: `conf-${c.name}`,
+        policy_metadata: c.policy_metadata,
       };
       const decision = await engine.evaluate(ctx);
       assert.deepEqual(canon(decision), canon(c.expect.decision), 'decision');

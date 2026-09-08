@@ -1,0 +1,309 @@
+{
+  "version": "v0.2",
+  "cases": [
+    {
+      "name": "1. no score allows",
+      "policies": [
+        "anomaly"
+      ],
+      "requestor": {
+        "id": 10,
+        "kind": "agent",
+        "tenant_id": 7,
+        "scopes": [],
+        "role": "employee"
+      },
+      "action": {
+        "verb": "pages.update",
+        "resource_type": "page",
+        "tenant_id": 7,
+        "resource_id": 42
+      },
+      "entity": null,
+      "expect": {
+        "decision": {
+          "kind": "allow"
+        },
+        "policy_chain": [
+          "anomaly"
+        ]
+      }
+    },
+    {
+      "name": "2. low risk allows",
+      "policies": [
+        "anomaly"
+      ],
+      "requestor": {
+        "id": 10,
+        "kind": "agent",
+        "tenant_id": 7,
+        "scopes": [],
+        "role": "employee"
+      },
+      "action": {
+        "verb": "pages.update",
+        "resource_type": "page",
+        "tenant_id": 7,
+        "resource_id": 42
+      },
+      "entity": null,
+      "policy_metadata": {
+        "anomaly": {
+          "risk": 0.3,
+          "reasons": [
+            "oversized_payload:250000b"
+          ],
+          "baseline_sample": 0,
+          "baseline_used": false
+        }
+      },
+      "expect": {
+        "decision": {
+          "kind": "allow"
+        },
+        "policy_chain": [
+          "anomaly"
+        ]
+      }
+    },
+    {
+      "name": "3. soft block requires approval with the implementation's ref",
+      "policies": [
+        "anomaly"
+      ],
+      "requestor": {
+        "id": 10,
+        "kind": "agent",
+        "tenant_id": 7,
+        "scopes": [],
+        "role": "employee"
+      },
+      "action": {
+        "verb": "team.update_role",
+        "resource_type": "team",
+        "tenant_id": 7,
+        "resource_id": 42
+      },
+      "entity": null,
+      "policy_metadata": {
+        "anomaly": {
+          "risk": 0.9,
+          "reasons": [
+            "scope_escalation:team"
+          ],
+          "baseline_sample": 0,
+          "baseline_used": false,
+          "approval_ref": "ask_7f3a"
+        }
+      },
+      "expect": {
+        "decision": {
+          "kind": "require_approval",
+          "policy": "anomaly",
+          "approval_ref": "ask_7f3a",
+          "message": "Needs owner approval: risk 0.90 (scope_escalation:team)."
+        },
+        "policy_chain": [
+          "anomaly"
+        ]
+      }
+    },
+    {
+      "name": "4. soft block without a ref falls back to ask-owner",
+      "policies": [
+        "anomaly"
+      ],
+      "requestor": {
+        "id": 10,
+        "kind": "agent",
+        "tenant_id": 7,
+        "scopes": [],
+        "role": "employee"
+      },
+      "action": {
+        "verb": "pages.update",
+        "resource_type": "page",
+        "tenant_id": 7,
+        "resource_id": 42
+      },
+      "entity": null,
+      "policy_metadata": {
+        "anomaly": {
+          "risk": 0.85,
+          "reasons": [
+            "off_hours_burst:60_in_5m@02h"
+          ],
+          "baseline_sample": 0,
+          "baseline_used": false
+        }
+      },
+      "expect": {
+        "decision": {
+          "kind": "require_approval",
+          "policy": "anomaly",
+          "approval_ref": "ask-owner",
+          "message": "Needs owner approval: risk 0.85 (off_hours_burst:60_in_5m@02h)."
+        },
+        "policy_chain": [
+          "anomaly"
+        ]
+      }
+    },
+    {
+      "name": "5. hard block denies with the full score",
+      "policies": [
+        "anomaly"
+      ],
+      "requestor": {
+        "id": 10,
+        "kind": "agent",
+        "tenant_id": 7,
+        "scopes": [],
+        "role": "employee"
+      },
+      "action": {
+        "verb": "pages.delete",
+        "resource_type": "page",
+        "tenant_id": 7,
+        "resource_id": 42
+      },
+      "entity": null,
+      "policy_metadata": {
+        "anomaly": {
+          "risk": 0.97,
+          "reasons": [
+            "bulk_delete:10_in_10m"
+          ],
+          "baseline_sample": 1200,
+          "baseline_used": true
+        }
+      },
+      "expect": {
+        "decision": {
+          "kind": "deny",
+          "policy": "anomaly",
+          "reason": "anomaly_hard_block",
+          "message": "Blocked: risk 0.97 (bulk_delete:10_in_10m). The agent has been quarantined.",
+          "detail": {
+            "risk": 0.97,
+            "reasons": [
+              "bulk_delete:10_in_10m"
+            ],
+            "baseline_sample": 1200,
+            "baseline_used": true
+          }
+        },
+        "policy_chain": [
+          "anomaly"
+        ]
+      }
+    },
+    {
+      "name": "6. exactly SOFT_BLOCK is not a soft block (strict greater-than)",
+      "policies": [
+        "anomaly"
+      ],
+      "requestor": {
+        "id": 10,
+        "kind": "agent",
+        "tenant_id": 7,
+        "scopes": [],
+        "role": "employee"
+      },
+      "action": {
+        "verb": "pages.update",
+        "resource_type": "page",
+        "tenant_id": 7,
+        "resource_id": 42
+      },
+      "entity": null,
+      "policy_metadata": {
+        "anomaly": {
+          "risk": 0.8,
+          "reasons": [
+            "x"
+          ],
+          "baseline_sample": 0,
+          "baseline_used": false
+        }
+      },
+      "expect": {
+        "decision": {
+          "kind": "allow"
+        },
+        "policy_chain": [
+          "anomaly"
+        ]
+      }
+    },
+    {
+      "name": "7. the firewall order: quarantine, rate_limit, anomaly, then lock",
+      "policies": [
+        "quarantine",
+        "rate_limit",
+        "anomaly",
+        "lock"
+      ],
+      "requestor": {
+        "id": 10,
+        "kind": "agent",
+        "tenant_id": 7,
+        "scopes": [],
+        "role": "employee"
+      },
+      "action": {
+        "verb": "pages.update",
+        "resource_type": "page",
+        "tenant_id": 7,
+        "resource_id": 42,
+        "area": "design"
+      },
+      "entity": {
+        "id": 42,
+        "tenant_id": 7,
+        "agency_owner_id": 99,
+        "locks": {
+          "design": true
+        }
+      },
+      "policy_metadata": {
+        "quarantine": {
+          "quarantined": false
+        },
+        "rate_limit": {
+          "allowed": true,
+          "limit": 1000,
+          "count": 2,
+          "tier": "platform",
+          "reputation": 1.0
+        },
+        "anomaly": {
+          "risk": 0.0,
+          "reasons": [],
+          "baseline_sample": 0,
+          "baseline_used": false
+        }
+      },
+      "expect": {
+        "decision": {
+          "kind": "deny",
+          "policy": "lock",
+          "reason": "agency_lock",
+          "message": "Area 'design' is locked by the agency for this resource.",
+          "detail": {
+            "area": "design",
+            "entity_id": 42,
+            "agency_owner_id": 99
+          }
+        },
+        "policy_chain": [
+          "quarantine",
+          "rate_limit",
+          "anomaly",
+          "lock"
+        ]
+      }
+    }
+  ]
+}

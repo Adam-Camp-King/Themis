@@ -3,11 +3,13 @@
 [![ci](https://github.com/Adam-Camp-King/Themis/actions/workflows/ci.yml/badge.svg)](https://github.com/Adam-Camp-King/Themis/actions/workflows/ci.yml) [![npm](https://img.shields.io/npm/v/themis-policy)](https://www.npmjs.com/package/themis-policy) [![PyPI](https://img.shields.io/pypi/v/themis-policy)](https://pypi.org/project/themis-policy/)
 
 > A policy kernel for bounded-autonomy LLM agents.
-> **Status:** pre-alpha. Core types shipping. No public release yet.
+> **Status:** 0.2.0 on npm and PyPI. RFC v0.2 (draft) adds the agent firewall.
 
 Themis is a small, framework-agnostic policy engine that decides what an LLM agent can do against a production system. It formalizes four primitives — **locks**, **drafts**, **scopes**, **audit** — and composes them into a single evaluation that returns `allow`, `deny`, `redirect`, or `require_approval`.
 
-This is the reference TypeScript implementation. Conforms to [Themis RFC v0](./spec/RFC-bounded-v0.md) (spec lives upstream in the design notes for now).
+**0.2 adds the agent firewall** — chess, not a cage: a revocable **agent identity** (who acted, not just which token), **quarantine** (a hard stop an owner lifts), **rate limits scaled by reputation** (an agent that misbehaves gets less of everything; a stolen key cannot exfiltrate at full speed), and **anomaly detection** with hard heuristics that fire from day one and a statistical baseline that switches itself on once there is enough history. See [`docs/agent-firewall.md`](./docs/agent-firewall.md) and [`examples/agent-firewall`](./examples/agent-firewall) — an Anthropic-style agent running under the firewall in about fifty lines.
+
+This is the reference TypeScript implementation. Conforms to Themis RFC v0 / v0.2 (the RFC lives upstream in the design notes for now; the [conformance vectors](spec/conformance) are the executable spec).
 
 
 ## Implementations and conformance
@@ -28,11 +30,17 @@ The four primitives are reinvented, inconsistently, in every agent framework and
 
 ## Packages
 
-| Package | Status |
-|---------|--------|
-| [`themis-policy`](./packages/core) | 🧱 types + guards shipping, policies in progress |
+| Package | What |
+|---------|------|
+| [`themis-policy`](./packages/core) | engine, the seven default policies (lock, draft, scope, quarantine, rate_limit, anomaly + scoring), sinks, in-memory stores |
+| [`themis-policy-anthropic`](./packages/anthropic) | gate Claude `tool_use` blocks |
+| [`themis-policy-openai`](./packages/openai) | gate OpenAI tool calls |
+| [`themis-policy-langchain`](./packages/langchain) | gate LangChain tools |
+| [`themis-policy-mcp`](./packages/mcp) | gate MCP tool handlers |
+| [`themis-policy-dsl`](./packages/policy-dsl) | YAML → policy bundle |
+| [`themis-policy` (PyPI)](./python) | the Python reference implementation, same vectors |
 
-Adapter packages (`themis-policy-fastapi`, `themis-policy-mcp`, `themis-policy-langchain`, `themis-policy-openai`, `themis-policy-anthropic`, and storage adapters) will land as separate packages in this monorepo.
+Every adapter takes a `policyMetadataFrom` hook so the firewall policies receive their per-call inputs (limiter result, reputation, risk score) from your stores.
 
 ## Development
 

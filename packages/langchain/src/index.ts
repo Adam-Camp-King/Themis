@@ -63,6 +63,15 @@ export interface GateToolOptions {
     | Promise<IPolicyContext['entity']>
     | IPolicyContext['entity'];
   readonly correlationIdFrom?: (args: unknown, toolName: string) => string;
+  /**
+   * RFC v0.2 agent firewall: per-call inputs for the pure firewall policies
+   * (`quarantine`, `rate_limit`, `anomaly`), keyed by policy name. Compute
+   * them from your own stores (limiter, reputation, baselines) and return
+   * them here; the engine passes them on `IPolicyContext.policy_metadata`.
+   */
+  readonly policyMetadataFrom?: (args: unknown, toolName: string) =>
+    | Promise<IPolicyContext['policy_metadata']>
+    | IPolicyContext['policy_metadata'];
   readonly now?: () => number;
   /**
    * How to surface a denial. Default: throw. Callers may return a string
@@ -104,6 +113,7 @@ export function gateTool<T extends LangChainToolLike>(
     const requestor = opts.requestorFrom(args, toolName);
     const action = opts.actionFrom(args, toolName);
     const entity = opts.entityFrom ? await opts.entityFrom(args, toolName) : null;
+    const policy_metadata = opts.policyMetadataFrom ? await opts.policyMetadataFrom(args, toolName) : undefined;
     const correlation_id =
       opts.correlationIdFrom?.(args, toolName) ?? defaultCorrelationId();
 
@@ -113,6 +123,7 @@ export function gateTool<T extends LangChainToolLike>(
       entity: entity ?? null,
       now: now(),
       correlation_id,
+      ...(policy_metadata ? { policy_metadata } : {}),
     };
 
     const decision = await opts.engine.evaluate(ctx);

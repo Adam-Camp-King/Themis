@@ -1,6 +1,6 @@
 {
   "name": "themis-policy-mcp",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Wrap MCP tools with Themis policy evaluation",
   "license": "Apache-2.0",
   "type": "module",
@@ -31,7 +31,7 @@
     "safety"
   ],
   "dependencies": {
-    "themis-policy": "^0.1.0"
+    "themis-policy": "^0.2.0"
   },
   "engines": {
     "node": ">=20"

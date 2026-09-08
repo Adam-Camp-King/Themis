@@ -1,0 +1,544 @@
+{
+  "version": "v0.2",
+  "cases": [
+    {
+      "name": "read scores zero",
+      "input": {
+        "verb": "pages.delete",
+        "side_effects": "read",
+        "trust_tier": "platform",
+        "recent_deletes": 50,
+        "recent_writes": 0,
+        "local_hour": 12,
+        "payload_bytes": 10,
+        "now": 1700000000000
+      },
+      "expect": {
+        "risk": 0.0,
+        "reasons": [],
+        "baseline_sample": 0,
+        "baseline_used": false
+      }
+    },
+    {
+      "name": "clean write scores zero",
+      "input": {
+        "verb": "pages.update",
+        "side_effects": "write",
+        "trust_tier": "platform",
+        "recent_deletes": 0,
+        "recent_writes": 0,
+        "local_hour": 12,
+        "payload_bytes": 10,
+        "now": 1700000000000
+      },
+      "expect": {
+        "risk": 0.0,
+        "reasons": [],
+        "baseline_sample": 0,
+        "baseline_used": false
+      }
+    },
+    {
+      "name": "bulk delete: the tenth delete in the window",
+      "input": {
+        "verb": "pages.delete",
+        "side_effects": "write",
+        "trust_tier": "platform",
+        "recent_deletes": 9,
+        "recent_writes": 0,
+        "local_hour": 12,
+        "payload_bytes": 10,
+        "now": 1700000000000
+      },
+      "expect": {
+        "risk": 0.97,
+        "reasons": [
+          "bulk_delete:10_in_10m"
+        ],
+        "baseline_sample": 0,
+        "baseline_used": false
+      }
+    },
+    {
+      "name": "bulk delete: nine is not ten",
+      "input": {
+        "verb": "pages.delete",
+        "side_effects": "write",
+        "trust_tier": "platform",
+        "recent_deletes": 8,
+        "recent_writes": 0,
+        "local_hour": 12,
+        "payload_bytes": 10,
+        "now": 1700000000000
+      },
+      "expect": {
+        "risk": 0.0,
+        "reasons": [],
+        "baseline_sample": 0,
+        "baseline_used": false
+      }
+    },
+    {
+      "name": "scope escalation by a custom-tier agent",
+      "input": {
+        "verb": "team.update_role",
+        "side_effects": "write",
+        "trust_tier": "custom",
+        "recent_deletes": 0,
+        "recent_writes": 0,
+        "local_hour": 12,
+        "payload_bytes": 10,
+        "now": 1700000000000
+      },
+      "expect": {
+        "risk": 0.9,
+        "reasons": [
+          "scope_escalation:team"
+        ],
+        "baseline_sample": 0,
+        "baseline_used": false
+      }
+    },
+    {
+      "name": "same verb from an agency-tier agent is fine",
+      "input": {
+        "verb": "team.update_role",
+        "side_effects": "write",
+        "trust_tier": "agency",
+        "recent_deletes": 0,
+        "recent_writes": 0,
+        "local_hour": 12,
+        "payload_bytes": 10,
+        "now": 1700000000000
+      },
+      "expect": {
+        "risk": 0.0,
+        "reasons": [],
+        "baseline_sample": 0,
+        "baseline_used": false
+      }
+    },
+    {
+      "name": "underscore namespace is recognised",
+      "input": {
+        "verb": "gdpr_delete",
+        "side_effects": "write",
+        "trust_tier": "custom",
+        "recent_deletes": 0,
+        "recent_writes": 0,
+        "local_hour": 12,
+        "payload_bytes": 10,
+        "now": 1700000000000
+      },
+      "expect": {
+        "risk": 0.9,
+        "reasons": [
+          "scope_escalation:gdpr"
+        ],
+        "baseline_sample": 0,
+        "baseline_used": false
+      }
+    },
+    {
+      "name": "off-hours burst at 02h",
+      "input": {
+        "verb": "pages.update",
+        "side_effects": "write",
+        "trust_tier": "platform",
+        "recent_deletes": 0,
+        "recent_writes": 59,
+        "local_hour": 2,
+        "payload_bytes": 10,
+        "now": 1700000000000
+      },
+      "expect": {
+        "risk": 0.85,
+        "reasons": [
+          "off_hours_burst:60_in_5m@02h"
+        ],
+        "baseline_sample": 0,
+        "baseline_used": false
+      }
+    },
+    {
+      "name": "same burst at noon is fine",
+      "input": {
+        "verb": "pages.update",
+        "side_effects": "write",
+        "trust_tier": "platform",
+        "recent_deletes": 0,
+        "recent_writes": 59,
+        "local_hour": 12,
+        "payload_bytes": 10,
+        "now": 1700000000000
+      },
+      "expect": {
+        "risk": 0.0,
+        "reasons": [],
+        "baseline_sample": 0,
+        "baseline_used": false
+      }
+    },
+    {
+      "name": "oversized payload",
+      "input": {
+        "verb": "pages.update",
+        "side_effects": "write",
+        "trust_tier": "platform",
+        "recent_deletes": 0,
+        "recent_writes": 0,
+        "local_hour": 12,
+        "payload_bytes": 250000,
+        "now": 1700000000000
+      },
+      "expect": {
+        "risk": 0.3,
+        "reasons": [
+          "oversized_payload:250000b"
+        ],
+        "baseline_sample": 0,
+        "baseline_used": false
+      }
+    },
+    {
+      "name": "heuristics sum and clamp to 1.0",
+      "input": {
+        "verb": "pages.delete",
+        "side_effects": "write",
+        "trust_tier": "platform",
+        "recent_deletes": 9,
+        "recent_writes": 0,
+        "local_hour": 12,
+        "payload_bytes": 250000,
+        "now": 1700000000000
+      },
+      "expect": {
+        "risk": 1.0,
+        "reasons": [
+          "bulk_delete:10_in_10m",
+          "oversized_payload:250000b"
+        ],
+        "baseline_sample": 0,
+        "baseline_used": false
+      }
+    },
+    {
+      "name": "baseline ignored until the sample is large enough",
+      "input": {
+        "verb": "pages.update",
+        "side_effects": "write",
+        "trust_tier": "platform",
+        "recent_deletes": 0,
+        "recent_writes": 0,
+        "local_hour": 12,
+        "payload_bytes": 10,
+        "now": 1700000000000,
+        "baseline": {
+          "agent_key": "id:5",
+          "window": "30d",
+          "total_actions": 50,
+          "sample_days": 14,
+          "action_counts": {
+            "policy:pages.update": 5
+          },
+          "daily_counts": {
+            "2026-08-01": 10,
+            "2026-08-02": 10,
+            "2026-08-03": 10,
+            "2026-08-04": 10,
+            "2026-08-05": 10,
+            "2026-08-06": 10,
+            "2026-08-07": 10,
+            "2026-08-08": 10,
+            "2026-08-09": 10,
+            "2026-08-10": 10,
+            "2026-08-11": 10,
+            "2026-08-12": 10,
+            "2026-08-13": 10,
+            "2026-08-14": 10
+          },
+          "computed_at": 1699996400000
+        },
+        "today_count": 500
+      },
+      "expect": {
+        "risk": 0.0,
+        "reasons": [],
+        "baseline_sample": 50,
+        "baseline_used": false
+      }
+    },
+    {
+      "name": "baseline ignored when stale",
+      "input": {
+        "verb": "pages.update",
+        "side_effects": "write",
+        "trust_tier": "platform",
+        "recent_deletes": 0,
+        "recent_writes": 0,
+        "local_hour": 12,
+        "payload_bytes": 10,
+        "now": 1700000000000,
+        "baseline": {
+          "agent_key": "id:5",
+          "window": "30d",
+          "total_actions": 1000,
+          "sample_days": 14,
+          "action_counts": {
+            "policy:pages.update": 5
+          },
+          "daily_counts": {
+            "2026-08-01": 10,
+            "2026-08-02": 10,
+            "2026-08-03": 10,
+            "2026-08-04": 10,
+            "2026-08-05": 10,
+            "2026-08-06": 10,
+            "2026-08-07": 10,
+            "2026-08-08": 10,
+            "2026-08-09": 10,
+            "2026-08-10": 10,
+            "2026-08-11": 10,
+            "2026-08-12": 10,
+            "2026-08-13": 10,
+            "2026-08-14": 10
+          },
+          "computed_at": 1699568000000
+        },
+        "today_count": 500
+      },
+      "expect": {
+        "risk": 0.0,
+        "reasons": [],
+        "baseline_sample": 1000,
+        "baseline_used": false
+      }
+    },
+    {
+      "name": "baseline ignored with too few days",
+      "input": {
+        "verb": "pages.update",
+        "side_effects": "write",
+        "trust_tier": "platform",
+        "recent_deletes": 0,
+        "recent_writes": 0,
+        "local_hour": 12,
+        "payload_bytes": 10,
+        "now": 1700000000000,
+        "baseline": {
+          "agent_key": "id:5",
+          "window": "30d",
+          "total_actions": 1000,
+          "sample_days": 3,
+          "action_counts": {
+            "policy:pages.update": 5
+          },
+          "daily_counts": {
+            "2026-08-01": 10,
+            "2026-08-02": 10,
+            "2026-08-03": 10
+          },
+          "computed_at": 1699996400000
+        },
+        "today_count": 500
+      },
+      "expect": {
+        "risk": 0.0,
+        "reasons": [],
+        "baseline_sample": 1000,
+        "baseline_used": false
+      }
+    },
+    {
+      "name": "volume spike z=5 contributes 0.2",
+      "input": {
+        "verb": "pages.update",
+        "side_effects": "write",
+        "trust_tier": "platform",
+        "recent_deletes": 0,
+        "recent_writes": 0,
+        "local_hour": 12,
+        "payload_bytes": 10,
+        "now": 1700000000000,
+        "baseline": {
+          "agent_key": "id:5",
+          "window": "30d",
+          "total_actions": 1000,
+          "sample_days": 14,
+          "action_counts": {
+            "policy:pages.update": 5
+          },
+          "daily_counts": {
+            "2026-08-01": 10,
+            "2026-08-02": 10,
+            "2026-08-03": 10,
+            "2026-08-04": 10,
+            "2026-08-05": 10,
+            "2026-08-06": 10,
+            "2026-08-07": 10,
+            "2026-08-08": 10,
+            "2026-08-09": 10,
+            "2026-08-10": 10,
+            "2026-08-11": 10,
+            "2026-08-12": 10,
+            "2026-08-13": 10,
+            "2026-08-14": 10
+          },
+          "computed_at": 1699996400000
+        },
+        "today_count": 15
+      },
+      "expect": {
+        "risk": 0.2,
+        "reasons": [
+          "volume_z:5.0"
+        ],
+        "baseline_sample": 1000,
+        "baseline_used": true
+      }
+    },
+    {
+      "name": "volume spike is capped at 0.6",
+      "input": {
+        "verb": "pages.update",
+        "side_effects": "write",
+        "trust_tier": "platform",
+        "recent_deletes": 0,
+        "recent_writes": 0,
+        "local_hour": 12,
+        "payload_bytes": 10,
+        "now": 1700000000000,
+        "baseline": {
+          "agent_key": "id:5",
+          "window": "30d",
+          "total_actions": 1000,
+          "sample_days": 14,
+          "action_counts": {
+            "policy:pages.update": 5
+          },
+          "daily_counts": {
+            "2026-08-01": 10,
+            "2026-08-02": 10,
+            "2026-08-03": 10,
+            "2026-08-04": 10,
+            "2026-08-05": 10,
+            "2026-08-06": 10,
+            "2026-08-07": 10,
+            "2026-08-08": 10,
+            "2026-08-09": 10,
+            "2026-08-10": 10,
+            "2026-08-11": 10,
+            "2026-08-12": 10,
+            "2026-08-13": 10,
+            "2026-08-14": 10
+          },
+          "computed_at": 1699996400000
+        },
+        "today_count": 500
+      },
+      "expect": {
+        "risk": 0.6,
+        "reasons": [
+          "volume_z:490.0"
+        ],
+        "baseline_sample": 1000,
+        "baseline_used": true
+      }
+    },
+    {
+      "name": "normal volume adds nothing",
+      "input": {
+        "verb": "pages.update",
+        "side_effects": "write",
+        "trust_tier": "platform",
+        "recent_deletes": 0,
+        "recent_writes": 0,
+        "local_hour": 12,
+        "payload_bytes": 10,
+        "now": 1700000000000,
+        "baseline": {
+          "agent_key": "id:5",
+          "window": "30d",
+          "total_actions": 1000,
+          "sample_days": 14,
+          "action_counts": {
+            "policy:pages.update": 5
+          },
+          "daily_counts": {
+            "2026-08-01": 10,
+            "2026-08-02": 10,
+            "2026-08-03": 10,
+            "2026-08-04": 10,
+            "2026-08-05": 10,
+            "2026-08-06": 10,
+            "2026-08-07": 10,
+            "2026-08-08": 10,
+            "2026-08-09": 10,
+            "2026-08-10": 10,
+            "2026-08-11": 10,
+            "2026-08-12": 10,
+            "2026-08-13": 10,
+            "2026-08-14": 10
+          },
+          "computed_at": 1699996400000
+        },
+        "today_count": 11
+      },
+      "expect": {
+        "risk": 0.0,
+        "reasons": [],
+        "baseline_sample": 1000,
+        "baseline_used": true
+      }
+    },
+    {
+      "name": "a never-seen action adds 0.15",
+      "input": {
+        "verb": "pages.delete",
+        "side_effects": "write",
+        "trust_tier": "platform",
+        "recent_deletes": 0,
+        "recent_writes": 0,
+        "local_hour": 12,
+        "payload_bytes": 10,
+        "now": 1700000000000,
+        "baseline": {
+          "agent_key": "id:5",
+          "window": "30d",
+          "total_actions": 1000,
+          "sample_days": 14,
+          "action_counts": {
+            "policy:pages.update": 5
+          },
+          "daily_counts": {
+            "2026-08-01": 10,
+            "2026-08-02": 10,
+            "2026-08-03": 10,
+            "2026-08-04": 10,
+            "2026-08-05": 10,
+            "2026-08-06": 10,
+            "2026-08-07": 10,
+            "2026-08-08": 10,
+            "2026-08-09": 10,
+            "2026-08-10": 10,
+            "2026-08-11": 10,
+            "2026-08-12": 10,
+            "2026-08-13": 10,
+            "2026-08-14": 10
+          },
+          "computed_at": 1699996400000
+        },
+        "today_count": 1
+      },
+      "expect": {
+        "risk": 0.15,
+        "reasons": [
+          "never_seen_action"
+        ],
+        "baseline_sample": 1000,
+        "baseline_used": true
+      }
+    }
+  ]
+}

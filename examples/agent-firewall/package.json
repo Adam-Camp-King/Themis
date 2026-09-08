@@ -1,0 +1,15 @@
+{
+  "name": "themis-policy-example-agent-firewall",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Example: an Anthropic-style agent running under the Themis agent firewall — identity, quarantine, reputation-scaled rate limit, anomaly — in about fifty lines.",
+  "type": "module",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "test": "tsx --test src/scenario.test.ts"
+  },
+  "dependencies": {
+    "themis-policy": "*",
+    "themis-policy-anthropic": "*"
+  }
+}

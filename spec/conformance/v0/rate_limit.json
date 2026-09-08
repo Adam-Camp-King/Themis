@@ -1,0 +1,201 @@
+{
+  "version": "v0.2",
+  "cases": [
+    {
+      "name": "1. no rate metadata allows",
+      "policies": [
+        "rate_limit"
+      ],
+      "requestor": {
+        "id": 10,
+        "kind": "agent",
+        "tenant_id": 7,
+        "scopes": [],
+        "role": "employee"
+      },
+      "action": {
+        "verb": "pages.update",
+        "resource_type": "page",
+        "tenant_id": 7,
+        "resource_id": 42
+      },
+      "entity": null,
+      "expect": {
+        "decision": {
+          "kind": "allow"
+        },
+        "policy_chain": [
+          "rate_limit"
+        ]
+      }
+    },
+    {
+      "name": "2. under the limit allows",
+      "policies": [
+        "rate_limit"
+      ],
+      "requestor": {
+        "id": 10,
+        "kind": "agent",
+        "tenant_id": 7,
+        "scopes": [],
+        "role": "employee"
+      },
+      "action": {
+        "verb": "pages.update",
+        "resource_type": "page",
+        "tenant_id": 7,
+        "resource_id": 42
+      },
+      "entity": null,
+      "policy_metadata": {
+        "rate_limit": {
+          "allowed": true,
+          "limit": 50,
+          "count": 50,
+          "tier": "custom",
+          "reputation": 1.0
+        }
+      },
+      "expect": {
+        "decision": {
+          "kind": "allow"
+        },
+        "policy_chain": [
+          "rate_limit"
+        ]
+      }
+    },
+    {
+      "name": "3. over the limit denies with detail",
+      "policies": [
+        "rate_limit"
+      ],
+      "requestor": {
+        "id": 10,
+        "kind": "agent",
+        "tenant_id": 7,
+        "scopes": [],
+        "role": "employee"
+      },
+      "action": {
+        "verb": "pages.update",
+        "resource_type": "page",
+        "tenant_id": 7,
+        "resource_id": 42
+      },
+      "entity": null,
+      "policy_metadata": {
+        "rate_limit": {
+          "allowed": false,
+          "limit": 50,
+          "count": 51,
+          "tier": "custom",
+          "reputation": 1.0
+        }
+      },
+      "expect": {
+        "decision": {
+          "kind": "deny",
+          "policy": "rate_limit",
+          "reason": "rate_limited",
+          "message": "Rate limit: 51/50 calls this minute for 'pages.update' (tier custom, reputation 1.00). Slow down or ask the owner to review the agent.",
+          "detail": {
+            "limit": 50,
+            "count": 51,
+            "tier": "custom",
+            "reputation": 1.0
+          }
+        },
+        "policy_chain": [
+          "rate_limit"
+        ]
+      }
+    },
+    {
+      "name": "4. reputation scales the limit (0.3 \u2192 15/min on custom)",
+      "policies": [
+        "rate_limit"
+      ],
+      "requestor": {
+        "id": 10,
+        "kind": "agent",
+        "tenant_id": 7,
+        "scopes": [],
+        "role": "employee"
+      },
+      "action": {
+        "verb": "pages.update",
+        "resource_type": "page",
+        "tenant_id": 7,
+        "resource_id": 42
+      },
+      "entity": null,
+      "policy_metadata": {
+        "rate_limit": {
+          "allowed": false,
+          "limit": 15,
+          "count": 16,
+          "tier": "custom",
+          "reputation": 0.3
+        }
+      },
+      "expect": {
+        "decision": {
+          "kind": "deny",
+          "policy": "rate_limit",
+          "reason": "rate_limited",
+          "message": "Rate limit: 16/15 calls this minute for 'pages.update' (tier custom, reputation 0.30). Slow down or ask the owner to review the agent.",
+          "detail": {
+            "limit": 15,
+            "count": 16,
+            "tier": "custom",
+            "reputation": 0.3
+          }
+        },
+        "policy_chain": [
+          "rate_limit"
+        ]
+      }
+    },
+    {
+      "name": "5. denials_only emits nothing on allow",
+      "policies": [
+        "rate_limit"
+      ],
+      "emit_policy": "denials_only",
+      "requestor": {
+        "id": 10,
+        "kind": "agent",
+        "tenant_id": 7,
+        "scopes": [],
+        "role": "employee"
+      },
+      "action": {
+        "verb": "pages.update",
+        "resource_type": "page",
+        "tenant_id": 7,
+        "resource_id": 42
+      },
+      "entity": null,
+      "policy_metadata": {
+        "rate_limit": {
+          "allowed": true,
+          "limit": 1000,
+          "count": 3,
+          "tier": "platform",
+          "reputation": 1.0
+        }
+      },
+      "expect": {
+        "decision": {
+          "kind": "allow"
+        },
+        "policy_chain": [
+          "rate_limit"
+        ],
+        "audit": "none"
+      }
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 {
   "name": "themis-policy",
-  "version": "0.1.0",
-  "description": "Policy kernel for bounded-autonomy LLM agents. Locks, drafts, scopes, audit \u2014 one engine, pluggable policies.",
+  "version": "0.2.0",
+  "description": "Policy kernel for bounded-autonomy LLM agents. Locks, drafts, scopes, audit, and the agent firewall (identity, quarantine, rate limit, anomaly) \u2014 one engine, pluggable policies.",
   "license": "Apache-2.0",
   "type": "module",
   "main": "./dist/index.js",

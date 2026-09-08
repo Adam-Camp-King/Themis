@@ -88,6 +88,15 @@ export interface GateOptions {
     | Promise<IPolicyContext['entity']>
     | IPolicyContext['entity'];
   readonly correlationIdFrom?: (toolUse: ToolUseBlock) => string;
+  /**
+   * RFC v0.2 agent firewall: per-call inputs for the pure firewall policies
+   * (`quarantine`, `rate_limit`, `anomaly`), keyed by policy name. Compute
+   * them from your own stores (limiter, reputation, baselines) and return
+   * them here; the engine passes them on `IPolicyContext.policy_metadata`.
+   */
+  readonly policyMetadataFrom?: (toolUse: ToolUseBlock) =>
+    | Promise<IPolicyContext['policy_metadata']>
+    | IPolicyContext['policy_metadata'];
   readonly now?: () => number;
 }
 
@@ -117,6 +126,7 @@ export function gateToolHandlers(
     const requestor = opts.requestorFrom(toolUse);
     const action = opts.actionFrom(toolUse);
     const entity = opts.entityFrom ? await opts.entityFrom(toolUse) : null;
+    const policy_metadata = opts.policyMetadataFrom ? await opts.policyMetadataFrom(toolUse) : undefined;
     const correlation_id =
       opts.correlationIdFrom?.(toolUse) ?? toolUse.id; // default: use the tool_use id
 
@@ -126,6 +136,7 @@ export function gateToolHandlers(
       entity: entity ?? null,
       now: now(),
       correlation_id,
+      ...(policy_metadata ? { policy_metadata } : {}),
     };
 
     const decision = await opts.engine.evaluate(ctx);

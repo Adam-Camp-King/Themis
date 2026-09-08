@@ -269,3 +269,130 @@ export interface IAuditSink {
   emit(event: IAuditEvent): void | Promise<void>;
   flush?(): Promise<void>;
 }
+
+// ============================================================================
+// 13 — Agent identity (RFC v0.2 § 4.6)
+// ============================================================================
+
+/**
+ * A first-class, revocable identity for an AGENT — distinct from the user or
+ * API key whose session it runs under. Carried on `IRequestor.metadata` as
+ * `agent_identity_id`, `agent_type`, `trust_tier`, `reputation`, `quarantined`
+ * (and the requestor's `kind` becomes `'agent'`).
+ */
+export type TrustTier = 'platform' | 'agency' | 'custom';
+
+export interface IAgentIdentity {
+  readonly id: number | string;
+  readonly tenant_id: number | string;
+  readonly agent_type: string;
+  readonly trust_tier: TrustTier;
+  /** 0.0–1.0, starts at 1.0. Scales the effective rate limit. */
+  readonly reputation: number;
+  readonly revoked_at?: number | null;
+  readonly quarantined_at?: number | null;
+  readonly quarantine_reason?: string | null;
+}
+
+export interface IAgentIdentityStore {
+  resolve(tenant_id: number | string, raw_key: string): Promise<IAgentIdentity | null>;
+  revoke(tenant_id: number | string, identity_id: number | string): Promise<IAgentIdentity | null>;
+  quarantine(tenant_id: number | string, identity_id: number | string, reason: string): Promise<IAgentIdentity | null>;
+  release(tenant_id: number | string, identity_id: number | string): Promise<IAgentIdentity | null>;
+}
+
+// ============================================================================
+// 14 — Behavior baseline + anomaly (RFC v0.2 § 5.6)
+// ============================================================================
+
+/**
+ * Rolling per-agent counters an implementation rebuilds periodically from its
+ * audit stream. The anomaly scorer contributes nothing until the sample is
+ * large and fresh enough (see DefaultAnomalyPolicy).
+ */
+export interface IBehaviorBaseline {
+  readonly agent_key: string;
+  readonly window: string;
+  readonly total_actions: number;
+  readonly sample_days: number;
+  /** {action_type: count} over the window. */
+  readonly action_counts: Readonly<Record<string, number>>;
+  /** {"YYYY-MM-DD": count} — the series the z-score is taken over. */
+  readonly daily_counts: Readonly<Record<string, number>>;
+  /** epoch ms of the rebuild. */
+  readonly computed_at: number;
+}
+
+export interface IAnomalyInput {
+  readonly verb: string;
+  readonly side_effects: 'read' | 'write' | 'mixed';
+  readonly trust_tier: TrustTier;
+  /** Deletes by this agent in the bulk-delete window, NOT counting this call. */
+  readonly recent_deletes: number;
+  /** Writes by this agent in the burst window, NOT counting this call. */
+  readonly recent_writes: number;
+  /** Hour of day (0–23) in the tenant's local time. */
+  readonly local_hour: number;
+  readonly payload_bytes: number;
+  readonly baseline?: IBehaviorBaseline | null;
+  /** Today's count of this action type, counting this call. */
+  readonly today_count?: number;
+  /** epoch ms — used only to judge baseline freshness. */
+  readonly now: number;
+}
+
+export interface IRiskScore {
+  readonly risk: number;
+  readonly reasons: readonly string[];
+  readonly baseline_sample: number;
+  readonly baseline_used: boolean;
+}
+
+// ============================================================================
+// 15 — Reputation + rate limit (RFC v0.2 § 5.5)
+// ============================================================================
+
+export interface IReputationStore {
+  get(tenant_id: number | string, agent_key: string): Promise<number>;
+  deduct(tenant_id: number | string, agent_key: string, reason: string): Promise<number>;
+  recover(tenant_id: number | string, agent_key: string): Promise<number>;
+}
+
+export interface IRateCheck {
+  readonly allowed: boolean;
+  readonly limit: number;
+  readonly count: number;
+  readonly tier: TrustTier;
+  readonly reputation: number;
+}
+
+export interface IRateLimiter {
+  check(
+    tenant_id: number | string,
+    agent_key: string,
+    verb: string,
+    tier: TrustTier,
+    reputation: number,
+    now: number,
+  ): Promise<IRateCheck>;
+}
+
+// ============================================================================
+// 16 — Firewall policy metadata (RFC v0.2 § 5.4–5.6)
+// ============================================================================
+
+/**
+ * The firewall policies are pure: an implementation computes these inputs
+ * from its own stores and passes them on `IPolicyContext.policy_metadata`
+ * under the policy's name. That is what keeps them conformance-testable.
+ */
+export interface IQuarantineMetadata {
+  readonly quarantined: boolean;
+  readonly quarantine_reason?: string | null;
+}
+
+export interface IRateLimitMetadata extends IRateCheck {}
+
+export interface IAnomalyMetadata extends IRiskScore {
+  readonly approval_ref?: string | null;
+}

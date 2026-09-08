@@ -202,8 +202,97 @@ class DraftStore(Protocol):
     def discard(self, entity_id: Id) -> DraftableEntity: ...
 
 
+# ── 13–16 — Agent firewall (RFC v0.2 § 4.6, § 5.4–5.6) ────────────────────
+TrustTier = Literal["platform", "agency", "custom"]
+
+
+@dataclass(frozen=True)
+class AgentIdentity:
+    """A revocable identity for an AGENT, distinct from the session it runs under.
+    Carried on ``Requestor.metadata`` as ``agent_identity_id`` / ``agent_type`` /
+    ``trust_tier`` / ``reputation`` / ``quarantined`` (and ``kind`` becomes ``agent``)."""
+    id: Id
+    tenant_id: Id
+    agent_type: str
+    trust_tier: str = "custom"
+    reputation: float = 1.0
+    revoked_at: Optional[int] = None
+    quarantined_at: Optional[int] = None
+    quarantine_reason: Optional[str] = None
+
+
+@dataclass(frozen=True)
+class BehaviorBaseline:
+    """Rolling per-agent counters rebuilt periodically from the audit stream."""
+    agent_key: str
+    window: str
+    total_actions: int
+    sample_days: int
+    action_counts: Mapping[str, int]
+    daily_counts: Mapping[str, int]
+    computed_at: int  # epoch ms
+
+
+@dataclass(frozen=True)
+class AnomalyInput:
+    verb: str
+    side_effects: str
+    trust_tier: str
+    recent_deletes: int
+    recent_writes: int
+    local_hour: int
+    payload_bytes: int
+    now: int  # epoch ms
+    baseline: Optional[BehaviorBaseline] = None
+    today_count: Optional[int] = None
+
+
+@dataclass(frozen=True)
+class RiskScore:
+    risk: float = 0.0
+    reasons: tuple[str, ...] = ()
+    baseline_sample: int = 0
+    baseline_used: bool = False
+
+    def to_dict(self) -> dict[str, Any]:
+        return {"risk": self.risk, "reasons": list(self.reasons),
+                "baseline_sample": self.baseline_sample, "baseline_used": self.baseline_used}
+
+
+@dataclass(frozen=True)
+class RateCheck:
+    allowed: bool
+    limit: int
+    count: int
+    tier: str
+    reputation: float
+
+    def to_dict(self) -> dict[str, Any]:
+        return {"allowed": self.allowed, "limit": self.limit, "count": self.count,
+                "tier": self.tier, "reputation": self.reputation}
+
+
+class ReputationStore(Protocol):
+    def get(self, tenant_id: Id, agent_key: str) -> float: ...
+    def deduct(self, tenant_id: Id, agent_key: str, reason: str) -> float: ...
+    def recover(self, tenant_id: Id, agent_key: str) -> float: ...
+
+
+class RateLimiter(Protocol):
+    def check(self, tenant_id: Id, agent_key: str, verb: str, tier: str, reputation: float, now: int) -> RateCheck: ...
+
+
+class AgentIdentityStore(Protocol):
+    def resolve(self, tenant_id: Id, raw_key: str) -> Optional[AgentIdentity]: ...
+    def revoke(self, tenant_id: Id, identity_id: Id) -> Optional[AgentIdentity]: ...
+    def quarantine(self, tenant_id: Id, identity_id: Id, reason: str) -> Optional[AgentIdentity]: ...
+    def release(self, tenant_id: Id, identity_id: Id) -> Optional[AgentIdentity]: ...
+
+
 __all__ = [
     "Id", "RequestorKind", "Requestor", "Action", "LockableEntity", "DraftableEntity", "Entity",
     "PolicyContext", "Allow", "Deny", "Redirect", "RequireApproval", "Decision", "decision_from_dict",
     "AuditEvent", "Policy", "AuditSink", "LockStore", "DraftStore",
+    "TrustTier", "AgentIdentity", "BehaviorBaseline", "AnomalyInput", "RiskScore", "RateCheck",
+    "ReputationStore", "RateLimiter", "AgentIdentityStore",
 ]

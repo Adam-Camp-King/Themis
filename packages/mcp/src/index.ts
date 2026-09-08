@@ -74,6 +74,15 @@ export interface WithThemisOptions<Input> {
 
   /** Optional: override correlation ID per invocation. */
   readonly correlationIdFrom?: (input: Input) => string;
+  /**
+   * RFC v0.2 agent firewall: per-call inputs for the pure firewall policies
+   * (`quarantine`, `rate_limit`, `anomaly`), keyed by policy name. Compute
+   * them from your own stores (limiter, reputation, baselines) and return
+   * them here; the engine passes them on `IPolicyContext.policy_metadata`.
+   */
+  readonly policyMetadataFrom?: (input: Input) =>
+    | Promise<IPolicyContext['policy_metadata']>
+    | IPolicyContext['policy_metadata'];
 
   /** Optional: override the clock. Default Date.now. */
   readonly now?: () => number;
@@ -140,6 +149,7 @@ export function withThemis<Input, Output>(
     const requestor = opts.requestorFrom(input);
     const action = opts.actionFrom(input);
     const entity = opts.entityFrom ? await opts.entityFrom(input) : null;
+    const policy_metadata = opts.policyMetadataFrom ? await opts.policyMetadataFrom(input) : undefined;
     const correlation_id =
       opts.correlationIdFrom?.(input) ?? defaultCorrelationId();
 
@@ -149,6 +159,7 @@ export function withThemis<Input, Output>(
       entity: entity ?? null,
       now: now(),
       correlation_id,
+      ...(policy_metadata ? { policy_metadata } : {}),
     };
 
     const decision = await opts.engine.evaluate(ctx);
