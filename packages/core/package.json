@@ -1,7 +1,7 @@
 {
   "name": "@themis/core",
-  "version": "0.0.1",
-  "description": "Policy kernel for bounded-autonomy LLM agents. Locks, drafts, scopes, audit — one engine, pluggable policies.",
+  "version": "0.1.0",
+  "description": "Policy kernel for bounded-autonomy LLM agents. Locks, drafts, scopes, audit \u2014 one engine, pluggable policies.",
   "license": "Apache-2.0",
   "type": "module",
   "main": "./dist/index.js",
@@ -35,5 +35,17 @@
   ],
   "engines": {
     "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Adam-Camp-King/Themis.git",
+    "directory": "packages/core"
+  },
+  "homepage": "https://github.com/Adam-Camp-King/Themis#readme",
+  "bugs": {
+    "url": "https://github.com/Adam-Camp-King/Themis/issues"
   }
 }

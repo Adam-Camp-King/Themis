@@ -2,7 +2,7 @@
 
 Policy kernel for bounded-autonomy LLM agents. Twelve interfaces, four decision variants, zero runtime dependencies.
 
-> Status: pre-alpha. Types + guards shipping. Policies (lock, draft, scope, engine) in progress.
+> Status: 0.1.0 — engine, the three core policies, sinks and guards ship; conforms to Themis RFC v0 (the `spec/conformance` vectors, shared with the Python implementation `themis-policy`).
 
 ## Install
 

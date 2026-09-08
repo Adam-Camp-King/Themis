@@ -1,7 +1,7 @@
 {
   "name": "@themis/mcp",
-  "version": "0.0.1",
-  "description": "Themis policy kernel adapter for MCP (Model Context Protocol) tool calls.",
+  "version": "0.1.0",
+  "description": "Wrap MCP tools with Themis policy evaluation",
   "license": "Apache-2.0",
   "type": "module",
   "main": "./dist/index.js",
@@ -23,11 +23,29 @@
     "test": "tsx --test \"test/**/*.test.ts\"",
     "clean": "rm -rf dist *.tsbuildinfo"
   },
-  "keywords": ["bounded", "mcp", "policy", "agent", "safety"],
+  "keywords": [
+    "bounded",
+    "mcp",
+    "policy",
+    "agent",
+    "safety"
+  ],
   "dependencies": {
-    "@themis/core": "*"
+    "@themis/core": "^0.1.0"
   },
   "engines": {
     "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Adam-Camp-King/Themis.git",
+    "directory": "packages/mcp"
+  },
+  "homepage": "https://github.com/Adam-Camp-King/Themis#readme",
+  "bugs": {
+    "url": "https://github.com/Adam-Camp-King/Themis/issues"
   }
 }
