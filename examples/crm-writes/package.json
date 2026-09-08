@@ -1,5 +1,5 @@
 {
-  "name": "@themis/example-crm-writes",
+  "name": "themis-policy-example-crm-writes",
   "version": "0.0.1",
   "private": true,
   "description": "Example: page-update agent with drafts-by-default redirect.",
@@ -9,7 +9,7 @@
     "test": "tsx --test src/scenario.test.ts"
   },
   "dependencies": {
-    "@themis/core": "*",
-    "@themis/anthropic": "*"
+    "themis-policy": "*",
+    "themis-policy-anthropic": "*"
   }
 }

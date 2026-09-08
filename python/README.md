@@ -6,7 +6,7 @@ LLM agents that act on production systems. Four primitives — **locks**,
 decision per attempted action: `allow`, `deny`, `redirect`, or
 `require_approval`.
 
-Byte-compatible with [`@themis/core`](https://github.com/Adam-Camp-King/Themis)
+Byte-compatible with [`themis-policy`](https://github.com/Adam-Camp-King/Themis)
 (TypeScript): both pass the same [conformance vectors](../spec/conformance).
 
 ```python

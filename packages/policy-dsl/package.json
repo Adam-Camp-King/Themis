@@ -1,7 +1,7 @@
 {
-  "name": "@themis/policy-dsl",
+  "name": "themis-policy-dsl",
   "version": "0.1.0",
-  "description": "YAML \u2192 @themis/core PolicyEngine compiler",
+  "description": "YAML \u2192 themis-policy PolicyEngine compiler",
   "license": "Apache-2.0",
   "type": "module",
   "main": "./dist/index.js",
@@ -30,14 +30,11 @@
     "yaml"
   ],
   "dependencies": {
-    "@themis/core": "^0.1.0",
+    "themis-policy": "^0.1.0",
     "yaml": "^2.6.0"
   },
   "engines": {
     "node": ">=20"
-  },
-  "publishConfig": {
-    "access": "public"
   },
   "repository": {
     "type": "git",

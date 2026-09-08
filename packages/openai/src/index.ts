@@ -2,7 +2,7 @@
 // Copyright 2026 Adam Campbell
 
 /**
- * @themis/openai — adapter for OpenAI function calling / tool calling.
+ * themis-policy-openai — adapter for OpenAI function calling / tool calling.
  *
  * OpenAI's chat completions emit tool_calls blocks of the form:
  *   { id, type: 'function', function: { name, arguments: <JSON string> } }
@@ -21,8 +21,8 @@ import type {
   IPolicyContext,
   IPolicyEngine,
   IRequestor,
-} from '@themis/core';
-import { isAllow, isDeny, isRedirect, isRequireApproval } from '@themis/core';
+} from 'themis-policy';
+import { isAllow, isDeny, isRedirect, isRequireApproval } from 'themis-policy';
 
 export interface OpenAIToolCall {
   readonly id: string;

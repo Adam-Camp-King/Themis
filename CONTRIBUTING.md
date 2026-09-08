@@ -91,7 +91,7 @@ Themis is pre-alpha (`0.0.x`). Expect breaking changes between `0.0.x` versions.
 
 ## Scope of this project
 
-Themis packages four primitives: **locks, drafts, scopes, audit**. The scope is deliberately narrow. Proposals to extend into adjacent territory (approval workflow state machines, observability dashboards, admin UIs) are welcome as companion packages but will not land inside `@themis/core`.
+Themis packages four primitives: **locks, drafts, scopes, audit**. The scope is deliberately narrow. Proposals to extend into adjacent territory (approval workflow state machines, observability dashboards, admin UIs) are welcome as companion packages but will not land inside `themis-policy`.
 
 ## License
 

@@ -2,13 +2,13 @@
 // Copyright 2026 Adam Campbell
 
 /**
- * @themis/core — public API.
+ * themis-policy — public API.
  *
  * Import types with `import type` to avoid runtime cost; import guards as
  * values.
  *
- *   import type { IPolicyDecision, IRequestor, IAction } from '@themis/core';
- *   import { isDeny, isRedirect } from '@themis/core';
+ *   import type { IPolicyDecision, IRequestor, IAction } from 'themis-policy';
+ *   import { isDeny, isRedirect } from 'themis-policy';
  */
 
 export * from './types.js';

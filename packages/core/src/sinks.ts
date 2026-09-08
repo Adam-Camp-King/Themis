@@ -2,7 +2,7 @@
 // Copyright 2026 Adam Campbell
 
 /**
- * Default audit sinks for @themis/core.
+ * Default audit sinks for themis-policy.
  *
  * Conforms to Themis RFC v0 §7.3 and §9.4 (sink failure MUST NOT fail
  * evaluation — the engine catches; sinks SHOULD still try not to throw).

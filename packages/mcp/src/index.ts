@@ -2,7 +2,7 @@
 // Copyright 2026 Adam Campbell
 
 /**
- * @themis/mcp — adapter that gates MCP tool invocations through Themis.
+ * themis-policy-mcp — adapter that gates MCP tool invocations through Themis.
  *
  * MCP (Model Context Protocol) tools are functions an LLM agent calls to
  * take action. This adapter wraps any MCP tool handler so every invocation
@@ -14,7 +14,7 @@
  *
  * Usage:
  *
- *   import { withThemis } from '@themis/mcp';
+ *   import { withThemis } from 'themis-policy-mcp';
  *
  *   const gatedTool = withThemis(sendInvoiceTool, {
  *     engine,
@@ -48,8 +48,8 @@ import type {
   IPolicyContext,
   IPolicyEngine,
   IRequestor,
-} from '@themis/core';
-import { isAllow, isDeny, isRedirect, isRequireApproval } from '@themis/core';
+} from 'themis-policy';
+import { isAllow, isDeny, isRedirect, isRequireApproval } from 'themis-policy';
 
 /**
  * Generic MCP tool shape. Input and output are opaque — adapters work with

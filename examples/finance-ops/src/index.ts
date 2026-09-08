@@ -5,8 +5,8 @@
  * examples/finance-ops — "don't wire money without approval."
  *
  * Demonstrates the full Themis stack end-to-end:
- *   - @themis/core            — PolicyEngine, DefaultScopePolicy, ConsoleSink
- *   - @themis/anthropic       — gateToolHandlers for Claude tool_use blocks
+ *   - themis-policy            — PolicyEngine, DefaultScopePolicy, ConsoleSink
+ *   - themis-policy-anthropic       — gateToolHandlers for Claude tool_use blocks
  *   - A custom ThresholdApprovalPolicy — require approval on amounts > $10k
  *
  * This is not a production system. It exists to show:
@@ -21,16 +21,16 @@ import type {
   IPolicyContext,
   IPolicyDecision,
   IRequestor,
-} from '@themis/core';
+} from 'themis-policy';
 import {
   ConsoleSink,
   DefaultScopePolicy,
   PolicyEngine,
-} from '@themis/core';
+} from 'themis-policy';
 import {
   gateToolHandlers,
   type ToolUseBlock,
-} from '@themis/anthropic';
+} from 'themis-policy-anthropic';
 
 // ----------------------------------------------------------------------------
 // Domain — pretend wire-transfer handler

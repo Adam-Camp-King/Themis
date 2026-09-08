@@ -2,7 +2,7 @@
 // Copyright 2026 Adam Campbell
 
 /**
- * @themis/langchain — adapter for LangChain Tools (and anything that
+ * themis-policy-langchain — adapter for LangChain Tools (and anything that
  * looks like one: a named object with an async call/invoke/func method).
  *
  * LangChain's Tool abstraction is duck-typed in practice — different
@@ -13,7 +13,7 @@
  * Usage:
  *
  *   import { DynamicTool } from '@langchain/core/tools';
- *   import { gateTool } from '@themis/langchain';
+ *   import { gateTool } from 'themis-policy-langchain';
  *
  *   const raw = new DynamicTool({
  *     name: 'send_invoice',
@@ -38,8 +38,8 @@ import type {
   IPolicyContext,
   IPolicyEngine,
   IRequestor,
-} from '@themis/core';
-import { isAllow, isDeny, isRedirect, isRequireApproval } from '@themis/core';
+} from 'themis-policy';
+import { isAllow, isDeny, isRedirect, isRequireApproval } from 'themis-policy';
 
 /**
  * Minimal LangChain-Tool-ish interface. We read `name` + `call` (or

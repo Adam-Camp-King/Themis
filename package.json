@@ -1,5 +1,5 @@
 {
-  "name": "bounded-workspace",
+  "name": "themis-policy-workspace",
   "private": true,
   "version": "0.1.0",
   "description": "Themis \u2014 a policy kernel for bounded-autonomy LLM agents (monorepo root).",
@@ -13,7 +13,7 @@
     "test": "npm run test --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "release:check": "npm run typecheck && npm test && npm run build && npm pack --dry-run --workspaces",
-    "release:publish": "npm run build && npm publish -w @themis/core --access public && npm publish -w @themis/mcp -w @themis/anthropic -w @themis/openai -w @themis/langchain -w @themis/policy-dsl --access public"
+    "release:publish": "npm run build && npm publish -w themis-policy --access public && npm publish -w themis-policy-mcp -w themis-policy-anthropic -w themis-policy-openai -w themis-policy-langchain -w themis-policy-dsl --access public"
   },
   "engines": {
     "node": ">=20"

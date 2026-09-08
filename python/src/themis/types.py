@@ -2,7 +2,7 @@
 # Copyright 2026 Adam Campbell
 """themis.types — the public types of the Themis policy kernel.
 
-Mirrors ``@themis/core`` ``types.ts`` one-for-one and conforms to Themis RFC v0.
+Mirrors ``themis-policy`` ``types.ts`` one-for-one and conforms to Themis RFC v0.
 Decisions are frozen dataclasses with a ``kind`` discriminator; ``to_dict()``
 produces the exact wire shape the RFC specifies (keys with ``None`` omitted),
 which is what the cross-language conformance vectors compare.

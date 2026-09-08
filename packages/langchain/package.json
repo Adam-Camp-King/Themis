@@ -1,5 +1,5 @@
 {
-  "name": "@themis/langchain",
+  "name": "themis-policy-langchain",
   "version": "0.1.0",
   "description": "Gate LangChain tools (and anything tool-shaped) through Themis",
   "license": "Apache-2.0",
@@ -31,13 +31,10 @@
     "agent"
   ],
   "dependencies": {
-    "@themis/core": "^0.1.0"
+    "themis-policy": "^0.1.0"
   },
   "engines": {
     "node": ">=20"
-  },
-  "publishConfig": {
-    "access": "public"
   },
   "repository": {
     "type": "git",

@@ -4,7 +4,7 @@
     "outDir": "./dist",
     "baseUrl": ".",
     "types": ["node"],
-    "paths": { "@themis/core": ["../core/src/index.ts"] }
+    "paths": { "themis-policy": ["../core/src/index.ts"] }
   },
   "include": ["src/**/*", "test/**/*"]
 }

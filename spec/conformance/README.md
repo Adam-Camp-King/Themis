@@ -2,7 +2,7 @@
 
 Themis is a specification (RFC v0) with more than one implementation. These
 files are what "conforms" means: an implementation passes every case here or it
-does not conform. `@themis/core` (TypeScript) and `themis-policy` (Python) both
+does not conform. `themis-policy` (TypeScript) and `themis-policy` (Python) both
 run this exact directory in their test suites.
 
 ## Layout

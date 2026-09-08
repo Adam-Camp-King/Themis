@@ -2,7 +2,7 @@
 // Copyright 2026 Adam Campbell
 
 /**
- * @themis/core — public types.
+ * themis-policy — public types.
  *
  * Twelve interfaces form the complete public API of this package:
  *   Cross-cutting (5) — IRequestor, IAction, IPolicyContext,

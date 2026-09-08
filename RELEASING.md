@@ -11,14 +11,14 @@ npm ci && npm run release:check          # typecheck + 215 tests + build + pack 
 cd python && pip install build && python -m build --outdir dist && cd ..
 ```
 
-## npm — `@themis/*` (needs the `themis` org on npm)
+## npm — `themis-policy-*` (needs the `themis` org on npm)
 
 1. `npm login` (the account must own the `@themis` scope; if the scope is not
    yet claimed, create the org at npmjs.com/org/create with the name `themis`).
-2. `npm run release:publish` — publishes `@themis/core` first, then the five
+2. `npm run release:publish` — publishes `themis-policy` first, then the five
    packages that depend on it, all with `--access public` (scoped packages
    default to private).
-3. Verify: `npm view @themis/core version` → `0.1.0`.
+3. Verify: `npm view themis-policy version` → `0.1.0`.
 
 ## PyPI — `themis-policy`
 

@@ -2,7 +2,7 @@
 # Copyright 2026 Adam Campbell
 """themis.engine — the Themis kernel (RFC v0 § 6).
 
-Evaluation rules (normative, identical to ``@themis/core``):
+Evaluation rules (normative, identical to ``themis-policy``):
 
   0. Tenancy gate — requestor.tenant_id != action.tenant_id → deny
      {policy: 'engine', reason: 'tenancy_mismatch'} before any policy runs.

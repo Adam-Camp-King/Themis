@@ -36,7 +36,7 @@ Every production Claude deployment answers these four questions with bespoke, in
 │              │                                                       │
 │              ▼                                                       │
 │   ┌──────────────────────────────────────────────┐                   │
-│   │  @themis/anthropic.gateToolHandlers         │                   │
+│   │  themis-policy-anthropic.gateToolHandlers         │                   │
 │   │   ├─ requestorFrom  → IRequestor             │                   │
 │   │   ├─ actionFrom     → IAction                │                   │
 │   │   └─ engine.evaluate(ctx)                    │                   │
@@ -44,7 +44,7 @@ Every production Claude deployment answers these four questions with bespoke, in
 │                      │                                               │
 │                      ▼                                               │
 │   ┌──────────────────────────────────────────────┐                   │
-│   │  @themis/core PolicyEngine                  │                   │
+│   │  themis-policy PolicyEngine                  │                   │
 │   │   1. tenancy gate                            │                   │
 │   │   2. scope policy      ─────┐                │                   │
 │   │   3. lock policy       ─── (in order)        │                   │
@@ -72,8 +72,8 @@ import {
   DefaultLockPolicy,
   DefaultScopePolicy,
   PolicyEngine,
-} from '@themis/core';
-import { gateToolHandlers } from '@themis/anthropic';
+} from 'themis-policy';
+import { gateToolHandlers } from 'themis-policy-anthropic';
 
 // 1. Build an engine with the three default policies
 const engine = new PolicyEngine({ auditSink: new ConsoleSink() });
@@ -130,7 +130,7 @@ Anthropic's messaging around Claude emphasizes helpful, harmless, honest. Consti
 
 - Themis is **run-time constitutional AI** — the same principle, enforced at the action layer.
 - Themis is **off-by-default** in the sense that no adoption is required to use Claude. It's *drop-in* for teams that want it — same shape as the existing tool-use pattern, just wrapped.
-- Themis is **framework-shaped** — Anthropic's own internal tools can wrap their tool-use handlers with `@themis/anthropic` without rewriting agents.
+- Themis is **framework-shaped** — Anthropic's own internal tools can wrap their tool-use handlers with `themis-policy-anthropic` without rewriting agents.
 - Themis's **audit schema** captures every policy denial as structured, machine-labeled training data. This is the single most scarce corpus for alignment research: real bounded-autonomy decisions with outcomes.
 
 ## Solid# as the reference deployment
@@ -156,9 +156,9 @@ Solid# is public-source (Tier 2 licensing for CLI/SDK; Tier 1 proprietary for th
 
 ## What's next
 
-- `@themis/policy-dsl` — YAML declarations for the 80% common case (scopes + locks + drafts + approvals)
-- `@themis/approvals` — the approval workflow state machine companion to `require_approval`
-- `@themis/observe` — OpenTelemetry-compatible audit sink
+- `themis-policy-dsl` — YAML declarations for the 80% common case (scopes + locks + drafts + approvals)
+- `themis-policy-approvals` — the approval workflow state machine companion to `require_approval`
+- `themis-policy-observe` — OpenTelemetry-compatible audit sink
 - Official MCP reference integration showing every `solid-mcp-server` tool gated by Themis (Solid#'s dogfood loop)
 
 ## License

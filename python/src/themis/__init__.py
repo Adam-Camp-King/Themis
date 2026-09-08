@@ -7,7 +7,7 @@ drafts, scopes, audit — composed by one engine into a single decision per
 attempted action: allow, deny, redirect, or require_approval.
 
 Conformance: ``spec/conformance/v0`` in the Themis repository holds the
-cross-language vectors; this package and ``@themis/core`` pass the same set.
+cross-language vectors; this package and ``themis-policy`` pass the same set.
 """
 from .types import (
     Action, Allow, AuditEvent, AuditSink, Decision, Deny, DraftableEntity, DraftStore, Entity, Id,

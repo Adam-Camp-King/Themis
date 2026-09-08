@@ -16,14 +16,14 @@
  * crm-writes (draft redirect) did not exercise.
  */
 
-import type { ILockableEntity, IRequestor } from '@themis/core';
+import type { ILockableEntity, IRequestor } from 'themis-policy';
 import {
   ConsoleSink,
   DefaultLockPolicy,
   DefaultScopePolicy,
   PolicyEngine,
-} from '@themis/core';
-import { gateToolHandlers, type ToolUseBlock } from '@themis/anthropic';
+} from 'themis-policy';
+import { gateToolHandlers, type ToolUseBlock } from 'themis-policy-anthropic';
 
 // ----------------------------------------------------------------------------
 // In-memory "CMS" — pages with agency ownership + lock state

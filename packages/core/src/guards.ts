@@ -4,7 +4,7 @@
 /**
  * Type guards for IPolicyDecision. Narrow a decision to its specific variant.
  *
- * These are used on the hot path by adapter packages (e.g., @themis/fastapi
+ * These are used on the hot path by adapter packages (e.g., themis-policy-fastapi
  * wrapping a route handler) to branch on the decision kind without resorting
  * to exhaustive switch statements or manual discriminator checks.
  */

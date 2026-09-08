@@ -9,7 +9,7 @@
  * Table-driven: every (guard, kind) pair is exercised; mutual exclusivity is
  * also asserted.
  *
- * Run: npm --workspace @themis/core test
+ * Run: npm --workspace themis-policy test
  */
 
 import { strict as assert } from 'node:assert';

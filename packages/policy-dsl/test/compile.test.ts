@@ -2,7 +2,7 @@
 // Copyright 2026 Adam Campbell
 
 /**
- * @themis/policy-dsl — compiler tests.
+ * themis-policy-dsl — compiler tests.
  *
  * Round-trip: YAML source → compiled engine → evaluate canonical scenarios
  * → assert decisions. Any mis-compilation silently corrupts production
@@ -11,7 +11,7 @@
 
 import { strict as assert } from 'node:assert';
 import { test } from 'node:test';
-import type { IAction, IPolicyContext, IRequestor } from '@themis/core';
+import type { IAction, IPolicyContext, IRequestor } from 'themis-policy';
 import { compilePolicyYaml, PolicyDslError } from '../src/index.js';
 
 function mkRequestor(overrides: Partial<IRequestor> = {}): IRequestor {

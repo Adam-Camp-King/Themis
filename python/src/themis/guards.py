@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright 2026 Adam Campbell
-"""Decision narrowing helpers — the Python twins of ``@themis/core`` guards."""
+"""Decision narrowing helpers — the Python twins of ``themis-policy`` guards."""
 from __future__ import annotations
 
 from typing import TypeGuard

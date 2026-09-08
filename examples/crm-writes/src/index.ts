@@ -16,14 +16,14 @@
 import type {
   IDraftableEntity,
   IRequestor,
-} from '@themis/core';
+} from 'themis-policy';
 import {
   ConsoleSink,
   DefaultDraftPolicy,
   DefaultScopePolicy,
   PolicyEngine,
-} from '@themis/core';
-import { gateToolHandlers, type ToolUseBlock } from '@themis/anthropic';
+} from 'themis-policy';
+import { gateToolHandlers, type ToolUseBlock } from 'themis-policy-anthropic';
 
 // ----------------------------------------------------------------------------
 // In-memory store — simulates the CMS backend

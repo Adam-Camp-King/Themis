@@ -2,7 +2,7 @@
 // Copyright 2026 Adam Campbell
 
 /**
- * @themis/mcp — withThemis() wrapper tests.
+ * themis-policy-mcp — withThemis() wrapper tests.
  *
  * The adapter is the interface between "what the LLM wants to do" and
  * "what the policy engine permits." Mis-mapping a decision here would be
@@ -17,8 +17,8 @@ import type {
   IPolicyContext,
   IPolicyDecision,
   IRequestor,
-} from '@themis/core';
-import { PolicyEngine } from '@themis/core';
+} from 'themis-policy';
+import { PolicyEngine } from 'themis-policy';
 import type {
   ThemisApprovalEnvelope,
   ThemisRedirectEnvelope,

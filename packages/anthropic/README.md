@@ -1,4 +1,4 @@
-# @themis/anthropic
+# themis-policy-anthropic
 
 Gates Claude's `tool_use` blocks through a Themis policy engine. No Anthropic
 SDK import: it accepts the public `tool_use` shape (`type`, `id`, `name`,
@@ -7,8 +7,8 @@ optional `is_error`). Any SDK that speaks those shapes works.
 
 ```ts
 import Anthropic from '@anthropic-ai/sdk';
-import { PolicyEngine, DefaultScopePolicy } from '@themis/core';
-import { gateToolHandlers } from '@themis/anthropic';
+import { PolicyEngine, DefaultScopePolicy } from 'themis-policy';
+import { gateToolHandlers } from 'themis-policy-anthropic';
 
 const engine = new PolicyEngine();
 engine.addPolicy(new DefaultScopePolicy());

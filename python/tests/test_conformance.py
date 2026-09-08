@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 """Run spec/conformance/v0/*.json and preview-tokens.json through the Python kernel.
 
-The same files are run by @themis/core. Passing them is what "conforms to
+The same files are run by themis-policy. Passing them is what "conforms to
 Themis RFC v0" means (RFC § 11).
 """
 from __future__ import annotations

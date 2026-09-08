@@ -1,6 +1,6 @@
 {
   "version": "v0",
-  "note": "verify-only vectors; minted by @themis/core DefaultDraftPolicy with secret below. exp_ms 4102444800000 = 2100-01-01; 946684800000 = 2000-01-01.",
+  "note": "verify-only vectors; minted by themis-policy DefaultDraftPolicy with secret below. exp_ms 4102444800000 = 2100-01-01; 946684800000 = 2000-01-01.",
   "secret": "conformance-secret",
   "cases": [
     {

@@ -9,8 +9,8 @@ import type {
   IPolicyContext,
   IPolicyDecision,
   IRequestor,
-} from '@themis/core';
-import { PolicyEngine } from '@themis/core';
+} from 'themis-policy';
+import { PolicyEngine } from 'themis-policy';
 import { gateToolCalls, type OpenAIToolCall } from '../src/index.js';
 
 function mkPolicy(

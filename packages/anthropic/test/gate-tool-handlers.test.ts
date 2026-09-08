@@ -2,7 +2,7 @@
 // Copyright 2026 Adam Campbell
 
 /**
- * @themis/anthropic — gateToolHandlers() tests.
+ * themis-policy-anthropic — gateToolHandlers() tests.
  *
  * Verifies Themis policy decisions map correctly onto Anthropic's
  * tool_result block shape. A wrong mapping here silently lets Claude
@@ -17,8 +17,8 @@ import type {
   IPolicyContext,
   IPolicyDecision,
   IRequestor,
-} from '@themis/core';
-import { PolicyEngine } from '@themis/core';
+} from 'themis-policy';
+import { PolicyEngine } from 'themis-policy';
 import { gateToolHandlers, type ToolUseBlock } from '../src/index.js';
 
 function mkPolicy(

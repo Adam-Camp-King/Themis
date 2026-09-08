@@ -2,7 +2,7 @@
 // Copyright 2026 Adam Campbell
 
 /**
- * @themis/anthropic — adapter that gates Claude's tool_use blocks through
+ * themis-policy-anthropic — adapter that gates Claude's tool_use blocks through
  * Themis.
  *
  * Pattern: the Claude SDK emits tool_use blocks; applications run the named
@@ -17,7 +17,7 @@
  * Primary usage:
  *
  *   import Anthropic from '@anthropic-ai/sdk';
- *   import { gateToolHandlers } from '@themis/anthropic';
+ *   import { gateToolHandlers } from 'themis-policy-anthropic';
  *
  *   const gated = gateToolHandlers(
  *     {
@@ -51,8 +51,8 @@ import type {
   IPolicyContext,
   IPolicyEngine,
   IRequestor,
-} from '@themis/core';
-import { isAllow, isDeny, isRedirect, isRequireApproval } from '@themis/core';
+} from 'themis-policy';
+import { isAllow, isDeny, isRedirect, isRequireApproval } from 'themis-policy';
 
 // ----------------------------------------------------------------------------
 // Public types — mirror the public Anthropic tool-use shape without

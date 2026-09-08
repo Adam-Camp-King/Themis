@@ -9,7 +9,7 @@ Decision rule:
   4. action.payload['publish'] is True      → allow  (explicit live write)
   5. otherwise                              → redirect {target: 'draft', payload}
 
-Preview token — byte-identical to ``@themis/core``:
+Preview token — byte-identical to ``themis-policy``:
   base64url( "v1.<entity_id>.<tenant_id>.<exp_ms>" + "." + hmac_sha256_hex )
 Verify uses constant-time comparison, rejects expired/tampered/wrong-secret/
 wrong-version tokens, and clamps TTL to 168 hours.

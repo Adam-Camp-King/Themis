@@ -1,5 +1,5 @@
 {
-  "name": "@themis/mcp",
+  "name": "themis-policy-mcp",
   "version": "0.1.0",
   "description": "Wrap MCP tools with Themis policy evaluation",
   "license": "Apache-2.0",
@@ -31,13 +31,10 @@
     "safety"
   ],
   "dependencies": {
-    "@themis/core": "^0.1.0"
+    "themis-policy": "^0.1.0"
   },
   "engines": {
     "node": ">=20"
-  },
-  "publishConfig": {
-    "access": "public"
   },
   "repository": {
     "type": "git",

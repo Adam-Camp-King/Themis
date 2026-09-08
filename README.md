@@ -12,7 +12,7 @@ This is the reference TypeScript implementation. Conforms to [Themis RFC v0](./s
 
 | Implementation | Language | Package | Status |
 |---|---|---|---|
-| `@themis/core` + adapters | TypeScript | `packages/*` | reference |
+| `themis-policy` + adapters | TypeScript | `packages/*` | reference |
 | `themis-policy` | Python 3.11+ | `python/` | reference |
 
 Both run the same [conformance vectors](spec/conformance) in CI. Themis is the
@@ -28,9 +28,9 @@ The four primitives are reinvented, inconsistently, in every agent framework and
 
 | Package | Status |
 |---------|--------|
-| [`@themis/core`](./packages/core) | 🧱 types + guards shipping, policies in progress |
+| [`themis-policy`](./packages/core) | 🧱 types + guards shipping, policies in progress |
 
-Adapter packages (`@themis/fastapi`, `@themis/mcp`, `@themis/langchain`, `@themis/openai`, `@themis/anthropic`, and storage adapters) will land as separate packages in this monorepo.
+Adapter packages (`themis-policy-fastapi`, `themis-policy-mcp`, `themis-policy-langchain`, `themis-policy-openai`, `themis-policy-anthropic`, and storage adapters) will land as separate packages in this monorepo.
 
 ## Development
 

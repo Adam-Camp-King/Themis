@@ -4,7 +4,7 @@
     "rootDir": "src",
     "outDir": "dist",
     "paths": {
-      "@themis/core": ["../core/dist/index.d.ts"]
+      "themis-policy": ["../core/dist/index.d.ts"]
     }
   },
   "include": ["src/**/*"],
