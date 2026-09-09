@@ -25,7 +25,7 @@ export {
   TIER_LIMITS_PER_MIN, DEDUCTIONS, REPUTATION_FLOOR, REPUTATION_CEILING, RECOVERY_PER_CLEAN_WRITE,
 } from './policies/rate_limit.js';
 export {
-  DefaultAnomalyPolicy, scoreAction, isDeleteVerb, namespaceOf,
+  DefaultAnomalyPolicy, scoreAction, isDeleteVerb, namespaceOf, escalationNamespaceOf,
   SOFT_BLOCK, HARD_BLOCK, BULK_DELETE_THRESHOLD, BURST_THRESHOLD, OFF_HOURS, PAYLOAD_SOFT_BYTES,
   MIN_BASELINE_SAMPLE, MIN_BASELINE_DAYS, BASELINE_MAX_AGE_MS, Z_TRIGGER, Z_MAX_CONTRIBUTION, ESCALATION_NAMESPACES,
 } from './policies/anomaly.js';

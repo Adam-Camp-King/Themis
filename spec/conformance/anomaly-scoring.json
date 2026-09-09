@@ -141,6 +141,126 @@
       }
     },
     {
+      "name": "multi-word underscore namespace is recognised",
+      "input": {
+        "verb": "ai_employee_enable",
+        "side_effects": "write",
+        "trust_tier": "custom",
+        "recent_deletes": 0,
+        "recent_writes": 0,
+        "local_hour": 12,
+        "payload_bytes": 10,
+        "now": 1700000000000
+      },
+      "expect": {
+        "risk": 0.9,
+        "reasons": [
+          "scope_escalation:ai_employee"
+        ],
+        "baseline_sample": 0,
+        "baseline_used": false
+      }
+    },
+    {
+      "name": "plural namespace form is recognised",
+      "input": {
+        "verb": "subscriptions_upgrade",
+        "side_effects": "write",
+        "trust_tier": "custom",
+        "recent_deletes": 0,
+        "recent_writes": 0,
+        "local_hour": 12,
+        "payload_bytes": 10,
+        "now": 1700000000000
+      },
+      "expect": {
+        "risk": 0.9,
+        "reasons": [
+          "scope_escalation:subscriptions"
+        ],
+        "baseline_sample": 0,
+        "baseline_used": false
+      }
+    },
+    {
+      "name": "plural multi-word namespace is recognised",
+      "input": {
+        "verb": "ai_employees_configure",
+        "side_effects": "write",
+        "trust_tier": "custom",
+        "recent_deletes": 0,
+        "recent_writes": 0,
+        "local_hour": 12,
+        "payload_bytes": 10,
+        "now": 1700000000000
+      },
+      "expect": {
+        "risk": 0.9,
+        "reasons": [
+          "scope_escalation:ai_employees"
+        ],
+        "baseline_sample": 0,
+        "baseline_used": false
+      }
+    },
+    {
+      "name": "a shared first token alone does not match",
+      "input": {
+        "verb": "ai_content_generate",
+        "side_effects": "write",
+        "trust_tier": "custom",
+        "recent_deletes": 0,
+        "recent_writes": 0,
+        "local_hour": 12,
+        "payload_bytes": 10,
+        "now": 1700000000000
+      },
+      "expect": {
+        "risk": 0.0,
+        "reasons": [],
+        "baseline_sample": 0,
+        "baseline_used": false
+      }
+    },
+    {
+      "name": "an entry never matches mid-word: teams.* is not team",
+      "input": {
+        "verb": "teams.send_message",
+        "side_effects": "write",
+        "trust_tier": "custom",
+        "recent_deletes": 0,
+        "recent_writes": 0,
+        "local_hour": 12,
+        "payload_bytes": 10,
+        "now": 1700000000000
+      },
+      "expect": {
+        "risk": 0.0,
+        "reasons": [],
+        "baseline_sample": 0,
+        "baseline_used": false
+      }
+    },
+    {
+      "name": "multi-word namespace from an agency-tier agent is fine",
+      "input": {
+        "verb": "ai_employee_enable",
+        "side_effects": "write",
+        "trust_tier": "agency",
+        "recent_deletes": 0,
+        "recent_writes": 0,
+        "local_hour": 12,
+        "payload_bytes": 10,
+        "now": 1700000000000
+      },
+      "expect": {
+        "risk": 0.0,
+        "reasons": [],
+        "baseline_sample": 0,
+        "baseline_used": false
+      }
+    },
+    {
       "name": "off-hours burst at 02h",
       "input": {
         "verb": "pages.update",

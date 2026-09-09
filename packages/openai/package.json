@@ -1,6 +1,6 @@
 {
   "name": "themis-policy-openai",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Gate OpenAI function/tool calls through Themis",
   "license": "Apache-2.0",
   "type": "module",

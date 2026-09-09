@@ -31,7 +31,10 @@ MIN_BASELINE_DAYS = 7
 BASELINE_MAX_AGE_MS = 48 * 3600 * 1000
 Z_TRIGGER = 3.0
 Z_MAX_CONTRIBUTION = 0.60
-ESCALATION_NAMESPACES = frozenset({"team", "gdpr", "billing", "subscription", "security", "audit", "ai_employee"})
+ESCALATION_NAMESPACES = frozenset({
+    "team", "gdpr", "billing", "subscription", "subscriptions", "security", "audit",
+    "ai_employee", "ai_employees",
+})
 _DELETE_WORDS = ("delete", "remove", "purge", "destroy")
 
 
@@ -48,6 +51,23 @@ def namespace_of(verb: str) -> str:
     return verb
 
 
+def escalation_namespace_of(verb: str) -> str | None:
+    """The escalation entry a verb falls under, or None. An entry matches when
+    it IS the verb or precedes a ``.``/``_`` boundary — never mid-word, so a
+    set entry that happens to prefix another namespace's name (``team`` vs the
+    ``teams.*`` Teams-integration verbs) does not match. Longest entry wins.
+    This exists because ``namespace_of`` cuts at the FIRST separator, which can
+    never reach a multi-word entry: ``ai_employee_enable`` → ``ai``, not
+    ``ai_employee``."""
+    match: str | None = None
+    for ns in ESCALATION_NAMESPACES:
+        if verb != ns and not verb.startswith(ns + ".") and not verb.startswith(ns + "_"):
+            continue
+        if match is None or len(ns) > len(match):
+            match = ns
+    return match
+
+
 def score_action(inp: AnomalyInput) -> RiskScore:
     if inp.side_effects not in ("write", "mixed"):
         return RiskScore()
@@ -61,8 +81,8 @@ def score_action(inp: AnomalyInput) -> RiskScore:
 
     if is_delete_verb(inp.verb) and inp.recent_deletes + 1 >= BULK_DELETE_THRESHOLD:
         add(0.97, f"bulk_delete:{inp.recent_deletes + 1}_in_10m")
-    ns = namespace_of(inp.verb)
-    if inp.trust_tier == "custom" and ns in ESCALATION_NAMESPACES:
+    ns = escalation_namespace_of(inp.verb)
+    if inp.trust_tier == "custom" and ns is not None:
         add(0.90, f"scope_escalation:{ns}")
     if OFF_HOURS[0] <= inp.local_hour < OFF_HOURS[1] and inp.recent_writes + 1 >= BURST_THRESHOLD:
         add(0.85, f"off_hours_burst:{inp.recent_writes + 1}_in_5m@{inp.local_hour:02d}h")
@@ -118,7 +138,7 @@ class DefaultAnomalyPolicy:
 
 
 __all__ = [
-    "DefaultAnomalyPolicy", "score_action", "is_delete_verb", "namespace_of",
+    "DefaultAnomalyPolicy", "score_action", "is_delete_verb", "namespace_of", "escalation_namespace_of",
     "SOFT_BLOCK", "HARD_BLOCK", "BULK_DELETE_THRESHOLD", "BURST_THRESHOLD", "OFF_HOURS", "PAYLOAD_SOFT_BYTES",
     "MIN_BASELINE_SAMPLE", "MIN_BASELINE_DAYS", "BASELINE_MAX_AGE_MS", "Z_TRIGGER", "Z_MAX_CONTRIBUTION",
     "ESCALATION_NAMESPACES",

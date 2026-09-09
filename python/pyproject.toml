@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "themis-policy"
-version = "0.2.0"
+version = "0.2.1"
 description = "Themis policy kernel for bounded-autonomy LLM agents — locks, drafts, scopes, audit, and the agent firewall (identity, quarantine, rate limit, anomaly). Python reference implementation of Themis RFC v0.2."
 readme = "README.md"
 license = { text = "Apache-2.0" }

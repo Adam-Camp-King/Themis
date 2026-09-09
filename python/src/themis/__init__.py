@@ -27,7 +27,7 @@ from .policies import (
     TIER_LIMITS_PER_MIN, DEDUCTIONS, SOFT_BLOCK, HARD_BLOCK,
 )
 
-__version__ = "0.2.0"
+__version__ = "0.2.1"
 __all__ = [
     "Action", "Allow", "AuditEvent", "AuditSink", "Decision", "Deny", "DraftableEntity", "DraftStore", "Entity",
     "Id", "LockableEntity", "LockStore", "Policy", "PolicyContext", "Redirect", "RequireApproval", "Requestor",

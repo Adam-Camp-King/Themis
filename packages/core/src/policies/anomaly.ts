@@ -42,7 +42,8 @@ export const Z_TRIGGER = 3.0;
 export const Z_MAX_CONTRIBUTION = 0.6;
 
 export const ESCALATION_NAMESPACES: ReadonlySet<string> = new Set([
-  'team', 'gdpr', 'billing', 'subscription', 'security', 'audit', 'ai_employee',
+  'team', 'gdpr', 'billing', 'subscription', 'subscriptions', 'security', 'audit',
+  'ai_employee', 'ai_employees',
 ]);
 const DELETE_WORDS = ['delete', 'remove', 'purge', 'destroy'];
 
@@ -55,6 +56,23 @@ export function namespaceOf(verb: string): string {
   if (verb.includes('.')) return verb.split('.', 1)[0] ?? verb;
   if (verb.includes('_')) return verb.split('_', 1)[0] ?? verb;
   return verb;
+}
+
+/**
+ * The escalation entry a verb falls under, or null. An entry matches when it
+ * IS the verb or precedes a `.`/`_` boundary — never mid-word, so a set entry
+ * that happens to prefix another namespace's name (`team` vs `teams.*`, the
+ * Teams-integration verbs) does not match. Longest entry wins. This exists
+ * because `namespaceOf` cuts at the FIRST separator, which can never reach a
+ * multi-word entry: `ai_employee_enable` → `ai`, not `ai_employee`.
+ */
+export function escalationNamespaceOf(verb: string): string | null {
+  let match: string | null = null;
+  for (const ns of ESCALATION_NAMESPACES) {
+    if (verb !== ns && !verb.startsWith(ns + '.') && !verb.startsWith(ns + '_')) continue;
+    if (match === null || ns.length > match.length) match = ns;
+  }
+  return match;
 }
 
 function round4(v: number): number {
@@ -78,8 +96,8 @@ export function scoreAction(input: IAnomalyInput): IRiskScore {
   if (isDeleteVerb(input.verb) && input.recent_deletes + 1 >= BULK_DELETE_THRESHOLD) {
     add(0.97, `bulk_delete:${input.recent_deletes + 1}_in_10m`);
   }
-  const ns = namespaceOf(input.verb);
-  if (input.trust_tier === 'custom' && ESCALATION_NAMESPACES.has(ns)) {
+  const ns = escalationNamespaceOf(input.verb);
+  if (input.trust_tier === 'custom' && ns !== null) {
     add(0.9, `scope_escalation:${ns}`);
   }
   if (input.local_hour >= OFF_HOURS[0] && input.local_hour < OFF_HOURS[1] && input.recent_writes + 1 >= BURST_THRESHOLD) {
