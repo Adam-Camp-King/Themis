@@ -1,12 +1,20 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "baseUrl": ".",
-    "types": ["node"],
+    "types": [
+      "node"
+    ],
     "paths": {
-      "themis-policy": ["../../packages/core/src/index.ts"],
-      "themis-policy-anthropic": ["../../packages/anthropic/src/index.ts"]
-    }
+      "themis-policy": [
+        "../../packages/core/src/index.ts"
+      ],
+      "themis-policy-anthropic": [
+        "../../packages/anthropic/src/index.ts"
+      ]
+    },
+    "rootDir": "../.."
   },
-  "include": ["src/**/*"]
+  "include": [
+    "src/**/*"
+  ]
 }

@@ -2,9 +2,18 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "./dist",
-    "baseUrl": ".",
-    "types": ["node"],
-    "paths": { "themis-policy": ["../core/src/index.ts"] }
+    "rootDir": "../..",
+    "types": [
+      "node"
+    ],
+    "paths": {
+      "themis-policy": [
+        "../core/src/index.ts"
+      ]
+    }
   },
-  "include": ["src/**/*", "test/**/*"]
+  "include": [
+    "src/**/*",
+    "test/**/*"
+  ]
 }
