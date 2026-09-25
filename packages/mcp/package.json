@@ -31,7 +31,7 @@
     "safety"
   ],
   "dependencies": {
-    "themis-policy": "^0.2.0"
+    "themis-policy": "^0.2.1"
   },
   "engines": {
     "node": ">=20"
