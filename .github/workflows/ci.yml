@@ -12,6 +12,9 @@ jobs:
         with: { node-version: 22, cache: npm }
       - run: npm ci
       - run: npm run typecheck
+      # Build before test: the examples import each package's dist/, and the
+      # root build compiles themis-policy (core) first so the adapters resolve it.
+      - run: npm run build
       - run: npm test
   python:
     runs-on: ubuntu-latest

@@ -2,14 +2,14 @@
   "name": "themis-policy-workspace",
   "private": true,
   "version": "0.1.0",
-  "description": "Themis \u2014 a policy kernel for bounded-autonomy LLM agents (monorepo root).",
+  "description": "Themis — a policy kernel for bounded-autonomy LLM agents (monorepo root).",
   "license": "Apache-2.0",
   "workspaces": [
     "packages/*",
     "examples/*"
   ],
   "scripts": {
-    "build": "npm run build --workspaces --if-present",
+    "build": "npm run build -w themis-policy && npm run build --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "release:check": "npm run typecheck && npm test && npm run build && npm pack --dry-run --workspaces",
@@ -20,7 +20,7 @@
   },
   "devDependencies": {
     "@types/node": "22.9.0",
-    "tsx": "^4.19.2",
+    "tsx": "^4.23.15",
     "typescript": "5.6.3"
   }
 }
