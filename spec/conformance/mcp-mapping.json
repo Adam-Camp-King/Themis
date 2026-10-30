@@ -1,6 +1,6 @@
 {
   "version": "v0.3",
-  "note": "contractFromMcpTool / contract_from_mcp_tool (RFC v0.3 draft \u00a7 2.8.4). MCP hint defaults: readOnlyHint false, destructiveHint true, idempotentHint false, openWorldHint true.",
+  "note": "contractFromMcpTool / contract_from_mcp_tool (RFC v0.3 draft \u00a7 2.8.4). MCP hint defaults: readOnlyHint false, destructiveHint true, idempotentHint false, openWorldHint true. A case with expect_error: true must be refused (TypeError).",
   "cases": [
     {
       "name": "read-only tool",
@@ -133,6 +133,45 @@
           "outbound"
         ],
         "idempotent": false,
+        "provenance": "declared",
+        "extensions": {
+          "mcp": {
+            "server": "s",
+            "tool": "t"
+          }
+        }
+      }
+    },
+    {
+      "name": "a tool with no name is refused",
+      "server": "s",
+      "tool": {
+        "description": "x"
+      },
+      "expect_error": true
+    },
+    {
+      "name": "a tool whose name is not a string is refused",
+      "server": "s",
+      "tool": {
+        "name": true
+      },
+      "expect_error": true
+    },
+    {
+      "name": "schemas that are not objects are dropped",
+      "server": "s",
+      "tool": {
+        "name": "t",
+        "inputSchema": [],
+        "outputSchema": "x",
+        "annotations": {
+          "readOnlyHint": true
+        }
+      },
+      "expect": {
+        "id": "mcp:s/t",
+        "side_effects": "read",
         "provenance": "declared",
         "extensions": {
           "mcp": {

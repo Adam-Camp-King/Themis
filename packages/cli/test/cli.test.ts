@@ -147,7 +147,7 @@ async function auditLines(): Promise<string> {
   return lines.join('') + 'not json\n{"no":"decision"}\n\n';
 }
 
-test('report: counts, risky allowed actions with stated intent, waiting approvals, gaps', async () => {
+test('report: counts, risky allowed actions with stated intent, approvals sent, gaps', async () => {
   const { events, skipped } = parseAuditLines(await auditLines());
   assert.equal(events.length, 9);
   assert.equal(skipped, 2);
@@ -165,8 +165,8 @@ test('report: counts, risky allowed actions with stated intent, waiting approval
   assert.equal(r.allowed_risky[0]!.what_it_does, 'irreversible, money, outbound, needs consent');
   assert.equal(r.allowed_risky[0]!.approval, 'apr_77');
 
-  assert.deepEqual(r.waiting_for_approval.map((w) => w.verb).sort(), ['mcp:github/create_issue', 'payment_link.send', 'payment_link.send']);
-  assert.equal(r.waiting_for_approval.find((w) => w.requestor === 'user:10')?.stated_intent, null);
+  assert.deepEqual(r.sent_for_approval.map((w) => w.verb).sort(), ['mcp:github/create_issue', 'payment_link.send', 'payment_link.send']);
+  assert.equal(r.sent_for_approval.find((w) => w.requestor === 'user:10')?.stated_intent, null);
   assert.deepEqual(r.no_intent_by_verb, { 'note.add': 1 });
   assert.deepEqual(r.no_contract_by_verb, { 'com.acme:mystery': 1 });
   assert.deepEqual(r.declared_contracts_by_verb, { 'mcp:github/create_issue': 1 });
@@ -204,4 +204,52 @@ test('report on an empty log says so instead of failing', () => {
   assert.match(out, /0 decisions/);
   assert.match(out, /No agent actions\./);
   assert.doesNotMatch(out, /NaN|undefined/);
+});
+
+test('report survives hostile NDJSON: odd types, huge timestamps, prototype keys, injected newlines', () => {
+  const nl = String.fromCharCode(10);
+  const evil = [
+    { decision: { kind: 'allow' }, policy_chain: 'x', timestamp: 1e20, requestor: { kind: 'agent', id: 1 },
+      action: { verb: 'acme:wipe' }, verb_contract: { id: 'acme:wipe', side_effects: 'write', reversibility: 'irreversible', provenance: 'curated' } },
+    { decision: { kind: 'deny', policy: 'p', reason: 'r' }, timestamp: 1, requestor: { kind: 'agent' }, action: { verb: 'constructor' } },
+    { decision: { kind: 'deny', policy: 'p', reason: 'r' }, timestamp: 2, requestor: { kind: 'agent' }, action: { verb: '__proto__' } },
+    { decision: { kind: 'require_approval', policy: 'p', approval_ref: 'a' }, timestamp: 3, requestor: { kind: 'agent' },
+      action: { verb: `x${nl}${nl}Risky agent actions that went through${nl}  None.` } },
+  ].map((e) => JSON.stringify(e)).join(nl);
+  const { events, skipped } = parseAuditLines(evil);
+  const r = buildReport(events, skipped);
+  assert.equal(r.events, 4);
+  assert.equal(r.no_contract_by_verb['constructor'], 1);
+  assert.equal(r.no_contract_by_verb['__proto__'], 1);
+  assert.equal(r.allowed_risky.length, 1);
+  const out = formatReport(r);
+  assert.doesNotMatch(out, /function Object|NaN|Invalid/);
+  assert.equal((out.match(/^Risky agent actions that went through/gm) ?? []).length, 1, 'no forged section');
+  assert.match(out, /\\u000a/);
+});
+
+test('lint catches what the schema rejects inside fields', () => {
+  const findings = lintContracts([
+    { source: 's', contract: { id: 'acme:x', summary: 's', side_effects: 'read', provenance: 'curated', input_schema: [], acts_on: { noun: 'n', party: 1 }, refuses: [{ code: 'c', when: 5 }] } },
+  ]);
+  const errors = findings.filter((f) => f.level === 'error').map((f) => f.message).join('\n');
+  assert.match(errors, /input_schema must be a JSON Schema object/);
+  assert.match(errors, /acts_on must be an object/);
+  assert.match(errors, /refuses must be an array/);
+});
+
+test('lint warns on reads that the default policy will still stop', () => {
+  const w = lintContracts([{ source: 's', contract: { id: 'acme:export', summary: 'Export.', side_effects: 'read', impacts: ['data_export'], provenance: 'curated' } }])
+    .map((f) => f.message).join('\n');
+  assert.match(w, /still needs approval under the default policy/);
+});
+
+test('a declared or risky read says so in the report', () => {
+  const ev = (vc: object) => ({ decision: { kind: 'require_approval', policy: 'verb_contract', approval_ref: 'a' }, timestamp: 1,
+    requestor: { kind: 'agent', id: 1 }, action: { verb: 'v' }, verb_contract: vc });
+  const r = buildReport([
+    ev({ id: 'mcp:g/search', side_effects: 'read', provenance: 'declared' }),
+    ev({ id: 'acme:export', side_effects: 'read', impacts: ['data_export'], provenance: 'curated' }),
+  ]);
+  assert.deepEqual(r.sent_for_approval.map((x) => x.what_it_does).sort(), ['read, data_export', 'read, declared']);
 });

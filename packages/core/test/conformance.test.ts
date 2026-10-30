@@ -21,7 +21,7 @@ const VECTORS = join(here, '..', '..', '..', 'spec', 'conformance', 'v0');
 interface StubSpec { stub: 'allow' | 'deny' | 'redirect' | 'require_approval'; name: string; [k: string]: unknown }
 interface ScopeSpec { name: 'scope'; rules?: Array<{ method: string; path: string; required_scope: string }> }
 interface IntentSpec { name: 'intent'; kinds?: IRequestor['kind'][] }
-interface VerbContractSpec { name: 'verb_contract'; requireContractFor?: IRequestor['kind'][]; approvalImpacts?: string[]; approveIrreversible?: boolean; declaredWrites?: 'require_approval' | 'trust' }
+interface VerbContractSpec { name: 'verb_contract'; requireContractFor?: IRequestor['kind'][]; approvalImpacts?: string[]; approveIrreversible?: boolean; declaredWrites?: 'require_approval' | 'trust'; declaredReads?: 'require_approval' | 'trust'; defaultNamespace?: string }
 type PolicySpec = 'lock' | 'scope' | 'draft' | 'quarantine' | 'rate_limit' | 'anomaly' | 'intent' | 'verb_contract' | StubSpec | ScopeSpec | IntentSpec | VerbContractSpec;
 
 interface Case {

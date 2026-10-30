@@ -64,7 +64,8 @@ def _build(spec: Any):
         return DefaultIntentPolicy(kinds=spec.get("kinds", ("agent",)))
     if spec.get("name") == "verb_contract":
         o = {"requireContractFor": "require_contract_for", "approvalImpacts": "approval_impacts",
-             "approveIrreversible": "approve_irreversible", "declaredWrites": "declared_writes"}
+             "approveIrreversible": "approve_irreversible", "declaredWrites": "declared_writes",
+             "declaredReads": "declared_reads", "defaultNamespace": "default_namespace"}
         return DefaultVerbContractPolicy(**{o[k]: v for k, v in spec.items() if k in o})
     p = DefaultScopePolicy()
     for r in spec.get("rules", []):

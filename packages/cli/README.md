@@ -22,7 +22,7 @@ themis report audit.ndjson [--since 2026-10-01] [--tenant 7] [--limit 20] [--jso
 
 - what agents did, grouped by what the verb does (read, irreversible, money, outbound, declared…);
 - which risky actions went through, which approval let each one through, and what the agent said it was for;
-- what is waiting for a person;
+- what was sent for a person's approval;
 - which agent actions stated no intent, ran a verb with no contract, or relied on a declared contract;
 - denials by rule, and the busiest verbs.
 

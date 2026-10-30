@@ -11,7 +11,7 @@
   "properties": {
     "id": {
       "type": "string",
-      "pattern": "^[a-z0-9][a-z0-9._-]*:\\S+$"
+      "pattern": "^(?!.*\\n)[a-z0-9][a-z0-9._-]*:[^\\x00-\\x20\\x7f-\\x9f\\u00a0\\u1680\\u2000-\\u200a\\u2028\\u2029\\u202f\\u205f\\u3000\\ufeff]+$"
     },
     "version": {
       "type": "string"
@@ -35,7 +35,7 @@
     },
     "undone_by": {
       "type": "string",
-      "pattern": "^[a-z0-9][a-z0-9._-]*:\\S+$"
+      "pattern": "^(?!.*\\n)[a-z0-9][a-z0-9._-]*:[^\\x00-\\x20\\x7f-\\x9f\\u00a0\\u1680\\u2000-\\u200a\\u2028\\u2029\\u202f\\u205f\\u3000\\ufeff]+$"
     },
     "impacts": {
       "type": "array",
@@ -54,7 +54,7 @@
           },
           {
             "type": "string",
-            "pattern": "^[a-z0-9][a-z0-9._-]*:\\S+$"
+            "pattern": "^(?!.*\\n)[a-z0-9][a-z0-9._-]*:[^\\x00-\\x20\\x7f-\\x9f\\u00a0\\u1680\\u2000-\\u200a\\u2028\\u2029\\u202f\\u205f\\u3000\\ufeff]+$"
           }
         ]
       }

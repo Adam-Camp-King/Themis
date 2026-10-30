@@ -25,7 +25,7 @@
  * `anomaly_hard_block`; risk > SOFT_BLOCK → require_approval; else allow.
  */
 
-import { impactsOf, usableContract } from '../internal/verb_contract.js';
+import { impactsOf, usableContract, verbName } from '../internal/verb_contract.js';
 import type { IAnomalyInput, IAnomalyMetadata, IPolicy, IPolicyContext, IPolicyDecision, IRiskScore } from '../types.js';
 
 export const SOFT_BLOCK = 0.8;
@@ -93,21 +93,26 @@ export function scoreAction(input: IAnomalyInput): IRiskScore {
   let baselineSample = 0;
   let baselineUsed = false;
 
-  // With a contract (RFC v0.3 § 5.8) the facts come from it, not from the verb name.
+  // A contract (RFC v0.3 § 5.6) can only add risk. Only a *curated* read lowers
+  // a write to zero; a declared read claim cannot. Anything that is not 'read'
+  // scores as a write. The name heuristics still apply alongside it.
   const contract = usableContract(input.contract);
   const impacts = contract ? impactsOf(contract) : [];
-  const sideEffects = contract ? contract['side_effects'] : input.side_effects;
+  let sideEffects: unknown = input.side_effects;
+  if (contract) {
+    if (contract['side_effects'] !== 'read') sideEffects = 'write';
+    else if (contract['provenance'] === 'curated') sideEffects = 'read';
+  }
   if (sideEffects !== 'write' && sideEffects !== 'mixed') {
     return { risk: 0, reasons: [], baseline_sample: 0, baseline_used: false };
   }
 
-  const isDelete = contract ? impacts.includes('deletion') : isDeleteVerb(input.verb);
+  const name = verbName(input.verb);
+  const isDelete = impacts.includes('deletion') || isDeleteVerb(name);
   if (isDelete && input.recent_deletes + 1 >= BULK_DELETE_THRESHOLD) {
     add(0.97, `bulk_delete:${input.recent_deletes + 1}_in_10m`);
   }
-  const escalation = contract
-    ? ESCALATION_IMPACTS.find((i) => impacts.includes(i)) ?? null
-    : escalationNamespaceOf(input.verb);
+  const escalation = ESCALATION_IMPACTS.find((i) => impacts.includes(i)) ?? escalationNamespaceOf(name);
   if (input.trust_tier === 'custom' && escalation !== null) {
     add(0.9, `scope_escalation:${escalation}`);
   }

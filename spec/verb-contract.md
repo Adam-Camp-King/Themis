@@ -18,7 +18,9 @@ Two properties matter most:
 ```
 verb-id   = namespace ":" name
 namespace = [a-z0-9] *( [a-z0-9] / "." / "_" / "-" )
-name      = 1*( any character except whitespace )
+name      = 1*name-char
+name-char = any character except C0 controls, space, DEL, C1 controls,
+            Unicode White_Space and U+FEFF
 ```
 
 | Namespace | Use | Example |
@@ -29,7 +31,9 @@ name      = 1*( any character except whitespace )
 | `skill` (reserved) | an agent skill: `skill:<skill-id>` | `skill:pdf-fill` |
 | `themis` (reserved) | future use by this specification | |
 
-Themis never reads meaning into a namespace or a name. The name after the colon is opaque. An implementation MAY let callers use an unqualified name (`payment_link.send`) and resolve it in a registry's default namespace (§ 2.8.4).
+The name characters are spelled out because `\S` means different things in JavaScript and Python regular expressions; a verb ID must parse the same everywhere.
+
+Themis never reads meaning into a namespace or a name. The name after the colon is opaque. An implementation MAY let callers use an unqualified name (`payment_link.send`) and resolve it in a registry's default namespace (§ 2.8.4). Prefer qualified verbs for agents: an unqualified verb is matched by name alone unless the policy is given the same default namespace (§ 5.8, rule 2).
 
 ## § 2.8.2 The contract
 
@@ -60,7 +64,7 @@ Themis never reads meaning into a namespace or a name. The name after the colon 
 | `provenance` | yes | `curated`: written or reviewed by whoever runs the engine. `declared`: self-described by the tool's own server or package. |
 | `version` | no | The contract's version, recorded in audit so a report shows what was believed at the time. |
 | `summary` | no | One line, plain words. |
-| `impacts` | no | What kind of thing changes. Well-known values below; any value containing `:` is an extension (`com.solidnumber:dispatch`). |
+| `impacts` | no | What kind of thing changes. Well-known values below, or an owner-namespaced extension in verb-ID form (`com.solidnumber:dispatch`). |
 | `requires_consent` | no | A person must agree to this exact action before it runs. Default `false`. |
 | `undone_by` | no | The verb ID that reverses or compensates this one. Not allowed on `irreversible`. |
 | `idempotent` | no | Calling it twice with the same input has the same effect as once. |
@@ -90,9 +94,9 @@ The machine-readable schema is [`schema/verb-contract.schema.json`](schema/verb-
 A contract is only as good as whoever wrote it. MCP's own specification tells clients not to make decisions from tool annotations supplied by untrusted servers, and the same holds here.
 
 - **Curated** contracts come from a registry the deployer controls. Themis treats them as fact.
-- **Declared** contracts come from the thing being governed. Themis records them and uses them, but the default policy (§ 5.8) requires approval for every declared write, whatever reversibility or impacts the server claims.
+- **Declared** contracts come from the thing being governed. Themis records them and uses them to *add* risk, never to remove it. The default policy (§ 5.8) requires approval for every declared write and every declared read, whatever the server claims, and `scoreAction` ignores a declared read claim.
 
-A declared `read` claim cannot be checked by any policy layer. If you rely on a third-party tool being read-only, curate its contract.
+A declared read-only claim cannot be checked by any policy layer, which is why it is not trusted by default. To let a third-party tool run unattended, review it and curate its contract, or set `declaredReads: 'trust'` knowing what that means.
 
 ## § 2.8.4 Registries
 
@@ -102,7 +106,7 @@ interface IVerbRegistry {
 }
 ```
 
-The engine does no I/O. The caller, usually an adapter, resolves `action.verb` against a registry and puts the result on `ctx.verb_contract`. Every adapter takes a `verbRegistry` option for this.
+The engine does no I/O. The caller, usually an adapter, resolves `action.verb` against a registry and puts the result on `ctx.verb_contract`. Every adapter takes a `verbRegistry` option for this. A registry that throws resolves to no contract, so requestor kinds in `requireContractFor` fail closed; add `user` or `service` to it if a registry outage must stop them too. Resolution has no built-in timeout; give your registry one.
 
 Shipped: `StaticVerbRegistry(contracts, { defaultNamespace })` (exact ID, or an unqualified name in the default namespace) and `ChainVerbRegistry([…])` (first hit wins). Chain in trust order, your curated registry first:
 
@@ -131,6 +135,8 @@ const registry = new ChainVerbRegistry([
 | `inputSchema`, `outputSchema` | `input_schema`, `output_schema` |
 | — | `provenance: declared`, `extensions.mcp = { server, tool }` |
 
+A tool without a string `name` is refused (`TypeError`). `inputSchema` and `outputSchema` are kept only when they are objects.
+
 Vectors: [`conformance/mcp-mapping.json`](conformance/mcp-mapping.json).
 
 ### Skills
@@ -141,27 +147,26 @@ Agent skills have no standard risk manifest. Give each skill its contract in you
 
 `DefaultVerbContractPolicy` (name `verb_contract`) reads `ctx.verb_contract` and `policy_metadata.verb_contract`.
 
-Options: `requireContractFor` (requestor kinds, default `['agent']`), `approvalImpacts` (default `['money', 'access', 'deletion', 'data_export']`), `approveIrreversible` (default `true`), `declaredWrites` (`'require_approval'` default, or `'trust'`).
+Options: `requireContractFor` (requestor kinds, default `['agent']`), `approvalImpacts` (default `['money', 'access', 'deletion', 'data_export']`), `approveIrreversible` (default `true`), `declaredWrites` and `declaredReads` (`'require_approval'` default, or `'trust'`), `defaultNamespace` (unset). Options of the wrong type are refused when the policy is built: a string where a list belongs would otherwise be read as its characters.
 
-`impacts` counts only when it is an array of strings; any other value is treated as no impacts, by this policy, by `scoreAction` and by the audit snapshot alike.
+**A malformed contract never fails open.** A contract the schema would reject is still evaluated, conservatively: an unrecognised `side_effects` is treated as a write, a missing `provenance` as declared, and any `impacts` that is not an array of well-known or namespaced strings is a reason for approval, not an absence of impacts. Only `true` counts as `true` for `requires_consent` and `approved`.
 
 Decision rules, in order:
 
-1. No contract (not an object, or no string `id`). The requestor's kind is in `requireContractFor` → **deny** `unknown_verb`. Otherwise allow.
-2. The contract is for a different verb → **deny** `contract_mismatch`. A qualified `action.verb` (it contains `:`) must equal `contract.id` exactly. An unqualified one must equal the part of `contract.id` after its first `:`.
-3. `side_effects` is `read` → allow.
-4. `policy_metadata.verb_contract.approved` is `true` → allow. The deployer sets this after verifying an approval for this exact action. Also put the approval's reference in `action.metadata.approval_ref`: the audit event records `metadata`, so the record shows which approval let a risky action through, and the report flags any that went through without one.
-5. Collect approval reasons, in this order:
+1. No contract (not a plain object, or no string `id`). The requestor's kind is in `requireContractFor` → **deny** `unknown_verb`. Otherwise allow.
+2. The contract is for a different verb → **deny** `contract_mismatch`. A qualified `action.verb` (it contains `:`) must equal `contract.id` exactly. An unqualified one must equal `<defaultNamespace>:<verb>` when `defaultNamespace` is set, and otherwise the part of `contract.id` after its first `:`.
+3. `policy_metadata.verb_contract.approved` is `true` → allow. The deployer sets this after verifying an approval for this exact action. Also put the approval's reference in `action.metadata.approval_ref`: the audit event records `metadata`, so the record shows which approval let a risky action through, and the report flags any that went through without one.
+4. Collect approval reasons, in this order. Reads are not exempt: consent and risky impacts apply to them too.
    - `requires_consent` when `requires_consent` is `true`;
-   - `irreversible` when `approveIrreversible` and `reversibility` is `irreversible`; `reversibility_unknown` when `reversibility` is missing or not one of the three values;
+   - unless `side_effects` is `read`: `side_effects_unknown` when it is not `write` or `mixed`; then `irreversible` when `approveIrreversible` and `reversibility` is `irreversible`, or `reversibility_unknown` when `reversibility` is missing or not one of the three values;
+   - `impacts_unknown` when `impacts` is present (not null) and is not an array of strings, or lists a value that is neither well-known nor a namespaced extension;
    - `impact:<x>` for each impact in `approvalImpacts`, in `approvalImpacts` order, that the contract lists;
-   - `declared_write` when `declaredWrites` is `'require_approval'` and `provenance` is not `curated`.
-6. Any reasons → **require_approval** with `approval_ref` = `policy_metadata.verb_contract.approval_ref` or `verb:<id>`, and message `Needs approval before <id> runs: <reasons joined by ", ">.`
-7. Otherwise allow.
+   - when `provenance` is not `curated`: `declared_read` for a read (unless `declaredReads` is `'trust'`), `declared_write` otherwise (unless `declaredWrites` is `'trust'`).
+5. Any reasons → **require_approval** with `approval_ref` = `policy_metadata.verb_contract.approval_ref` or `verb:<id>`, and message `Needs approval before <id> runs: <reasons joined by ", ">.` Otherwise allow.
 
 Register it after `intent` and `quarantine` and before `scope`. Wire `contract.required_scope` into `action.required_scope` so the scope policy enforces it.
 
-With a contract on the context, `scoreAction` (§ 5.6) stops guessing: `side_effects` comes from the contract, a bulk delete is a verb whose impacts include `deletion`, and a custom-tier escalation is a verb whose impacts include `access`, `money` or `data_export` (reason `scope_escalation:<impact>`, first match in that order). Without a contract, the name heuristics apply unchanged.
+With a contract on the context, `scoreAction` (§ 5.6) uses it to **add** risk, never to remove it. A bulk delete is a verb whose impacts include `deletion` *or* whose name looks like a delete; a custom-tier escalation is a verb whose impacts include `access`, `money` or `data_export` (reason `scope_escalation:<impact>`, first match in that order) *or* whose name is in an escalation namespace. Any `side_effects` other than `read` scores as a write. Only a *curated* read contract scores a call as a read; a declared read claim leaves the caller's `side_effects` in force. For a qualified verb, the name heuristics read the part after the namespace.
 
 ## § 9.6 Intent records
 

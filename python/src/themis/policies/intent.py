@@ -25,6 +25,11 @@ class DefaultIntentPolicy:
     name = "intent"
 
     def __init__(self, kinds: Iterable[RequestorKind] = ("agent",)) -> None:
+        if isinstance(kinds, (str, bytes)):
+            raise TypeError("DefaultIntentPolicy: kinds must be a list of strings")
+        kinds = tuple(kinds)
+        if not all(isinstance(k, str) for k in kinds):
+            raise TypeError("DefaultIntentPolicy: kinds must be a list of strings")
         self._kinds = frozenset(kinds)
 
     def evaluate(self, ctx: PolicyContext) -> Decision:

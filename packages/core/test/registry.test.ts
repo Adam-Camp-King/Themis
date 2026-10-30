@@ -17,12 +17,13 @@ import { ChainVerbRegistry, StaticVerbRegistry, contractFromMcpTool, isVerbId } 
 
 const SPEC = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', 'spec');
 const mapping = JSON.parse(readFileSync(join(SPEC, 'conformance', 'mcp-mapping.json'), 'utf8')) as {
-  cases: Array<{ name: string; server: string; tool: Parameters<typeof contractFromMcpTool>[1]; expect: unknown }>;
+  cases: Array<{ name: string; server: string; tool: Parameters<typeof contractFromMcpTool>[1]; expect?: unknown; expect_error?: boolean }>;
 };
 
 for (const c of mapping.cases) {
   test(`mcp-mapping.json › ${c.name}`, () => {
-    assert.deepEqual(contractFromMcpTool(c.server, c.tool), c.expect);
+    if (c.expect_error) assert.throws(() => contractFromMcpTool(c.server, c.tool), TypeError);
+    else assert.deepEqual(contractFromMcpTool(c.server, c.tool), c.expect);
   });
 }
 
@@ -53,7 +54,7 @@ test('chain registry: first hit wins, so curated shadows declared', async () => 
 test('verb id grammar', () => {
   for (const ok of ['com.solidnumber:payment_link.send', 'acme:refund.issue', 'mcp:github/create_issue', 'skill:pdf-fill', 'a:b:c'])
     assert.equal(isVerbId(ok), true, ok);
-  for (const bad of ['payment_link.send', 'Acme:x', ':x', 'acme:', 'acme: x', 'ac me:x', '', 42])
+  for (const bad of ['payment_link.send', 'Acme:x', ':x', 'acme:', 'acme: x', 'ac me:x', '', 42, 'acme:x\n', 'a:x\u001cy', 'a:x\u0085y', 'a:x\ufeffy', 'a:x\u00a0y'])
     assert.equal(isVerbId(bad), false, String(bad));
 });
 

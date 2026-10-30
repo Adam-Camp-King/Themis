@@ -269,7 +269,7 @@
       }
     },
     {
-      "name": "7. a read is allowed, even when declared",
+      "name": "7. a declared read needs approval: a server's own read-only claim is not a fact",
       "policies": [
         "verb_contract"
       ],
@@ -289,7 +289,10 @@
       "entity": null,
       "expect": {
         "decision": {
-          "kind": "allow"
+          "kind": "require_approval",
+          "policy": "verb_contract",
+          "approval_ref": "verb:mcp:github/search_issues",
+          "message": "Needs approval before mcp:github/search_issues runs: declared_read."
         },
         "policy_chain": [
           "verb_contract"
@@ -299,6 +302,152 @@
         "id": "mcp:github/search_issues",
         "side_effects": "read",
         "provenance": "declared"
+      }
+    },
+    {
+      "name": "7b. declaredReads trust lets a declared read through",
+      "policies": [
+        {
+          "name": "verb_contract",
+          "declaredReads": "trust"
+        }
+      ],
+      "requestor": {
+        "id": 100,
+        "kind": "agent",
+        "tenant_id": 7,
+        "scopes": [
+          "*"
+        ]
+      },
+      "action": {
+        "verb": "mcp:github/search_issues",
+        "resource_type": "thing",
+        "tenant_id": 7
+      },
+      "entity": null,
+      "verb_contract": {
+        "id": "mcp:github/search_issues",
+        "side_effects": "read",
+        "provenance": "declared"
+      },
+      "expect": {
+        "decision": {
+          "kind": "allow"
+        },
+        "policy_chain": [
+          "verb_contract"
+        ]
+      }
+    },
+    {
+      "name": "7c. a curated read that exports data needs approval",
+      "policies": [
+        "verb_contract"
+      ],
+      "requestor": {
+        "id": 100,
+        "kind": "agent",
+        "tenant_id": 7,
+        "scopes": [
+          "*"
+        ]
+      },
+      "action": {
+        "verb": "com.acme:contacts.export",
+        "resource_type": "thing",
+        "tenant_id": 7
+      },
+      "entity": null,
+      "verb_contract": {
+        "id": "com.acme:contacts.export",
+        "side_effects": "read",
+        "impacts": [
+          "data_export"
+        ],
+        "provenance": "curated"
+      },
+      "expect": {
+        "decision": {
+          "kind": "require_approval",
+          "policy": "verb_contract",
+          "approval_ref": "verb:com.acme:contacts.export",
+          "message": "Needs approval before com.acme:contacts.export runs: impact:data_export."
+        },
+        "policy_chain": [
+          "verb_contract"
+        ]
+      }
+    },
+    {
+      "name": "7d. a read that requires consent needs approval",
+      "policies": [
+        "verb_contract"
+      ],
+      "requestor": {
+        "id": 100,
+        "kind": "agent",
+        "tenant_id": 7,
+        "scopes": [
+          "*"
+        ]
+      },
+      "action": {
+        "verb": "com.acme:record.view",
+        "resource_type": "thing",
+        "tenant_id": 7
+      },
+      "entity": null,
+      "verb_contract": {
+        "id": "com.acme:record.view",
+        "side_effects": "read",
+        "requires_consent": true,
+        "provenance": "curated"
+      },
+      "expect": {
+        "decision": {
+          "kind": "require_approval",
+          "policy": "verb_contract",
+          "approval_ref": "verb:com.acme:record.view",
+          "message": "Needs approval before com.acme:record.view runs: requires_consent."
+        },
+        "policy_chain": [
+          "verb_contract"
+        ]
+      }
+    },
+    {
+      "name": "7e. reversibility is ignored on a curated read",
+      "policies": [
+        "verb_contract"
+      ],
+      "requestor": {
+        "id": 100,
+        "kind": "agent",
+        "tenant_id": 7,
+        "scopes": [
+          "*"
+        ]
+      },
+      "action": {
+        "verb": "com.acme:contacts.search",
+        "resource_type": "thing",
+        "tenant_id": 7
+      },
+      "entity": null,
+      "verb_contract": {
+        "id": "com.acme:contacts.search",
+        "side_effects": "read",
+        "reversibility": "irreversible",
+        "provenance": "curated"
+      },
+      "expect": {
+        "decision": {
+          "kind": "allow"
+        },
+        "policy_chain": [
+          "verb_contract"
+        ]
       }
     },
     {
@@ -1004,7 +1153,7 @@
       }
     },
     {
-      "name": "23. the snapshot keeps only typed fields; a mixed impacts list is ignored by policy and snapshot alike",
+      "name": "23. a mixed impacts list is impacts_unknown, and the snapshot drops it",
       "policies": [
         "verb_contract"
       ],
@@ -1024,7 +1173,10 @@
       "entity": null,
       "expect": {
         "decision": {
-          "kind": "allow"
+          "kind": "require_approval",
+          "policy": "verb_contract",
+          "approval_ref": "verb:com.acme:thing.do",
+          "message": "Needs approval before com.acme:thing.do runs: impacts_unknown."
         },
         "policy_chain": [
           "verb_contract"
@@ -1066,6 +1218,348 @@
         "extensions": {
           "a": {}
         }
+      }
+    },
+    {
+      "name": "23b. impacts that is a string is impacts_unknown",
+      "policies": [
+        "verb_contract"
+      ],
+      "requestor": {
+        "id": 100,
+        "kind": "agent",
+        "tenant_id": 7,
+        "scopes": [
+          "*"
+        ]
+      },
+      "action": {
+        "verb": "com.acme:thing.do",
+        "resource_type": "thing",
+        "tenant_id": 7
+      },
+      "entity": null,
+      "verb_contract": {
+        "id": "com.acme:thing.do",
+        "side_effects": "write",
+        "reversibility": "reversible",
+        "provenance": "curated",
+        "impacts": "money"
+      },
+      "expect": {
+        "decision": {
+          "kind": "require_approval",
+          "policy": "verb_contract",
+          "approval_ref": "verb:com.acme:thing.do",
+          "message": "Needs approval before com.acme:thing.do runs: impacts_unknown."
+        },
+        "policy_chain": [
+          "verb_contract"
+        ]
+      }
+    },
+    {
+      "name": "23c. an unrecognised impact name is impacts_unknown (typos fail closed)",
+      "policies": [
+        "verb_contract"
+      ],
+      "requestor": {
+        "id": 100,
+        "kind": "agent",
+        "tenant_id": 7,
+        "scopes": [
+          "*"
+        ]
+      },
+      "action": {
+        "verb": "com.acme:thing.do",
+        "resource_type": "thing",
+        "tenant_id": 7
+      },
+      "entity": null,
+      "verb_contract": {
+        "id": "com.acme:thing.do",
+        "side_effects": "write",
+        "reversibility": "reversible",
+        "provenance": "curated",
+        "impacts": [
+          "Money"
+        ]
+      },
+      "expect": {
+        "decision": {
+          "kind": "require_approval",
+          "policy": "verb_contract",
+          "approval_ref": "verb:com.acme:thing.do",
+          "message": "Needs approval before com.acme:thing.do runs: impacts_unknown."
+        },
+        "policy_chain": [
+          "verb_contract"
+        ]
+      }
+    },
+    {
+      "name": "23d. a namespaced extension impact is not unknown",
+      "policies": [
+        "verb_contract"
+      ],
+      "requestor": {
+        "id": 100,
+        "kind": "agent",
+        "tenant_id": 7,
+        "scopes": [
+          "*"
+        ]
+      },
+      "action": {
+        "verb": "com.acme:thing.do",
+        "resource_type": "thing",
+        "tenant_id": 7
+      },
+      "entity": null,
+      "verb_contract": {
+        "id": "com.acme:thing.do",
+        "side_effects": "write",
+        "reversibility": "reversible",
+        "provenance": "curated",
+        "impacts": [
+          "acme:dispatch"
+        ]
+      },
+      "expect": {
+        "decision": {
+          "kind": "allow"
+        },
+        "policy_chain": [
+          "verb_contract"
+        ]
+      }
+    },
+    {
+      "name": "23e. impacts null is no impacts",
+      "policies": [
+        "verb_contract"
+      ],
+      "requestor": {
+        "id": 100,
+        "kind": "agent",
+        "tenant_id": 7,
+        "scopes": [
+          "*"
+        ]
+      },
+      "action": {
+        "verb": "com.acme:thing.do",
+        "resource_type": "thing",
+        "tenant_id": 7
+      },
+      "entity": null,
+      "verb_contract": {
+        "id": "com.acme:thing.do",
+        "side_effects": "write",
+        "reversibility": "reversible",
+        "provenance": "curated",
+        "impacts": null
+      },
+      "expect": {
+        "decision": {
+          "kind": "allow"
+        },
+        "policy_chain": [
+          "verb_contract"
+        ]
+      }
+    },
+    {
+      "name": "23f. unknown impacts and a risky impact are both reported",
+      "policies": [
+        "verb_contract"
+      ],
+      "requestor": {
+        "id": 100,
+        "kind": "agent",
+        "tenant_id": 7,
+        "scopes": [
+          "*"
+        ]
+      },
+      "action": {
+        "verb": "com.acme:thing.do",
+        "resource_type": "thing",
+        "tenant_id": 7
+      },
+      "entity": null,
+      "verb_contract": {
+        "id": "com.acme:thing.do",
+        "side_effects": "write",
+        "reversibility": "reversible",
+        "provenance": "curated",
+        "impacts": [
+          "money",
+          "moneyy"
+        ]
+      },
+      "expect": {
+        "decision": {
+          "kind": "require_approval",
+          "policy": "verb_contract",
+          "approval_ref": "verb:com.acme:thing.do",
+          "message": "Needs approval before com.acme:thing.do runs: impacts_unknown, impact:money."
+        },
+        "policy_chain": [
+          "verb_contract"
+        ]
+      }
+    },
+    {
+      "name": "23g. an unrecognised side_effects is side_effects_unknown and treated as a write",
+      "policies": [
+        "verb_contract"
+      ],
+      "requestor": {
+        "id": 100,
+        "kind": "agent",
+        "tenant_id": 7,
+        "scopes": [
+          "*"
+        ]
+      },
+      "action": {
+        "verb": "com.acme:thing.do",
+        "resource_type": "thing",
+        "tenant_id": 7
+      },
+      "entity": null,
+      "verb_contract": {
+        "id": "com.acme:thing.do",
+        "side_effects": "delete",
+        "reversibility": "reversible",
+        "provenance": "curated"
+      },
+      "expect": {
+        "decision": {
+          "kind": "require_approval",
+          "policy": "verb_contract",
+          "approval_ref": "verb:com.acme:thing.do",
+          "message": "Needs approval before com.acme:thing.do runs: side_effects_unknown."
+        },
+        "policy_chain": [
+          "verb_contract"
+        ]
+      }
+    },
+    {
+      "name": "23h. no side_effects and no reversibility",
+      "policies": [
+        "verb_contract"
+      ],
+      "requestor": {
+        "id": 100,
+        "kind": "agent",
+        "tenant_id": 7,
+        "scopes": [
+          "*"
+        ]
+      },
+      "action": {
+        "verb": "com.acme:thing.do",
+        "resource_type": "thing",
+        "tenant_id": 7
+      },
+      "entity": null,
+      "verb_contract": {
+        "id": "com.acme:thing.do",
+        "provenance": "curated"
+      },
+      "expect": {
+        "decision": {
+          "kind": "require_approval",
+          "policy": "verb_contract",
+          "approval_ref": "verb:com.acme:thing.do",
+          "message": "Needs approval before com.acme:thing.do runs: side_effects_unknown, reversibility_unknown."
+        },
+        "policy_chain": [
+          "verb_contract"
+        ]
+      }
+    },
+    {
+      "name": "23i. with defaultNamespace an unqualified verb matches only that namespace",
+      "policies": [
+        {
+          "name": "verb_contract",
+          "defaultNamespace": "com.acme"
+        }
+      ],
+      "requestor": {
+        "id": 100,
+        "kind": "agent",
+        "tenant_id": 7,
+        "scopes": [
+          "*"
+        ]
+      },
+      "action": {
+        "verb": "wire",
+        "resource_type": "thing",
+        "tenant_id": 7
+      },
+      "entity": null,
+      "verb_contract": {
+        "id": "evil:wire",
+        "side_effects": "read",
+        "provenance": "curated"
+      },
+      "expect": {
+        "decision": {
+          "kind": "deny",
+          "policy": "verb_contract",
+          "reason": "contract_mismatch",
+          "message": "The verb contract evil:wire does not describe wire.",
+          "detail": {
+            "verb": "wire",
+            "contract_id": "evil:wire"
+          }
+        },
+        "policy_chain": [
+          "verb_contract"
+        ]
+      }
+    },
+    {
+      "name": "23j. with defaultNamespace the right namespace matches",
+      "policies": [
+        {
+          "name": "verb_contract",
+          "defaultNamespace": "com.acme"
+        }
+      ],
+      "requestor": {
+        "id": 100,
+        "kind": "agent",
+        "tenant_id": 7,
+        "scopes": [
+          "*"
+        ]
+      },
+      "action": {
+        "verb": "wire",
+        "resource_type": "thing",
+        "tenant_id": 7
+      },
+      "entity": null,
+      "verb_contract": {
+        "id": "com.acme:wire",
+        "side_effects": "read",
+        "provenance": "curated"
+      },
+      "expect": {
+        "decision": {
+          "kind": "allow"
+        },
+        "policy_chain": [
+          "verb_contract"
+        ]
       }
     },
     {

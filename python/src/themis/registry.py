@@ -9,7 +9,9 @@ import inspect
 import re
 from typing import Any, Iterable, Mapping, Optional, Protocol, Sequence, runtime_checkable
 
-_VERB_ID = re.compile(r"[a-z0-9][a-z0-9._-]*:\S+")
+# `<namespace>:<name>`; the name excludes C0/C1 controls, space, DEL, Unicode
+# White_Space and U+FEFF. Spelled out because `\S` differs from JavaScript.
+_VERB_ID = re.compile("[a-z0-9][a-z0-9._-]*:[^\x00-\x20\x7f-\x9f\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000\ufeff]+")
 
 
 def is_verb_id(s: Any) -> bool:
@@ -72,7 +74,10 @@ class ChainVerbRegistry:
 def contract_from_mcp_tool(server: str, tool: Mapping[str, Any]) -> dict[str, Any]:
     """Map an MCP ``tools/list`` entry to a *declared* contract. Non-bool hints fall
     back to MCP's defaults: readOnly False, destructive True, idempotent False, openWorld True."""
-    a = tool.get("annotations") or {}
+    name = tool.get("name")
+    if not isinstance(name, str) or name == "":
+        raise TypeError("contract_from_mcp_tool: the MCP tool has no name")
+    a = tool.get("annotations")
     if not isinstance(a, Mapping):
         a = {}
 
@@ -83,7 +88,7 @@ def contract_from_mcp_tool(server: str, tool: Mapping[str, Any]) -> dict[str, An
     desc, title = tool.get("description"), a.get("title")
     summary = desc if isinstance(desc, str) else title if isinstance(title, str) else None
     read_only = hint("readOnlyHint", False)
-    out: dict[str, Any] = {"id": f"mcp:{server}/{tool['name']}"}
+    out: dict[str, Any] = {"id": f"mcp:{server}/{name}"}
     if summary is not None:
         out["summary"] = summary
     out["side_effects"] = "read" if read_only else "write"
@@ -97,7 +102,7 @@ def contract_from_mcp_tool(server: str, tool: Mapping[str, Any]) -> dict[str, An
     if isinstance(tool.get("outputSchema"), Mapping):
         out["output_schema"] = tool["outputSchema"]
     out["provenance"] = "declared"
-    out["extensions"] = {"mcp": {"server": server, "tool": tool["name"]}}
+    out["extensions"] = {"mcp": {"server": server, "tool": name}}
     return out
 
 

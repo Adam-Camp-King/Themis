@@ -10,8 +10,14 @@
  */
 
 import type { IVerbContract, IVerbRegistry } from './types.js';
+import { isPlainObject } from './internal/intent.js';
 
-const VERB_ID = /^[a-z0-9][a-z0-9._-]*:\S+$/;
+/**
+ * `<namespace>:<name>`. The name may not contain control characters (C0, C1,
+ * DEL), spaces, Unicode White_Space or U+FEFF. Spelled out because `\\S`
+ * differs between JavaScript and Python.
+ */
+const VERB_ID = /^[a-z0-9][a-z0-9._-]*:[^\x00-\x20\x7f-\x9f\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000\ufeff]+$/;
 
 /** True when `s` is a namespaced verb ID: `<namespace>:<name>`. */
 export function isVerbId(s: unknown): s is string {
@@ -86,7 +92,9 @@ export interface McpToolLike {
  * idempotent false, openWorld true.
  */
 export function contractFromMcpTool(server: string, tool: McpToolLike): IVerbContract {
-  const a = (tool.annotations ?? {}) as Record<string, unknown>;
+  if (typeof tool.name !== 'string' || tool.name === '') throw new TypeError('contractFromMcpTool: the MCP tool has no name');
+  const rawAnnotations: unknown = tool.annotations;
+  const a = (isPlainObject(rawAnnotations) ? rawAnnotations : {}) as Record<string, unknown>;
   const hint = (k: string, dflt: boolean): boolean => (typeof a[k] === 'boolean' ? (a[k] as boolean) : dflt);
   const summary =
     typeof tool.description === 'string' ? tool.description : typeof a['title'] === 'string' ? (a['title'] as string) : undefined;
@@ -99,8 +107,8 @@ export function contractFromMcpTool(server: string, tool: McpToolLike): IVerbCon
     if (hint('openWorldHint', true)) out['impacts'] = ['outbound'];
     out['idempotent'] = hint('idempotentHint', false);
   }
-  if (tool.inputSchema && typeof tool.inputSchema === 'object') out['input_schema'] = tool.inputSchema;
-  if (tool.outputSchema && typeof tool.outputSchema === 'object') out['output_schema'] = tool.outputSchema;
+  if (isPlainObject(tool.inputSchema)) out['input_schema'] = tool.inputSchema;
+  if (isPlainObject(tool.outputSchema)) out['output_schema'] = tool.outputSchema;
   out['provenance'] = 'declared';
   out['extensions'] = { mcp: { server, tool: tool.name } };
   return out as unknown as IVerbContract;

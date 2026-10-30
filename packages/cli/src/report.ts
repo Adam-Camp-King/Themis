@@ -50,7 +50,8 @@ export interface IntentReport {
     readonly by_what_it_does: Record<string, Split>;
   };
   readonly allowed_risky: readonly ActionRow[];
-  readonly waiting_for_approval: readonly ActionRow[];
+  /** Every require_approval logged. Approvals are granted outside Themis, so some may since have run. */
+  readonly sent_for_approval: readonly ActionRow[];
   readonly no_intent_by_verb: Record<string, number>;
   readonly no_contract_by_verb: Record<string, number>;
   readonly declared_contracts_by_verb: Record<string, number>;
@@ -62,7 +63,11 @@ type Obj = Record<string, unknown>;
 const isObj = (v: unknown): v is Obj => v !== null && typeof v === 'object' && !Array.isArray(v);
 const str = (v: unknown): string | null => (typeof v === 'string' ? v : null);
 const emptySplit = (): Split => ({ allow: 0, require_approval: 0, redirect: 0, deny: 0 });
+/** Prototype-free maps: a verb named __proto__ or constructor is just a key. */
+const dict = <T>(): Record<string, T> => Object.create(null) as Record<string, T>;
 const bump = (m: Record<string, number>, k: string): void => { m[k] = (m[k] ?? 0) + 1; };
+/** A timestamp Date can represent. */
+const validTs = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v) && Math.abs(v) <= 8.64e15;
 
 /** Parse NDJSON. Blank lines are ignored; lines that are not a JSON object with a decision are counted as skipped. */
 export function parseAuditLines(text: string): { events: Obj[]; skipped: number } {
@@ -90,9 +95,8 @@ function whatItDoes(c: Obj | null): string {
   if (!c) return 'no contract';
   const parts: string[] = [];
   const se = str(c['side_effects']);
-  if (se === 'read') return 'read';
-  const rev = str(c['reversibility']);
-  parts.push(rev ?? 'reversibility unknown');
+  if (se === 'read') parts.push('read');
+  else parts.push(str(c['reversibility']) ?? 'reversibility unknown');
   const impacts = Array.isArray(c['impacts']) ? (c['impacts'] as unknown[]).filter((x): x is string => typeof x === 'string') : [];
   parts.push(...impacts);
   if (c['requires_consent'] === true) parts.push('needs consent');
@@ -103,7 +107,8 @@ function whatItDoes(c: Obj | null): string {
 function why(e: Obj): string {
   const d = e['decision'] as Obj;
   const kind = str(d['kind']);
-  if (kind === 'allow') return 'allowed by ' + ((e['policy_chain'] as unknown[] | undefined)?.join(' → ') || 'no policies');
+  const chain = Array.isArray(e['policy_chain']) ? (e['policy_chain'] as unknown[]).filter((x): x is string => typeof x === 'string') : [];
+  if (kind === 'allow') return 'allowed by ' + (chain.join(' → ') || 'no policies');
   const label = [str(d['policy']), str(d['reason']) ?? str(d['approval_ref'])].filter(Boolean).join(': ');
   return label || kind || '';
 }
@@ -113,7 +118,7 @@ function row(e: Obj): ActionRow {
   const contract = isObj(e['verb_contract']) ? e['verb_contract'] : null;
   const action = isObj(e['action']) ? e['action'] : {};
   const req = isObj(e['requestor']) ? e['requestor'] : {};
-  const ts = typeof e['timestamp'] === 'number' ? new Date(e['timestamp']).toISOString() : '';
+  const ts = validTs(e['timestamp']) ? new Date(e['timestamp']).toISOString() : '';
   return {
     at: ts,
     tenant: String(e['tenant_id'] ?? ''),
@@ -136,18 +141,18 @@ function isRisky(c: Obj | null): boolean {
 export function buildReport(all: readonly Obj[], skipped = 0, opts: ReportOptions = {}): IntentReport {
   const limit = opts.limit ?? 20;
   const events = all
-    .filter((e) => opts.since === undefined || (typeof e['timestamp'] === 'number' && e['timestamp'] >= opts.since))
+    .filter((e) => opts.since === undefined || (validTs(e['timestamp']) && e['timestamp'] >= opts.since))
     .filter((e) => opts.tenant === undefined || String(e['tenant_id']) === opts.tenant)
     .slice()
-    .sort((a, b) => Number(b['timestamp'] ?? 0) - Number(a['timestamp'] ?? 0));
+    .sort((a, b) => (validTs(b['timestamp']) ? b['timestamp'] : 0) - (validTs(a['timestamp']) ? a['timestamp'] : 0));
 
   const decisions = emptySplit();
-  const byKind: Record<string, number> = {};
-  const byWhat: Record<string, Split> = {};
-  const noIntent: Record<string, number> = {};
-  const noContract: Record<string, number> = {};
-  const declared: Record<string, number> = {};
-  const denials: Record<string, number> = {};
+  const byKind = dict<number>();
+  const byWhat = dict<Split>();
+  const noIntent = dict<number>();
+  const noContract = dict<number>();
+  const declared = dict<number>();
+  const denials = dict<number>();
   const verbs = new Map<string, Split>();
   const allowedRisky: ActionRow[] = [];
   const waiting: ActionRow[] = [];
@@ -157,7 +162,7 @@ export function buildReport(all: readonly Obj[], skipped = 0, opts: ReportOption
   for (const e of events) {
     const kind = kindOf(e);
     decisions[kind]++;
-    if (typeof e['timestamp'] === 'number') { minTs = Math.min(minTs, e['timestamp']); maxTs = Math.max(maxTs, e['timestamp']); }
+    if (validTs(e['timestamp'])) { minTs = Math.min(minTs, e['timestamp']); maxTs = Math.max(maxTs, e['timestamp']); }
     const req = isObj(e['requestor']) ? e['requestor'] : {};
     const rk = str(req['kind']) ?? 'unknown';
     bump(byKind, rk);
@@ -207,7 +212,7 @@ export function buildReport(all: readonly Obj[], skipped = 0, opts: ReportOption
       ),
     },
     allowed_risky: allowedRisky.slice(0, limit),
-    waiting_for_approval: waiting.slice(0, limit),
+    sent_for_approval: waiting.slice(0, limit),
     no_intent_by_verb: sortMap(noIntent),
     no_contract_by_verb: sortMap(noContract),
     declared_contracts_by_verb: sortMap(declared),
@@ -229,7 +234,20 @@ function total(s: Split): number {
 
 const pct = (n: number, d: number): string => (d === 0 ? '—' : `${Math.round((n / d) * 100)}%`);
 
-function table(head: readonly string[], rows: readonly (readonly string[])[]): string {
+/** Control characters (C0, DEL, C1, line and paragraph separators) shown as \\uXXXX, so a value cannot forge report lines. */
+function clean(s: string): string {
+  let out = '';
+  for (const ch of s) {
+    const c = ch.codePointAt(0)!;
+    out += c < 0x20 || (c >= 0x7f && c <= 0x9f) || c === 0x2028 || c === 0x2029
+      ? String.fromCharCode(92) + 'u' + c.toString(16).padStart(4, '0')
+      : ch;
+  }
+  return out;
+}
+
+function table(head: readonly string[], rawRows: readonly (readonly string[])[]): string {
+  const rows = rawRows.map((r) => r.map(clean));
   const w = head.map((h, i) => Math.max(h.length, ...rows.map((r) => (r[i] ?? '').length)));
   const line = (r: readonly string[]): string => r.map((c, i) => (i === r.length - 1 ? c : c.padEnd(w[i]!))).join('  ').trimEnd();
   return [line(head), line(w.map((n) => '─'.repeat(n))), ...rows.map(line)].map((l) => '  ' + l).join('\n');
@@ -256,6 +274,7 @@ export function formatReport(r: IntentReport, limit = 20): string {
   out.push(`Themis intent report · ${r.period.from?.slice(0, 16).replace('T', ' ') ?? '—'} to ${r.period.to?.slice(0, 16).replace('T', ' ') ?? '—'} UTC`);
   out.push(`${r.events} decisions: ${d.allow} allowed, ${d.require_approval} sent for approval, ${d.redirect} redirected to draft, ${d.deny} denied.` +
     (r.skipped_lines ? ` ${r.skipped_lines} unreadable lines skipped.` : ''));
+  out.push(`By requestor: ${Object.entries(r.by_requestor_kind).map(([k, v]) => `${clean(k)} ${v}`).join(', ') || 'none'}.`);
   out.push(`Agents made ${a.actions}. ${a.with_intent} (${pct(a.with_intent, a.actions)}) stated an intent; ${a.with_contract} (${pct(a.with_contract, a.actions)}) ran a verb with a contract.`);
 
   const cats = Object.entries(a.by_what_it_does);
@@ -270,13 +289,13 @@ export function formatReport(r: IntentReport, limit = 20): string {
       r.allowed_risky.map((x) => [x.at.replace('T', ' ').slice(0, 16), x.requestor, x.verb, x.what_it_does,
         x.approval ?? '(no approval recorded)', x.stated_intent ?? '(none stated)']),
     )}`);
-  out.push(actions('Waiting for approval', r.waiting_for_approval, 'Nothing is waiting.'));
+  out.push(actions('Sent for approval (approvals happen outside Themis; some may since have run)', r.sent_for_approval, 'None.'));
   out.push(counts('Agent actions with no stated intent', r.no_intent_by_verb, 'None.', limit));
   out.push(counts('Agent actions on verbs with no contract', r.no_contract_by_verb, 'None.', limit));
   out.push(counts("Contracts taken on the tool's own word (declared)", r.declared_contracts_by_verb, 'None. Every contract was curated.', limit));
   out.push(counts('Denials by rule', r.denials_by_reason, 'None.', limit));
   out.push(r.top_verbs.length === 0 ? 'Busiest verbs\n  None.' :
-    `Busiest verbs\n${table(['total', 'allowed', 'approval', 'denied', 'verb'],
-      r.top_verbs.map((v) => [String(v.total), String(v.split.allow), String(v.split.require_approval), String(v.split.deny), v.verb]))}`);
+    `Busiest verbs\n${table(['total', 'allowed', 'approval', 'draft', 'denied', 'verb'],
+      r.top_verbs.map((v) => [String(v.total), String(v.split.allow), String(v.split.require_approval), String(v.split.redirect), String(v.split.deny), v.verb]))}`);
   return out.join('\n\n') + '\n';
 }

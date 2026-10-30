@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import math
 
-from .._verb_contract import impacts_of, usable_contract
+from .._verb_contract import impacts_of, usable_contract, verb_name
 from ..types import Allow, AnomalyInput, Decision, Deny, PolicyContext, RequireApproval, RiskScore
 
 SOFT_BLOCK = 0.80
@@ -74,10 +74,17 @@ ESCALATION_IMPACTS: tuple[str, ...] = ("access", "money", "data_export")
 
 
 def score_action(inp: AnomalyInput) -> RiskScore:
-    # With a contract (RFC v0.3 § 5.8) the facts come from it, not from the verb name.
+    # A contract (RFC v0.3 § 5.6) can only add risk: only a *curated* read lowers a
+    # write to zero; anything that is not 'read' scores as a write; the name
+    # heuristics still apply alongside it.
     contract = usable_contract(inp.contract)
     impacts = impacts_of(contract) if contract is not None else []
-    side_effects = contract.get("side_effects") if contract is not None else inp.side_effects
+    side_effects: object = inp.side_effects
+    if contract is not None:
+        if contract.get("side_effects") != "read":
+            side_effects = "write"
+        elif contract.get("provenance") == "curated":
+            side_effects = "read"
     if side_effects not in ("write", "mixed"):
         return RiskScore()
     risk = 0.0
@@ -88,13 +95,11 @@ def score_action(inp: AnomalyInput) -> RiskScore:
         risk = min(1.0, round(risk + amount, 4))
         reasons.append(reason)
 
-    is_delete = "deletion" in impacts if contract is not None else is_delete_verb(inp.verb)
+    name = verb_name(inp.verb)
+    is_delete = "deletion" in impacts or is_delete_verb(name)
     if is_delete and inp.recent_deletes + 1 >= BULK_DELETE_THRESHOLD:
         add(0.97, f"bulk_delete:{inp.recent_deletes + 1}_in_10m")
-    if contract is not None:
-        escalation = next((i for i in ESCALATION_IMPACTS if i in impacts), None)
-    else:
-        escalation = escalation_namespace_of(inp.verb)
+    escalation = next((i for i in ESCALATION_IMPACTS if i in impacts), None) or escalation_namespace_of(name)
     if inp.trust_tier == "custom" and escalation is not None:
         add(0.90, f"scope_escalation:{escalation}")
     if OFF_HOURS[0] <= inp.local_hour < OFF_HOURS[1] and inp.recent_writes + 1 >= BURST_THRESHOLD:

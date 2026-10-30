@@ -2,9 +2,10 @@
 // Copyright 2026 Adam Campbell
 
 /**
- * Verb contract lint (RFC v0.3 draft § 2.8). Errors are what the JSON Schema
- * (spec/schema/verb-contract.schema.json) rejects, reported in plain words;
- * warnings are contracts that are valid but probably wrong.
+ * Verb contract lint (RFC v0.3 draft § 2.8). Errors cover everything the JSON
+ * Schema (spec/schema/verb-contract.schema.json) rejects, in plain words, plus
+ * duplicate ids across files; warnings are contracts that are valid but
+ * probably wrong. Schemas inside input_schema/output_schema are not checked.
  */
 
 import { isVerbId } from 'themis-policy';
@@ -97,14 +98,22 @@ export function lintContracts(inputs: readonly LintInput[]): LintFinding[] {
       else if (id !== null) undoRefs.push({ source, id, ref: undo });
     }
 
-    if (c['acts_on'] !== undefined && !(isObject(c['acts_on']) && typeof c['acts_on']['noun'] === 'string'))
-      err('acts_on must be an object with a string noun.');
-    if (c['refuses'] !== undefined && !(Array.isArray(c['refuses']) && c['refuses'].every((r) => isObject(r) && typeof r['code'] === 'string')))
-      err('refuses must be an array of { code, when } objects.');
+    const actsOn = c['acts_on'];
+    if (actsOn !== undefined && !(isObject(actsOn) && typeof actsOn['noun'] === 'string' && (actsOn['party'] === undefined || typeof actsOn['party'] === 'string')))
+      err('acts_on must be an object with a string noun and, if given, a string party.');
+    const refuses = c['refuses'];
+    if (refuses !== undefined && !(Array.isArray(refuses) && refuses.every((r) => isObject(r) && typeof r['code'] === 'string' && (r['when'] === undefined || typeof r['when'] === 'string'))))
+      err('refuses must be an array of { code, when } objects with string values.');
+    for (const k of ['input_schema', 'output_schema'] as const)
+      if (c[k] !== undefined && !isObject(c[k])) err(`${k} must be a JSON Schema object.`);
     if (c['extensions'] !== undefined && !(isObject(c['extensions']) && Object.values(c['extensions']).every(isObject)))
       err('extensions must map a namespace to an object.');
 
     if (typeof c['summary'] !== 'string' || c['summary'].trim() === '') warn('No summary. Reports and approval prompts read better with one.');
+    if (se === 'read' && (c['requires_consent'] === true || impactList.some((i) => ['money', 'access', 'deletion', 'data_export'].includes(i))))
+      warn('A read with requires_consent or a risky impact still needs approval under the default policy. Is it really a read?');
+    if (prov === 'declared')
+      warn('Declared: the default policy asks for approval on every call. Curate it once you have reviewed the tool.');
     if (writes && impactList.includes('money') && c['requires_consent'] !== true)
       warn('Moves money without requires_consent. Is a person meant to agree first?');
     if (writes && rev === 'irreversible' && impactList.includes('outbound') && c['requires_consent'] !== true)

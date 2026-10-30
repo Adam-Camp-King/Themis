@@ -21,10 +21,14 @@ MCP = json.loads((SPEC / "conformance" / "mcp-mapping.json").read_text())
 
 @pytest.mark.parametrize("c", [pytest.param(c, id=c["name"]) for c in MCP["cases"]])
 def test_mcp_mapping_vector(c: dict) -> None:
-    assert contract_from_mcp_tool(c["server"], c["tool"]) == c["expect"]
+    if c.get("expect_error"):
+        with pytest.raises(TypeError):
+            contract_from_mcp_tool(c["server"], c["tool"])
+    else:
+        assert contract_from_mcp_tool(c["server"], c["tool"]) == c["expect"]
 
 
-@pytest.mark.parametrize("c", [pytest.param(c, id=c["name"]) for c in MCP["cases"]])
+@pytest.mark.parametrize("c", [pytest.param(c, id=c["name"]) for c in MCP["cases"] if not c.get("expect_error")])
 def test_mcp_mapping_output_is_schema_valid(c: dict) -> None:
     jsonschema.validate(c["expect"], SCHEMA)
 
@@ -48,6 +52,10 @@ def test_example_contracts_are_schema_valid(c: dict) -> None:
     {"id": "acme:x", "side_effects": "read", "provenance": "trusted"},
     {"id": "acme:x", "side_effects": "read", "provenance": "curated", "impacts": ["moneyy"]},
     {"id": "acme:x", "side_effects": "read", "provenance": "curated", "colour": "red"},
+    {"id": "acme:x\n", "side_effects": "read", "provenance": "curated"},                                # trailing newline
+    {"id": "a:x\ufeffy", "side_effects": "read", "provenance": "curated"},
+    {"id": "acme:x", "side_effects": "read", "provenance": "curated", "input_schema": []},
+    {"id": "acme:x", "side_effects": "read", "provenance": "curated", "acts_on": {"noun": "n", "party": 1}},
 ])
 def test_schema_rejects_bad_contracts(bad: dict) -> None:
     with pytest.raises(jsonschema.ValidationError):
@@ -87,5 +95,6 @@ def test_chain_registry_curated_shadows_declared() -> None:
 def test_verb_id_grammar_matches_typescript() -> None:
     for ok in ["com.solidnumber:payment_link.send", "acme:refund.issue", "mcp:github/create_issue", "skill:pdf-fill", "a:b:c"]:
         assert is_verb_id(ok), ok
-    for bad in ["payment_link.send", "Acme:x", ":x", "acme:", "acme: x", "ac me:x", "", 42]:
+    for bad in ["payment_link.send", "Acme:x", ":x", "acme:", "acme: x", "ac me:x", "", 42,
+                "acme:x\n", "a:x\x1cy", "a:x\x85y", "a:x\ufeffy", "a:x\xa0y"]:
         assert not is_verb_id(bad), bad
