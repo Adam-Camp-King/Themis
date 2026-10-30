@@ -1,6 +1,6 @@
 # themis-policy
 
-Python reference implementation of **Themis RFC v0** — a policy kernel for
+Python reference implementation of **Themis RFC v0.2** (and the v0.3 intent draft) — a policy kernel for
 LLM agents that act on production systems. Four primitives — **locks**,
 **drafts**, **scopes**, **audit** — composed by one engine into a single
 decision per attempted action: `allow`, `deny`, `redirect`, or
@@ -29,6 +29,10 @@ decision = engine.evaluate(PolicyContext(
 if is_deny(decision):
     print(decision.reason)          # missing_scope
 ```
+
+Actions can state why they are happening — `Action(..., intent={"summary": "...", "source": "user_request"})`.
+The engine copies intent, detached, into every audit event, and `DefaultIntentPolicy()`
+denies agent actions that state none (RFC v0.3 draft).
 
 The engine is synchronous (every core policy is pure CPU); `evaluate_async`
 exists for callers already inside an event loop. Stores (`LockStore`,

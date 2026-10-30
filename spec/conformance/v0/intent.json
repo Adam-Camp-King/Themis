@@ -1,0 +1,477 @@
+{
+  "version": "v0",
+  "note": "RFC v0.3 (draft) \u00a7 2.7 / \u00a7 5.7 \u2014 action intent. Intent is carried verbatim into the one audit event whether or not the intent policy is registered; the intent policy denies requestors of the configured kinds (default: agent) whose intent has no non-blank summary.",
+  "cases": [
+    {
+      "name": "1. agent with a stated intent is allowed",
+      "policies": [
+        "intent"
+      ],
+      "requestor": {
+        "id": 100,
+        "kind": "agent",
+        "tenant_id": 7,
+        "scopes": [
+          "*"
+        ]
+      },
+      "action": {
+        "verb": "invoice.send",
+        "resource_type": "invoice",
+        "tenant_id": 7,
+        "resource_id": 881,
+        "intent": {
+          "summary": "Send the March invoice the owner asked for",
+          "source": "user_request",
+          "request_ref": "msg_31",
+          "tool_call_id": "toolu_01"
+        }
+      },
+      "entity": null,
+      "expect": {
+        "decision": {
+          "kind": "allow"
+        },
+        "policy_chain": [
+          "intent"
+        ],
+        "audit": {
+          "requestor": {
+            "id": 100,
+            "kind": "agent",
+            "scopes": [
+              "*"
+            ]
+          },
+          "action": {
+            "verb": "invoice.send",
+            "resource_type": "invoice",
+            "resource_id": 881
+          },
+          "intent": {
+            "summary": "Send the March invoice the owner asked for",
+            "source": "user_request",
+            "request_ref": "msg_31",
+            "tool_call_id": "toolu_01"
+          }
+        }
+      }
+    },
+    {
+      "name": "2. agent with no intent is denied",
+      "policies": [
+        "intent"
+      ],
+      "requestor": {
+        "id": 100,
+        "kind": "agent",
+        "tenant_id": 7,
+        "scopes": [
+          "*"
+        ]
+      },
+      "action": {
+        "verb": "invoice.send",
+        "resource_type": "invoice",
+        "tenant_id": 7
+      },
+      "entity": null,
+      "expect": {
+        "decision": {
+          "kind": "deny",
+          "policy": "intent",
+          "reason": "intent_missing",
+          "message": "This agent action has no stated intent. Set action.intent.summary to say what it is for.",
+          "detail": {
+            "requestor_kind": "agent"
+          }
+        },
+        "policy_chain": [
+          "intent"
+        ],
+        "audit": {
+          "requestor": {
+            "id": 100,
+            "kind": "agent",
+            "scopes": [
+              "*"
+            ]
+          },
+          "action": {
+            "verb": "invoice.send",
+            "resource_type": "invoice"
+          },
+          "intent": null
+        }
+      }
+    },
+    {
+      "name": "3. blank summary counts as no intent",
+      "policies": [
+        "intent"
+      ],
+      "requestor": {
+        "id": 100,
+        "kind": "agent",
+        "tenant_id": 7,
+        "scopes": [
+          "*"
+        ]
+      },
+      "action": {
+        "verb": "invoice.send",
+        "resource_type": "invoice",
+        "tenant_id": 7,
+        "intent": {
+          "summary": "   ",
+          "tool_call_id": "toolu_02"
+        }
+      },
+      "entity": null,
+      "expect": {
+        "decision": {
+          "kind": "deny",
+          "policy": "intent",
+          "reason": "intent_missing",
+          "message": "This agent action has no stated intent. Set action.intent.summary to say what it is for.",
+          "detail": {
+            "requestor_kind": "agent"
+          }
+        },
+        "policy_chain": [
+          "intent"
+        ],
+        "audit": {
+          "requestor": {
+            "id": 100,
+            "kind": "agent",
+            "scopes": [
+              "*"
+            ]
+          },
+          "action": {
+            "verb": "invoice.send",
+            "resource_type": "invoice"
+          },
+          "intent": {
+            "summary": "   ",
+            "tool_call_id": "toolu_02"
+          }
+        }
+      }
+    },
+    {
+      "name": "4. non-string summary counts as no intent",
+      "policies": [
+        "intent"
+      ],
+      "requestor": {
+        "id": 100,
+        "kind": "agent",
+        "tenant_id": 7,
+        "scopes": [
+          "*"
+        ]
+      },
+      "action": {
+        "verb": "invoice.send",
+        "resource_type": "invoice",
+        "tenant_id": 7,
+        "intent": {
+          "summary": 42
+        }
+      },
+      "entity": null,
+      "expect": {
+        "decision": {
+          "kind": "deny",
+          "policy": "intent",
+          "reason": "intent_missing",
+          "message": "This agent action has no stated intent. Set action.intent.summary to say what it is for.",
+          "detail": {
+            "requestor_kind": "agent"
+          }
+        },
+        "policy_chain": [
+          "intent"
+        ]
+      }
+    },
+    {
+      "name": "5. a user without intent is not affected by default",
+      "policies": [
+        "intent"
+      ],
+      "requestor": {
+        "id": 10,
+        "kind": "user",
+        "tenant_id": 7,
+        "scopes": []
+      },
+      "action": {
+        "verb": "invoice.send",
+        "resource_type": "invoice",
+        "tenant_id": 7
+      },
+      "entity": null,
+      "expect": {
+        "decision": {
+          "kind": "allow"
+        },
+        "policy_chain": [
+          "intent"
+        ]
+      }
+    },
+    {
+      "name": "6. configured kinds extend the requirement to api keys",
+      "policies": [
+        {
+          "name": "intent",
+          "kinds": [
+            "agent",
+            "api_key"
+          ]
+        }
+      ],
+      "requestor": {
+        "id": 55,
+        "kind": "api_key",
+        "tenant_id": 7,
+        "scopes": [
+          "invoices:write"
+        ]
+      },
+      "action": {
+        "verb": "invoice.send",
+        "resource_type": "invoice",
+        "tenant_id": 7
+      },
+      "entity": null,
+      "expect": {
+        "decision": {
+          "kind": "deny",
+          "policy": "intent",
+          "reason": "intent_missing",
+          "message": "This api_key action has no stated intent. Set action.intent.summary to say what it is for.",
+          "detail": {
+            "requestor_kind": "api_key"
+          }
+        },
+        "policy_chain": [
+          "intent"
+        ]
+      }
+    },
+    {
+      "name": "7. intent and attributes are carried into the audit event of a denial by another policy",
+      "policies": [
+        {
+          "stub": "deny",
+          "name": "A",
+          "reason": "nope"
+        }
+      ],
+      "requestor": {
+        "id": 100,
+        "kind": "agent",
+        "tenant_id": 7,
+        "scopes": [
+          "*"
+        ]
+      },
+      "action": {
+        "verb": "team.update_role",
+        "resource_type": "team",
+        "tenant_id": 7,
+        "intent": {
+          "summary": "Promote Dana to manager",
+          "source": "agent_plan",
+          "attributes": {
+            "plan_step": 3,
+            "confidence": "high"
+          }
+        }
+      },
+      "entity": null,
+      "expect": {
+        "decision": {
+          "kind": "deny",
+          "policy": "A",
+          "reason": "nope"
+        },
+        "policy_chain": [
+          "A"
+        ],
+        "audit": {
+          "requestor": {
+            "id": 100,
+            "kind": "agent",
+            "scopes": [
+              "*"
+            ]
+          },
+          "action": {
+            "verb": "team.update_role",
+            "resource_type": "team"
+          },
+          "intent": {
+            "summary": "Promote Dana to manager",
+            "source": "agent_plan",
+            "attributes": {
+              "plan_step": 3,
+              "confidence": "high"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "8. intent is carried into the audit event of a tenancy mismatch",
+      "policies": [
+        "intent"
+      ],
+      "requestor": {
+        "id": 100,
+        "kind": "agent",
+        "tenant_id": 7,
+        "scopes": [
+          "*"
+        ]
+      },
+      "action": {
+        "verb": "contact.export",
+        "resource_type": "contact",
+        "tenant_id": 9,
+        "intent": {
+          "summary": "Export contacts for the owner"
+        }
+      },
+      "entity": null,
+      "expect": {
+        "decision": {
+          "kind": "deny",
+          "policy": "engine",
+          "reason": "tenancy_mismatch",
+          "message": "requestor and action belong to different tenants",
+          "detail": {
+            "requestor_tenant": 7,
+            "action_tenant": 9
+          }
+        },
+        "policy_chain": [],
+        "audit": {
+          "requestor": {
+            "id": 100,
+            "kind": "agent",
+            "scopes": [
+              "*"
+            ]
+          },
+          "action": {
+            "verb": "contact.export",
+            "resource_type": "contact"
+          },
+          "intent": {
+            "summary": "Export contacts for the owner"
+          }
+        }
+      }
+    },
+    {
+      "name": "9. denials_only still records the intent of what was refused",
+      "policies": [
+        "intent",
+        {
+          "stub": "deny",
+          "name": "B",
+          "reason": "blocked"
+        }
+      ],
+      "emit_policy": "denials_only",
+      "requestor": {
+        "id": 100,
+        "kind": "agent",
+        "tenant_id": 7,
+        "scopes": [
+          "*"
+        ]
+      },
+      "action": {
+        "verb": "invoice.delete",
+        "resource_type": "invoice",
+        "tenant_id": 7,
+        "intent": {
+          "summary": "Clean up duplicate invoices"
+        }
+      },
+      "entity": null,
+      "expect": {
+        "decision": {
+          "kind": "deny",
+          "policy": "B",
+          "reason": "blocked"
+        },
+        "policy_chain": [
+          "intent",
+          "B"
+        ],
+        "audit": {
+          "requestor": {
+            "id": 100,
+            "kind": "agent",
+            "scopes": [
+              "*"
+            ]
+          },
+          "action": {
+            "verb": "invoice.delete",
+            "resource_type": "invoice"
+          },
+          "intent": {
+            "summary": "Clean up duplicate invoices"
+          }
+        }
+      }
+    },
+    {
+      "name": "10. an empty intent is recorded as no intent",
+      "policies": [],
+      "requestor": {
+        "id": 100,
+        "kind": "agent",
+        "tenant_id": 7,
+        "scopes": [
+          "*"
+        ]
+      },
+      "action": {
+        "verb": "invoice.send",
+        "resource_type": "invoice",
+        "tenant_id": 7,
+        "intent": {}
+      },
+      "entity": null,
+      "expect": {
+        "decision": {
+          "kind": "allow"
+        },
+        "policy_chain": [],
+        "audit": {
+          "requestor": {
+            "id": 100,
+            "kind": "agent",
+            "scopes": [
+              "*"
+            ]
+          },
+          "action": {
+            "verb": "invoice.send",
+            "resource_type": "invoice"
+          },
+          "intent": null
+        }
+      }
+    }
+  ]
+}

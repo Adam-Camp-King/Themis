@@ -22,7 +22,7 @@ from .guards import is_allow, is_deny, is_redirect, is_require_approval
 from .sinks import ConsoleSink, MemorySink, MultiSink, NoOpSink
 from .policies import (
     DefaultDraftPolicy, DefaultLockPolicy, DefaultScopePolicy,
-    DefaultQuarantinePolicy, DefaultRateLimitPolicy, DefaultAnomalyPolicy,
+    DefaultQuarantinePolicy, DefaultRateLimitPolicy, DefaultAnomalyPolicy, DefaultIntentPolicy,
     MemoryRateLimiter, MemoryReputationStore, effective_limit, score_action,
     TIER_LIMITS_PER_MIN, DEDUCTIONS, SOFT_BLOCK, HARD_BLOCK,
 )
@@ -37,7 +37,7 @@ __all__ = [
     "DefaultDraftPolicy", "DefaultLockPolicy", "DefaultScopePolicy",
     "TrustTier", "AgentIdentity", "BehaviorBaseline", "AnomalyInput", "RiskScore", "RateCheck",
     "ReputationStore", "RateLimiter", "AgentIdentityStore",
-    "DefaultQuarantinePolicy", "DefaultRateLimitPolicy", "DefaultAnomalyPolicy",
+    "DefaultQuarantinePolicy", "DefaultRateLimitPolicy", "DefaultAnomalyPolicy", "DefaultIntentPolicy",
     "MemoryRateLimiter", "MemoryReputationStore", "effective_limit", "score_action",
     "TIER_LIMITS_PER_MIN", "DEDUCTIONS", "SOFT_BLOCK", "HARD_BLOCK", "__version__",
 ]

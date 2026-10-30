@@ -3,6 +3,7 @@ from .lock import DefaultLockPolicy
 from .scope import DefaultScopePolicy
 from .draft import DefaultDraftPolicy
 from .quarantine import DefaultQuarantinePolicy
+from .intent import DefaultIntentPolicy
 from .rate_limit import (
     DefaultRateLimitPolicy, MemoryRateLimiter, MemoryReputationStore, effective_limit,
     TIER_LIMITS_PER_MIN, DEDUCTIONS, REPUTATION_FLOOR, REPUTATION_CEILING, RECOVERY_PER_CLEAN_WRITE,
@@ -15,7 +16,7 @@ from .anomaly import (
 
 __all__ = [
     "DefaultLockPolicy", "DefaultScopePolicy", "DefaultDraftPolicy",
-    "DefaultQuarantinePolicy", "DefaultRateLimitPolicy", "DefaultAnomalyPolicy",
+    "DefaultQuarantinePolicy", "DefaultRateLimitPolicy", "DefaultAnomalyPolicy", "DefaultIntentPolicy",
     "MemoryRateLimiter", "MemoryReputationStore", "effective_limit", "score_action", "is_delete_verb", "namespace_of",
     "escalation_namespace_of",
     "TIER_LIMITS_PER_MIN", "DEDUCTIONS", "REPUTATION_FLOOR", "REPUTATION_CEILING", "RECOVERY_PER_CLEAN_WRITE",

@@ -11,6 +11,9 @@ run this exact directory in their test suites.
   redirect ordering, one audit event per evaluation, `emit_policy`.
 - `v0/lock.json`, `v0/scope.json`, `v0/draft.json` — the three core policies
   (RFC § 5), one case per numbered decision rule plus edge cases.
+- `v0/intent.json` — RFC v0.3 draft action intent (§ 2.7, § 5.7, § 9.5): intent is
+  copied, detached, into the one audit event whatever the decision, and the
+  intent policy denies configured requestor kinds that state no summary.
 - `v0/quarantine.json`, `v0/rate_limit.json`, `v0/anomaly.json` — the RFC v0.2
   agent-firewall policies (§ 5.4–5.6). These policies are pure: their inputs
   arrive on the case's `policy_metadata` (keyed by policy name) and, for an
@@ -41,7 +44,8 @@ run this exact directory in their test suites.
 ```
 
 - `policies` entries are `"lock"`, `"scope"`, `"draft"`, `"quarantine"`, `"rate_limit"`,
-  `"anomaly"`, a scope policy with a
+  `"anomaly"`, `"intent"`, an intent policy with configured kinds
+  `{ "name": "intent", "kinds": ["agent", "api_key"] }`, a scope policy with a
   rule table `{ "name": "scope", "rules": [{ "method", "path", "required_scope" }] }`,
   or a stub `{ "stub": "allow|deny|redirect|require_approval", "name": "…", …fields }`
   used to exercise the engine's ordering rules.
@@ -50,8 +54,9 @@ run this exact directory in their test suites.
   is the bare `{ "kind": "allow" }`.
 - `expect.policy_chain` is the ordered list of policies that ran.
 - `expect.audit` is `"none"` (no event may be emitted), an object (the
-  denormalised `requestor` and `action` on the one emitted event must match),
-  or absent (an event must be emitted; only decision/chain/tenant/correlation
+  denormalised `requestor` and `action` on the one emitted event must match;
+  when it has an `intent` key, the event's intent must match too, and
+  `"intent": null` means the event must carry none), or absent (an event must be emitted; only decision/chain/tenant/correlation
   are checked).
 - `policy_metadata` (optional) is passed to the context verbatim; `requestor.metadata`
   (optional) likewise. That is how the firewall vectors feed their pure policies.

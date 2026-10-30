@@ -13,7 +13,7 @@ from typing import Any
 import pytest
 
 from themis import (
-    Action, Allow, DefaultAnomalyPolicy, DefaultDraftPolicy, DefaultLockPolicy, DefaultQuarantinePolicy,
+    Action, Allow, DefaultAnomalyPolicy, DefaultIntentPolicy, DefaultDraftPolicy, DefaultLockPolicy, DefaultQuarantinePolicy,
     DefaultRateLimitPolicy, DefaultScopePolicy, Deny, DraftableEntity, LockableEntity, MemorySink, PolicyContext,
     PolicyEngine, Redirect, RequireApproval, Requestor,
 )
@@ -54,8 +54,12 @@ def _build(spec: Any):
         return DefaultRateLimitPolicy()
     if spec == "anomaly":
         return DefaultAnomalyPolicy()
+    if spec == "intent":
+        return DefaultIntentPolicy()
     if "stub" in spec:
         return _Stub(spec)
+    if spec.get("name") == "intent":
+        return DefaultIntentPolicy(kinds=spec.get("kinds", ("agent",)))
     p = DefaultScopePolicy()
     for r in spec.get("rules", []):
         p.add_rule((r["method"], r["path"]), r["required_scope"])
@@ -99,7 +103,8 @@ def test_vector(c: dict[str, Any]) -> None:
         requestor=Requestor(id=r["id"], kind=r["kind"], tenant_id=r["tenant_id"], scopes=tuple(r.get("scopes", [])),
                             role=r.get("role"), is_super_admin=r.get("is_super_admin"), metadata=r.get("metadata")),
         action=Action(verb=a["verb"], resource_type=a["resource_type"], tenant_id=a["tenant_id"], resource_id=a.get("resource_id"),
-                      area=a.get("area"), required_scope=a.get("required_scope"), payload=a.get("payload"), metadata=a.get("metadata")),
+                      area=a.get("area"), required_scope=a.get("required_scope"), payload=a.get("payload"), metadata=a.get("metadata"),
+                      intent=a.get("intent")),
         entity=_entity(c.get("entity")),
         now=1_700_000_000_000,
         correlation_id=f"conf-{c['name']}",
@@ -118,8 +123,10 @@ def test_vector(c: dict[str, Any]) -> None:
     assert e.tenant_id == a["tenant_id"]
     assert e.correlation_id == ctx.correlation_id
     if isinstance(audit, dict):
-        got = _canon({"requestor": dict(e.requestor), "action": dict(e.action)})
-        assert got == _canon(audit)
+        got = {"requestor": dict(e.requestor), "action": dict(e.action)}
+        if "intent" in audit:
+            got["intent"] = dict(e.intent) if e.intent is not None else None
+        assert _canon(got) == _canon(audit)
 
 
 def test_preview_tokens() -> None:

@@ -20,6 +20,7 @@ export { DefaultLockPolicy } from './policies/lock.js';
 export { DefaultScopePolicy } from './policies/scope.js';
 export { DefaultDraftPolicy } from './policies/draft.js';
 export { DefaultQuarantinePolicy } from './policies/quarantine.js';
+export { DefaultIntentPolicy, type IntentPolicyOptions } from './policies/intent.js';
 export {
   DefaultRateLimitPolicy, MemoryRateLimiter, MemoryReputationStore, effectiveLimit,
   TIER_LIMITS_PER_MIN, DEDUCTIONS, REPUTATION_FLOOR, REPUTATION_CEILING, RECOVERY_PER_CLEAN_WRITE,

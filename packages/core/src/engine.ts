@@ -24,10 +24,11 @@
  *   6. Emit exactly one IAuditEvent per evaluation (when emit_policy != off).
  */
 
-import { randomUUID } from 'node:crypto';
+import { uuidV4 } from './internal/crypto.js';
 import type {
   IAuditEvent,
   IAuditSink,
+  IIntent,
   IPolicy,
   IPolicyConfig,
   IPolicyContext,
@@ -163,7 +164,7 @@ export function buildAuditEvent(
     required_scope: ctx.action.required_scope,
   };
   return {
-    id: randomUUID(),
+    id: uuidV4(),
     timestamp: ctx.now || nowMs(),
     correlation_id: ctx.correlation_id,
     tenant_id: ctx.action.tenant_id,
@@ -173,7 +174,37 @@ export function buildAuditEvent(
     policy_chain: [...policy_chain],
     latency_ms,
     metadata: ctx.action.metadata,
+    ...withIntent(ctx.action.intent),
   };
+}
+
+function withIntent(intent: IIntent | undefined): { intent?: IIntent } {
+  if (!intent || typeof intent !== 'object') return {};
+  const detached = detachIntent(intent);
+  return Object.keys(detached).length > 0 ? { intent: detached } : {};
+}
+
+/**
+ * Copy intent so the audit event never shares structure with the live action
+ * (RFC v0.3 § 9.5). `attributes` is deep-copied through JSON, which is also
+ * the shape any sink will persist. Attributes that are not JSON-serialisable
+ * are dropped rather than allowed to fail the evaluation (§ 9.4).
+ */
+function detachIntent(intent: IIntent): IIntent {
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(intent)) {
+    if (v === undefined || v === null) continue;
+    if (k === 'attributes') {
+      try {
+        out[k] = JSON.parse(JSON.stringify(v)) as unknown;
+      } catch {
+        // not serialisable — drop, never throw out of the audit path
+      }
+      continue;
+    }
+    out[k] = v;
+  }
+  return out as IIntent;
 }
 
 function nowMs(): number {

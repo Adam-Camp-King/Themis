@@ -303,3 +303,32 @@ test('correlationIdFrom override is used', async () => {
   await gate.execute(mkToolUse());
   assert.equal(seen[0], 'trace-override');
 });
+
+// --- intent (RFC v0.3 § 2.7) --------------------------------------------
+
+test('a stated intent is stamped with the tool_use id in the audit event', async () => {
+  const events: Array<{ intent?: { tool_call_id?: string; summary?: string } }> = [];
+  const engine = new PolicyEngine({ auditSink: { emit: (e) => { events.push(e); } } });
+  const gate = gateToolHandlers(
+    { send_invoice: () => 'ok' },
+    {
+      engine,
+      requestorFrom: () => mkRequestor(),
+      actionFrom: (tu) => ({ ...mkAction(tu.name), intent: { summary: 'Send the March invoice' } }),
+    },
+  );
+  await gate.execute(mkToolUse({ id: 'toolu_42', name: 'send_invoice' }));
+  assert.equal(events[0]?.intent?.tool_call_id, 'toolu_42');
+  assert.equal(events[0]?.intent?.summary, 'Send the March invoice');
+});
+
+test('an action with no intent is not given one', async () => {
+  const events: Array<{ intent?: unknown }> = [];
+  const engine = new PolicyEngine({ auditSink: { emit: (e) => { events.push(e); } } });
+  const gate = gateToolHandlers(
+    { send_invoice: () => 'ok' },
+    { engine, requestorFrom: () => mkRequestor(), actionFrom: (tu) => mkAction(tu.name) },
+  );
+  await gate.execute(mkToolUse({ id: 'toolu_43', name: 'send_invoice' }));
+  assert.equal(events[0]?.intent, undefined);
+});

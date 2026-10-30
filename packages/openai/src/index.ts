@@ -88,7 +88,7 @@ export function gateToolCalls(
     }
 
     const requestor = opts.requestorFrom(toolCall, parsedArgs);
-    const action = opts.actionFrom(toolCall, parsedArgs);
+    const action = withToolCallId(opts.actionFrom(toolCall, parsedArgs), toolCall.id);
     const entity = opts.entityFrom ? await opts.entityFrom(toolCall, parsedArgs) : null;
     const policy_metadata = opts.policyMetadataFrom ? await opts.policyMetadataFrom(toolCall, parsedArgs) : undefined;
     const correlation_id =
@@ -164,4 +164,14 @@ function stringify(v: unknown): string {
 function formatError(err: unknown): string {
   if (err instanceof Error) return err.message;
   return String(err);
+}
+
+/**
+ * Stamp the model's tool-call id onto a stated intent (RFC v0.3 § 2.7) so the
+ * audit event links back to the exact call. An action that stated no intent is
+ * left alone: an id is provenance, not a reason.
+ */
+function withToolCallId(action: IAction, id: string): IAction {
+  if (!action.intent || action.intent.tool_call_id) return action;
+  return { ...action, intent: { ...action.intent, tool_call_id: id } };
 }
