@@ -20,11 +20,11 @@ is provided for callers already inside an event loop.
 """
 from __future__ import annotations
 
-import json
 import time
 import uuid
 from typing import Any, Literal, Mapping, Optional, Sequence
 
+from ._intent import recordable_intent
 from .types import (
     Allow, AuditEvent, AuditSink, Decision, Deny, Policy, PolicyContext, Redirect, RequireApproval,
 )
@@ -64,29 +64,8 @@ def build_audit_event(
         policy_chain=tuple(policy_chain),
         latency_ms=latency_ms,
         metadata=ctx.action.metadata,
-        intent=_detach_intent(ctx.action.intent),
+        intent=recordable_intent(ctx.action.intent),
     )
-
-
-def _detach_intent(intent: Optional[Mapping[str, Any]]) -> Optional[dict[str, Any]]:
-    """Copy intent so the audit event never shares structure with the live action
-    (RFC v0.3 § 9.5). ``attributes`` is deep-copied through JSON — the shape any
-    sink persists — and dropped if it is not serialisable, never raised (§ 9.4).
-    """
-    if not isinstance(intent, Mapping):
-        return None
-    out: dict[str, Any] = {}
-    for k, v in intent.items():
-        if v is None:
-            continue
-        if k == "attributes":
-            try:
-                out[k] = json.loads(json.dumps(v))
-            except (TypeError, ValueError):
-                pass
-            continue
-        out[k] = v
-    return out or None
 
 
 class PolicyEngine:
@@ -141,8 +120,10 @@ class PolicyEngine:
         if self._emit_policy == "denials_only" and isinstance(decision, Allow):
             return
         latency_ms = (time.perf_counter() - start) * 1000.0
-        event = build_audit_event(ctx, decision, chain, latency_ms)
         try:
+            # Building the event is inside the try too: nothing on the audit
+            # path — event construction, the sink — may fail the evaluation.
+            event = build_audit_event(ctx, decision, chain, latency_ms)
             self.audit_sink.emit(event)
         except Exception:  # noqa: BLE001 — RFC § 9.4: audit failure never fails evaluation
             pass

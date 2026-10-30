@@ -10,8 +10,8 @@
  *
  *   1. requestor.kind is not one of the configured kinds → allow.
  *      Default kinds: ['agent'].
- *   2. action.intent.summary is a string with at least one non-whitespace
- *      character → allow.
+ *   2. action.intent is a plain object whose summary is a string with at
+ *      least one character outside Unicode White_Space ∪ {U+FEFF} → allow.
  *   3. Otherwise deny { reason: 'intent_missing' }.
  *
  * The policy checks that an intent was *stated*, not that it is true. Its job
@@ -21,6 +21,7 @@
  */
 
 import type { IPolicy, IPolicyContext, IPolicyDecision, IRequestor } from '../types.js';
+import { isBlankSummary, isPlainObject } from '../internal/intent.js';
 
 export interface IntentPolicyOptions {
   /** Requestor kinds that must state an intent. Default ['agent']. */
@@ -42,8 +43,9 @@ export class DefaultIntentPolicy implements IPolicy {
     }
 
     // Rule 2
-    const summary: unknown = ctx.action.intent?.summary;
-    if (typeof summary === 'string' && summary.trim().length > 0) {
+    const intent: unknown = ctx.action.intent;
+    const summary: unknown = isPlainObject(intent) ? intent['summary'] : undefined;
+    if (!isBlankSummary(summary)) {
       return { kind: 'allow', policy: this.name };
     }
 

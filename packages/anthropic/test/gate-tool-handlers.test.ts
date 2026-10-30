@@ -332,3 +332,16 @@ test('an action with no intent is not given one', async () => {
   await gate.execute(mkToolUse({ id: 'toolu_43', name: 'send_invoice' }));
   assert.equal(events[0]?.intent, undefined);
 });
+
+test('an empty or non-object intent is not stamped', async () => {
+  for (const intent of [{}, 'do it', ['a']]) {
+    const events: Array<{ intent?: unknown }> = [];
+    const engine = new PolicyEngine({ auditSink: { emit: (e) => { events.push(e); } } });
+    const gate = gateToolHandlers(
+      { send_invoice: () => 'ok' },
+      { engine, requestorFrom: () => mkRequestor(), actionFrom: (tu) => ({ ...mkAction(tu.name), intent: intent as never }) },
+    );
+    await gate.execute(mkToolUse({ id: 'toolu_44', name: 'send_invoice' }));
+    assert.equal(events[0]?.intent, undefined, JSON.stringify(intent));
+  }
+});

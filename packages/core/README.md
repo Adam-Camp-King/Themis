@@ -66,7 +66,7 @@ The firewall policies are pure: they read only `policy_metadata[policy.name]`. Y
 
 ## Intent
 
-`action.intent` records why the requestor says it is acting: `summary`, `source` (`user_request`, `agent_plan`, `schedule`, `system`, or your own), `request_ref`, `tool_call_id` and free-form `attributes`. It is declared, not verified. The engine copies it, detached, into every audit event whatever the decision, so the audit trail pairs what an agent said it was doing with what it was allowed to do. The Anthropic and OpenAI adapters stamp the model's tool-call id onto a stated intent automatically.
+`action.intent` records why the requestor says it is acting: `summary`, `source` (`user_request`, `agent_plan`, `schedule`, `system`, or your own), `request_ref`, `tool_call_id` and free-form `attributes`. It is declared, not verified. The engine records only those five fields: the four string fields when they are strings, and `attributes` when it is a JSON object (anything else — NaN, a Date, a class instance, more than 32 levels deep — drops the whole `attributes` field). The engine copies it, detached, into every audit event whatever the decision, so the audit trail pairs what an agent said it was doing with what it was allowed to do. The Anthropic and OpenAI adapters stamp the model's tool-call id onto a stated intent automatically.
 
 ## Tests
 

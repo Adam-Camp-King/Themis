@@ -6,8 +6,8 @@ Decision rules (normative, identical to ``themis-policy``):
 
   1. ``requestor.kind`` is not one of the configured kinds → allow.
      Default kinds: ``("agent",)``.
-  2. ``action.intent["summary"]`` is a ``str`` with at least one non-whitespace
-     character → allow.
+  2. ``action.intent`` is a mapping whose ``summary`` is a ``str`` with at least
+     one character outside Unicode White_Space ∪ {U+FEFF} → allow.
   3. Otherwise deny ``{reason: 'intent_missing'}``.
 
 The policy checks that an intent was *stated*, not that it is true. Register it
@@ -15,8 +15,9 @@ first so even a refused action that stated nothing is recorded as such.
 """
 from __future__ import annotations
 
-from typing import Iterable
+from typing import Iterable, Mapping
 
+from .._intent import is_blank_summary
 from ..types import Allow, Decision, Deny, PolicyContext, RequestorKind
 
 
@@ -30,8 +31,9 @@ class DefaultIntentPolicy:
         kind = ctx.requestor.kind
         if kind not in self._kinds:
             return Allow(policy=self.name)
-        summary = (ctx.action.intent or {}).get("summary")
-        if isinstance(summary, str) and summary.strip():
+        intent = ctx.action.intent
+        summary = intent.get("summary") if isinstance(intent, Mapping) else None
+        if not is_blank_summary(summary):
             return Allow(policy=self.name)
         return Deny(
             policy=self.name,

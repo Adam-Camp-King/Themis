@@ -25,6 +25,7 @@
  */
 
 import { uuidV4 } from './internal/crypto.js';
+import { recordableIntent } from './internal/intent.js';
 import type {
   IAuditEvent,
   IAuditSink,
@@ -128,8 +129,10 @@ export class PolicyEngine implements IPolicyEngine {
     if (this.emit_policy === 'denials_only' && decision.kind === 'allow') {
       return;
     }
-    const event = buildAuditEvent(ctx, decision, chain, latency_ms);
     try {
+      // Building the event is inside the try too: nothing on the audit path —
+      // event construction, id generation, the sink — may fail the evaluation.
+      const event = buildAuditEvent(ctx, decision, chain, latency_ms);
       await this.auditSink.emit(event);
     } catch {
       // Audit failures MUST NOT fail the evaluation (RFC v0 § 9.4).
@@ -178,33 +181,9 @@ export function buildAuditEvent(
   };
 }
 
-function withIntent(intent: IIntent | undefined): { intent?: IIntent } {
-  if (!intent || typeof intent !== 'object') return {};
-  const detached = detachIntent(intent);
-  return Object.keys(detached).length > 0 ? { intent: detached } : {};
-}
-
-/**
- * Copy intent so the audit event never shares structure with the live action
- * (RFC v0.3 § 9.5). `attributes` is deep-copied through JSON, which is also
- * the shape any sink will persist. Attributes that are not JSON-serialisable
- * are dropped rather than allowed to fail the evaluation (§ 9.4).
- */
-function detachIntent(intent: IIntent): IIntent {
-  const out: Record<string, unknown> = {};
-  for (const [k, v] of Object.entries(intent)) {
-    if (v === undefined || v === null) continue;
-    if (k === 'attributes') {
-      try {
-        out[k] = JSON.parse(JSON.stringify(v)) as unknown;
-      } catch {
-        // not serialisable — drop, never throw out of the audit path
-      }
-      continue;
-    }
-    out[k] = v;
-  }
-  return out as IIntent;
+function withIntent(intent: unknown): { intent?: IIntent } {
+  const recorded = recordableIntent(intent);
+  return recorded ? { intent: recorded } : {};
 }
 
 function nowMs(): number {

@@ -1,6 +1,6 @@
 {
   "version": "v0",
-  "note": "RFC v0.3 (draft) \u00a7 2.7 / \u00a7 5.7 \u2014 action intent. Intent is carried verbatim into the one audit event whether or not the intent policy is registered; the intent policy denies requestors of the configured kinds (default: agent) whose intent has no non-blank summary.",
+  "note": "RFC v0.3 (draft) § 2.7 / § 5.7 — action intent. Intent is carried verbatim into the one audit event whether or not the intent policy is registered; the intent policy denies requestors of the configured kinds (default: agent) whose intent has no non-blank summary.",
   "cases": [
     {
       "name": "1. agent with a stated intent is allowed",
@@ -194,7 +194,21 @@
         },
         "policy_chain": [
           "intent"
-        ]
+        ],
+        "audit": {
+          "requestor": {
+            "id": 100,
+            "kind": "agent",
+            "scopes": [
+              "*"
+            ]
+          },
+          "action": {
+            "verb": "invoice.send",
+            "resource_type": "invoice"
+          },
+          "intent": null
+        }
       }
     },
     {
@@ -470,6 +484,653 @@
             "resource_type": "invoice"
           },
           "intent": null
+        }
+      }
+    },
+    {
+      "name": "11. a summary of only U+FEFF is blank",
+      "policies": [
+        "intent"
+      ],
+      "requestor": {
+        "id": 100,
+        "kind": "agent",
+        "tenant_id": 7,
+        "scopes": [
+          "*"
+        ]
+      },
+      "action": {
+        "verb": "invoice.send",
+        "resource_type": "invoice",
+        "tenant_id": 7,
+        "intent": {
+          "summary": "﻿"
+        }
+      },
+      "entity": null,
+      "expect": {
+        "decision": {
+          "kind": "deny",
+          "policy": "intent",
+          "reason": "intent_missing",
+          "message": "This agent action has no stated intent. Set action.intent.summary to say what it is for.",
+          "detail": {
+            "requestor_kind": "agent"
+          }
+        },
+        "policy_chain": [
+          "intent"
+        ],
+        "audit": {
+          "requestor": {
+            "id": 100,
+            "kind": "agent",
+            "scopes": [
+              "*"
+            ]
+          },
+          "action": {
+            "verb": "invoice.send",
+            "resource_type": "invoice"
+          },
+          "intent": {
+            "summary": "﻿"
+          }
+        }
+      }
+    },
+    {
+      "name": "12. a summary of only Unicode White_Space is blank (U+3000, U+0085, U+00A0, U+2028)",
+      "policies": [
+        "intent"
+      ],
+      "requestor": {
+        "id": 100,
+        "kind": "agent",
+        "tenant_id": 7,
+        "scopes": [
+          "*"
+        ]
+      },
+      "action": {
+        "verb": "invoice.send",
+        "resource_type": "invoice",
+        "tenant_id": 7,
+        "intent": {
+          "summary": "　  "
+        }
+      },
+      "entity": null,
+      "expect": {
+        "decision": {
+          "kind": "deny",
+          "policy": "intent",
+          "reason": "intent_missing",
+          "message": "This agent action has no stated intent. Set action.intent.summary to say what it is for.",
+          "detail": {
+            "requestor_kind": "agent"
+          }
+        },
+        "policy_chain": [
+          "intent"
+        ],
+        "audit": {
+          "requestor": {
+            "id": 100,
+            "kind": "agent",
+            "scopes": [
+              "*"
+            ]
+          },
+          "action": {
+            "verb": "invoice.send",
+            "resource_type": "invoice"
+          },
+          "intent": {
+            "summary": "　  "
+          }
+        }
+      }
+    },
+    {
+      "name": "13. U+001C is not White_Space, so the summary is stated",
+      "policies": [
+        "intent"
+      ],
+      "requestor": {
+        "id": 100,
+        "kind": "agent",
+        "tenant_id": 7,
+        "scopes": [
+          "*"
+        ]
+      },
+      "action": {
+        "verb": "invoice.send",
+        "resource_type": "invoice",
+        "tenant_id": 7,
+        "intent": {
+          "summary": "\u001c"
+        }
+      },
+      "entity": null,
+      "expect": {
+        "decision": {
+          "kind": "allow"
+        },
+        "policy_chain": [
+          "intent"
+        ],
+        "audit": {
+          "requestor": {
+            "id": 100,
+            "kind": "agent",
+            "scopes": [
+              "*"
+            ]
+          },
+          "action": {
+            "verb": "invoice.send",
+            "resource_type": "invoice"
+          },
+          "intent": {
+            "summary": "\u001c"
+          }
+        }
+      }
+    },
+    {
+      "name": "14. a string intent is no intent",
+      "policies": [
+        "intent"
+      ],
+      "requestor": {
+        "id": 100,
+        "kind": "agent",
+        "tenant_id": 7,
+        "scopes": [
+          "*"
+        ]
+      },
+      "action": {
+        "verb": "invoice.send",
+        "resource_type": "invoice",
+        "tenant_id": 7,
+        "intent": "do it"
+      },
+      "entity": null,
+      "expect": {
+        "decision": {
+          "kind": "deny",
+          "policy": "intent",
+          "reason": "intent_missing",
+          "message": "This agent action has no stated intent. Set action.intent.summary to say what it is for.",
+          "detail": {
+            "requestor_kind": "agent"
+          }
+        },
+        "policy_chain": [
+          "intent"
+        ],
+        "audit": {
+          "requestor": {
+            "id": 100,
+            "kind": "agent",
+            "scopes": [
+              "*"
+            ]
+          },
+          "action": {
+            "verb": "invoice.send",
+            "resource_type": "invoice"
+          },
+          "intent": null
+        }
+      }
+    },
+    {
+      "name": "15. an array intent is no intent",
+      "policies": [
+        "intent"
+      ],
+      "requestor": {
+        "id": 100,
+        "kind": "agent",
+        "tenant_id": 7,
+        "scopes": [
+          "*"
+        ]
+      },
+      "action": {
+        "verb": "invoice.send",
+        "resource_type": "invoice",
+        "tenant_id": 7,
+        "intent": [
+          "send",
+          "the invoice"
+        ]
+      },
+      "entity": null,
+      "expect": {
+        "decision": {
+          "kind": "deny",
+          "policy": "intent",
+          "reason": "intent_missing",
+          "message": "This agent action has no stated intent. Set action.intent.summary to say what it is for.",
+          "detail": {
+            "requestor_kind": "agent"
+          }
+        },
+        "policy_chain": [
+          "intent"
+        ],
+        "audit": {
+          "requestor": {
+            "id": 100,
+            "kind": "agent",
+            "scopes": [
+              "*"
+            ]
+          },
+          "action": {
+            "verb": "invoice.send",
+            "resource_type": "invoice"
+          },
+          "intent": null
+        }
+      }
+    },
+    {
+      "name": "16. only the five spec fields, and only string scalars, are recorded",
+      "policies": [
+        "intent"
+      ],
+      "requestor": {
+        "id": 100,
+        "kind": "agent",
+        "tenant_id": 7,
+        "scopes": [
+          "*"
+        ]
+      },
+      "action": {
+        "verb": "invoice.send",
+        "resource_type": "invoice",
+        "tenant_id": 7,
+        "intent": {
+          "summary": "Send it",
+          "source": {
+            "kind": "user"
+          },
+          "request_ref": 31,
+          "tool_call_id": "toolu_7",
+          "plan": {
+            "step": 2
+          },
+          "secret": "not recorded"
+        }
+      },
+      "entity": null,
+      "expect": {
+        "decision": {
+          "kind": "allow"
+        },
+        "policy_chain": [
+          "intent"
+        ],
+        "audit": {
+          "requestor": {
+            "id": 100,
+            "kind": "agent",
+            "scopes": [
+              "*"
+            ]
+          },
+          "action": {
+            "verb": "invoice.send",
+            "resource_type": "invoice"
+          },
+          "intent": {
+            "summary": "Send it",
+            "tool_call_id": "toolu_7"
+          }
+        }
+      }
+    },
+    {
+      "name": "17. attributes that are not an object are dropped",
+      "policies": [
+        "intent"
+      ],
+      "requestor": {
+        "id": 100,
+        "kind": "agent",
+        "tenant_id": 7,
+        "scopes": [
+          "*"
+        ]
+      },
+      "action": {
+        "verb": "invoice.send",
+        "resource_type": "invoice",
+        "tenant_id": 7,
+        "intent": {
+          "summary": "Send it",
+          "attributes": [
+            "a",
+            "b"
+          ]
+        }
+      },
+      "entity": null,
+      "expect": {
+        "decision": {
+          "kind": "allow"
+        },
+        "policy_chain": [
+          "intent"
+        ],
+        "audit": {
+          "requestor": {
+            "id": 100,
+            "kind": "agent",
+            "scopes": [
+              "*"
+            ]
+          },
+          "action": {
+            "verb": "invoice.send",
+            "resource_type": "invoice"
+          },
+          "intent": {
+            "summary": "Send it"
+          }
+        }
+      }
+    },
+    {
+      "name": "18. attributes nested 32 deep are recorded",
+      "policies": [
+        "intent"
+      ],
+      "requestor": {
+        "id": 100,
+        "kind": "agent",
+        "tenant_id": 7,
+        "scopes": [
+          "*"
+        ]
+      },
+      "action": {
+        "verb": "invoice.send",
+        "resource_type": "invoice",
+        "tenant_id": 7,
+        "intent": {
+          "summary": "Send it",
+          "attributes": {
+            "a": {
+              "a": {
+                "a": {
+                  "a": {
+                    "a": {
+                      "a": {
+                        "a": {
+                          "a": {
+                            "a": {
+                              "a": {
+                                "a": {
+                                  "a": {
+                                    "a": {
+                                      "a": {
+                                        "a": {
+                                          "a": {
+                                            "a": {
+                                              "a": {
+                                                "a": {
+                                                  "a": {
+                                                    "a": {
+                                                      "a": {
+                                                        "a": {
+                                                          "a": {
+                                                            "a": {
+                                                              "a": {
+                                                                "a": {
+                                                                  "a": {
+                                                                    "a": {
+                                                                      "a": {
+                                                                        "a": {}
+                                                                      }
+                                                                    }
+                                                                  }
+                                                                }
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "entity": null,
+      "expect": {
+        "decision": {
+          "kind": "allow"
+        },
+        "policy_chain": [
+          "intent"
+        ],
+        "audit": {
+          "requestor": {
+            "id": 100,
+            "kind": "agent",
+            "scopes": [
+              "*"
+            ]
+          },
+          "action": {
+            "verb": "invoice.send",
+            "resource_type": "invoice"
+          },
+          "intent": {
+            "summary": "Send it",
+            "attributes": {
+              "a": {
+                "a": {
+                  "a": {
+                    "a": {
+                      "a": {
+                        "a": {
+                          "a": {
+                            "a": {
+                              "a": {
+                                "a": {
+                                  "a": {
+                                    "a": {
+                                      "a": {
+                                        "a": {
+                                          "a": {
+                                            "a": {
+                                              "a": {
+                                                "a": {
+                                                  "a": {
+                                                    "a": {
+                                                      "a": {
+                                                        "a": {
+                                                          "a": {
+                                                            "a": {
+                                                              "a": {
+                                                                "a": {
+                                                                  "a": {
+                                                                    "a": {
+                                                                      "a": {
+                                                                        "a": {
+                                                                          "a": {}
+                                                                        }
+                                                                      }
+                                                                    }
+                                                                  }
+                                                                }
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "19. attributes nested 33 deep are dropped whole",
+      "policies": [
+        "intent"
+      ],
+      "requestor": {
+        "id": 100,
+        "kind": "agent",
+        "tenant_id": 7,
+        "scopes": [
+          "*"
+        ]
+      },
+      "action": {
+        "verb": "invoice.send",
+        "resource_type": "invoice",
+        "tenant_id": 7,
+        "intent": {
+          "summary": "Send it",
+          "attributes": {
+            "a": {
+              "a": {
+                "a": {
+                  "a": {
+                    "a": {
+                      "a": {
+                        "a": {
+                          "a": {
+                            "a": {
+                              "a": {
+                                "a": {
+                                  "a": {
+                                    "a": {
+                                      "a": {
+                                        "a": {
+                                          "a": {
+                                            "a": {
+                                              "a": {
+                                                "a": {
+                                                  "a": {
+                                                    "a": {
+                                                      "a": {
+                                                        "a": {
+                                                          "a": {
+                                                            "a": {
+                                                              "a": {
+                                                                "a": {
+                                                                  "a": {
+                                                                    "a": {
+                                                                      "a": {
+                                                                        "a": {
+                                                                          "a": {}
+                                                                        }
+                                                                      }
+                                                                    }
+                                                                  }
+                                                                }
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "entity": null,
+      "expect": {
+        "decision": {
+          "kind": "allow"
+        },
+        "policy_chain": [
+          "intent"
+        ],
+        "audit": {
+          "requestor": {
+            "id": 100,
+            "kind": "agent",
+            "scopes": [
+              "*"
+            ]
+          },
+          "action": {
+            "verb": "invoice.send",
+            "resource_type": "invoice"
+          },
+          "intent": {
+            "summary": "Send it"
+          }
         }
       }
     }

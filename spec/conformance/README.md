@@ -12,8 +12,13 @@ run this exact directory in their test suites.
 - `v0/lock.json`, `v0/scope.json`, `v0/draft.json` — the three core policies
   (RFC § 5), one case per numbered decision rule plus edge cases.
 - `v0/intent.json` — RFC v0.3 draft action intent (§ 2.7, § 5.7, § 9.5): intent is
-  copied, detached, into the one audit event whatever the decision, and the
-  intent policy denies configured requestor kinds that state no summary.
+  copied, detached, into the one audit event whatever the decision; only the
+  five spec fields are recorded (string fields only as strings, `attributes`
+  only as a JSON object at most 32 deep); a summary is blank when every
+  character is Unicode White_Space or U+FEFF; and the intent policy denies
+  configured requestor kinds that state no summary. Non-finite numbers and
+  non-JSON values cannot be written in JSON vectors, so each implementation
+  pins those in its unit tests (they drop the whole `attributes` field).
 - `v0/quarantine.json`, `v0/rate_limit.json`, `v0/anomaly.json` — the RFC v0.2
   agent-firewall policies (§ 5.4–5.6). These policies are pure: their inputs
   arrive on the case's `policy_metadata` (keyed by policy name) and, for an

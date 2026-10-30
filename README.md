@@ -62,7 +62,7 @@ await engine.evaluate({
 // audit event → { …, decision: { kind: 'allow' }, intent: { summary: 'Send the March invoice…', … } }
 ```
 
-An agent that states nothing is denied with `intent_missing`, and Claude sees that as an error `tool_result` telling it to say what the action is for. Intent is declared, not verified. Its value is the pairing: an approved `team.update_role` whose stated purpose was "send an invoice" is exactly what an auditor, or an anomaly model, should look at. Persisting events to Postgres? Store `decision`, `intent` and `metadata` as `jsonb` and index `intent` with GIN.
+An agent that states nothing is denied with `intent_missing`. Your adapter's `actionFrom` supplies the intent; to have the model state it, add a required `intent` field to each tool's input schema and map it to `summary`. Intent is declared, not verified. Its value is the pairing: an approved `team.update_role` whose stated purpose was "send an invoice" is exactly what an auditor, or an anomaly model, should look at. Persisting events to Postgres? Store `decision`, `intent` and `metadata` as `jsonb` and index `intent` with GIN.
 
 ## Development
 

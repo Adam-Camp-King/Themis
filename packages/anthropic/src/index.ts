@@ -230,6 +230,8 @@ function formatError(err: unknown): string {
  * left alone: an id is provenance, not a reason.
  */
 function withToolCallId(action: IAction, id: string): IAction {
-  if (!action.intent || action.intent.tool_call_id) return action;
+  const intent: unknown = action.intent;
+  if (intent === null || typeof intent !== 'object' || Array.isArray(intent)) return action;
+  if (Object.keys(intent).length === 0 || action.intent?.tool_call_id) return action;
   return { ...action, intent: { ...action.intent, tool_call_id: id } };
 }

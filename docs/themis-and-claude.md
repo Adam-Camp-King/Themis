@@ -136,7 +136,9 @@ actionFrom: (toolUse) => ({
 }),
 ```
 
-Every audit event then carries the intent, detached and verbatim, whatever the decision. Register `DefaultIntentPolicy` first and an agent action with no stated intent is denied with `intent_missing`; Claude reads the error and retries with a reason. Intent is declared, not verified. The pairing of stated purpose and permitted action is the governance record.
+Every audit event then carries the intent, detached, whatever the decision. Register `DefaultIntentPolicy` first and an agent action with no stated intent is denied with `intent_missing`.
+
+The intent comes from your `actionFrom`, not from Claude directly. To have the model state it, add a required `intent` string to each tool's `input_schema` ("why you are making this call, in one sentence") and map `toolUse.input.intent` to `intent.summary`. A missing reason then reaches Claude as an error `tool_result`, and Claude can call again with one. Intent is declared, not verified. The pairing of stated purpose and permitted action is the governance record.
 
 ## Why this fits Anthropic's deployment story
 
