@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import math
 
+from .._verb_contract import impacts_of, usable_contract
 from ..types import Allow, AnomalyInput, Decision, Deny, PolicyContext, RequireApproval, RiskScore
 
 SOFT_BLOCK = 0.80
@@ -68,8 +69,16 @@ def escalation_namespace_of(verb: str) -> str | None:
     return match
 
 
+#: With a contract, a custom-tier verb with any of these impacts is an escalation; first match names it.
+ESCALATION_IMPACTS: tuple[str, ...] = ("access", "money", "data_export")
+
+
 def score_action(inp: AnomalyInput) -> RiskScore:
-    if inp.side_effects not in ("write", "mixed"):
+    # With a contract (RFC v0.3 § 5.8) the facts come from it, not from the verb name.
+    contract = usable_contract(inp.contract)
+    impacts = impacts_of(contract) if contract is not None else []
+    side_effects = contract.get("side_effects") if contract is not None else inp.side_effects
+    if side_effects not in ("write", "mixed"):
         return RiskScore()
     risk = 0.0
     reasons: list[str] = []
@@ -79,11 +88,15 @@ def score_action(inp: AnomalyInput) -> RiskScore:
         risk = min(1.0, round(risk + amount, 4))
         reasons.append(reason)
 
-    if is_delete_verb(inp.verb) and inp.recent_deletes + 1 >= BULK_DELETE_THRESHOLD:
+    is_delete = "deletion" in impacts if contract is not None else is_delete_verb(inp.verb)
+    if is_delete and inp.recent_deletes + 1 >= BULK_DELETE_THRESHOLD:
         add(0.97, f"bulk_delete:{inp.recent_deletes + 1}_in_10m")
-    ns = escalation_namespace_of(inp.verb)
-    if inp.trust_tier == "custom" and ns is not None:
-        add(0.90, f"scope_escalation:{ns}")
+    if contract is not None:
+        escalation = next((i for i in ESCALATION_IMPACTS if i in impacts), None)
+    else:
+        escalation = escalation_namespace_of(inp.verb)
+    if inp.trust_tier == "custom" and escalation is not None:
+        add(0.90, f"scope_escalation:{escalation}")
     if OFF_HOURS[0] <= inp.local_hour < OFF_HOURS[1] and inp.recent_writes + 1 >= BURST_THRESHOLD:
         add(0.85, f"off_hours_burst:{inp.recent_writes + 1}_in_5m@{inp.local_hour:02d}h")
     if inp.payload_bytes > PAYLOAD_SOFT_BYTES:
@@ -140,6 +153,6 @@ class DefaultAnomalyPolicy:
 __all__ = [
     "DefaultAnomalyPolicy", "score_action", "is_delete_verb", "namespace_of", "escalation_namespace_of",
     "SOFT_BLOCK", "HARD_BLOCK", "BULK_DELETE_THRESHOLD", "BURST_THRESHOLD", "OFF_HOURS", "PAYLOAD_SOFT_BYTES",
-    "MIN_BASELINE_SAMPLE", "MIN_BASELINE_DAYS", "BASELINE_MAX_AGE_MS", "Z_TRIGGER", "Z_MAX_CONTRIBUTION",
+    "MIN_BASELINE_SAMPLE", "MIN_BASELINE_DAYS", "BASELINE_MAX_AGE_MS", "Z_TRIGGER", "Z_MAX_CONTRIBUTION", "ESCALATION_IMPACTS",
     "ESCALATION_NAMESPACES",
 ]

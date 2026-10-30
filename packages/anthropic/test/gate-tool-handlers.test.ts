@@ -345,3 +345,49 @@ test('an empty or non-object intent is not stamped', async () => {
     assert.equal(events[0]?.intent, undefined, JSON.stringify(intent));
   }
 });
+
+// --- verb contracts (RFC v0.3 § 2.8, § 9.6) -------------------------------
+
+test('verbRegistry: the contract reaches the policy and the audit event; Claude sees the approval envelope', async () => {
+  const { DefaultVerbContractPolicy, StaticVerbRegistry } = await import('themis-policy');
+  const events: Array<{ verb_contract?: { id?: string; impacts?: readonly string[] } }> = [];
+  const engine = new PolicyEngine({ auditSink: { emit: (e) => { events.push(e); } } });
+  engine.addPolicy(new DefaultVerbContractPolicy());
+  let ran = false;
+  const gate = gateToolHandlers(
+    { send_payment_link: () => { ran = true; return 'sent'; } },
+    {
+      engine,
+      requestorFrom: () => mkRequestor(),
+      actionFrom: () => ({ verb: 'payment_link.send', resource_type: 'payment_link', tenant_id: 7 }),
+      verbRegistry: new StaticVerbRegistry(
+        [{ id: 'com.solidnumber:payment_link.send', side_effects: 'write', reversibility: 'irreversible', impacts: ['money'], provenance: 'curated' }],
+        { defaultNamespace: 'com.solidnumber' },
+      ),
+    },
+  );
+  const r = await gate.execute(mkToolUse({ id: 'toolu_50', name: 'send_payment_link' }));
+  assert.equal(ran, false);
+  assert.match(String(r.content), /themis_approval_pending/);
+  assert.match(String(r.content), /irreversible, impact:money/);
+  assert.equal(events[0]?.verb_contract?.id, 'com.solidnumber:payment_link.send');
+  assert.deepEqual(events[0]?.verb_contract?.impacts, ['money']);
+});
+
+test('verbRegistry that throws resolves to no contract: an agent fails closed, the call does not crash', async () => {
+  const { DefaultVerbContractPolicy } = await import('themis-policy');
+  const engine = new PolicyEngine();
+  engine.addPolicy(new DefaultVerbContractPolicy());
+  const gate = gateToolHandlers(
+    { send_invoice: () => 'ok' },
+    {
+      engine,
+      requestorFrom: () => mkRequestor(),
+      actionFrom: (tu) => mkAction(tu.name),
+      verbRegistry: { resolve: () => { throw new Error('registry down'); } },
+    },
+  );
+  const r = await gate.execute(mkToolUse({ id: 'toolu_51', name: 'send_invoice' }));
+  assert.equal(r.is_error, true);
+  assert.match(String(r.content), /unknown_verb|has no verb contract/);
+});

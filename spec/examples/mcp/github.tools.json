@@ -1,0 +1,53 @@
+{
+  "tools": [
+    {
+      "name": "search_issues",
+      "description": "Search issues in a repository.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "q": {
+            "type": "string"
+          }
+        }
+      },
+      "annotations": {
+        "title": "Search issues",
+        "readOnlyHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "create_issue",
+      "description": "Open a new issue.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "title"
+        ]
+      },
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "delete_branch",
+      "description": "Delete a branch.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "branch": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  ]
+}

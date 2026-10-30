@@ -13,7 +13,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { IAuditEvent, IAuditSink, IPolicy, IPolicyContext, IPolicyDecision, IRequestor, IAction } from '../src/index.js';
-import { PolicyEngine, DefaultLockPolicy, DefaultScopePolicy, DefaultDraftPolicy, DefaultQuarantinePolicy, DefaultRateLimitPolicy, DefaultAnomalyPolicy, DefaultIntentPolicy } from '../src/index.js';
+import { PolicyEngine, DefaultLockPolicy, DefaultScopePolicy, DefaultDraftPolicy, DefaultQuarantinePolicy, DefaultRateLimitPolicy, DefaultAnomalyPolicy, DefaultIntentPolicy, DefaultVerbContractPolicy } from '../src/index.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const VECTORS = join(here, '..', '..', '..', 'spec', 'conformance', 'v0');
@@ -21,7 +21,8 @@ const VECTORS = join(here, '..', '..', '..', 'spec', 'conformance', 'v0');
 interface StubSpec { stub: 'allow' | 'deny' | 'redirect' | 'require_approval'; name: string; [k: string]: unknown }
 interface ScopeSpec { name: 'scope'; rules?: Array<{ method: string; path: string; required_scope: string }> }
 interface IntentSpec { name: 'intent'; kinds?: IRequestor['kind'][] }
-type PolicySpec = 'lock' | 'scope' | 'draft' | 'quarantine' | 'rate_limit' | 'anomaly' | 'intent' | StubSpec | ScopeSpec | IntentSpec;
+interface VerbContractSpec { name: 'verb_contract'; requireContractFor?: IRequestor['kind'][]; approvalImpacts?: string[]; approveIrreversible?: boolean; declaredWrites?: 'require_approval' | 'trust' }
+type PolicySpec = 'lock' | 'scope' | 'draft' | 'quarantine' | 'rate_limit' | 'anomaly' | 'intent' | 'verb_contract' | StubSpec | ScopeSpec | IntentSpec | VerbContractSpec;
 
 interface Case {
   name: string;
@@ -31,6 +32,7 @@ interface Case {
   action: IAction;
   entity?: Record<string, unknown> | null;
   policy_metadata?: Record<string, Record<string, unknown>>;
+  verb_contract?: unknown;
   expect: { decision: IPolicyDecision; policy_chain: string[]; audit?: 'none' | Record<string, unknown> };
 }
 
@@ -58,8 +60,10 @@ function build(spec: PolicySpec): IPolicy {
   if (spec === 'rate_limit') return new DefaultRateLimitPolicy();
   if (spec === 'anomaly') return new DefaultAnomalyPolicy();
   if (spec === 'intent') return new DefaultIntentPolicy();
+  if (spec === 'verb_contract') return new DefaultVerbContractPolicy();
   if ('stub' in spec) return stub(spec);
   if (spec.name === 'intent') return new DefaultIntentPolicy({ kinds: spec.kinds });
+  if (spec.name === 'verb_contract') return new DefaultVerbContractPolicy(spec);
   const p = new DefaultScopePolicy();
   for (const r of spec.rules ?? []) p.addRule({ method: r.method, path_pattern: r.path }, r.required_scope);
   return p;
@@ -87,6 +91,7 @@ for (const file of readdirSync(VECTORS).filter((f) => f.endsWith('.json')).sort(
         requestor: c.requestor, action: c.action, entity: (c.entity ?? null) as IPolicyContext['entity'],
         now: 1_700_000_000_000, correlation_id: `conf-${c.name}`,
         policy_metadata: c.policy_metadata,
+        ...('verb_contract' in c ? { verb_contract: c.verb_contract as IPolicyContext['verb_contract'] } : {}),
       };
       const decision = await engine.evaluate(ctx);
       assert.deepEqual(canon(decision), canon(c.expect.decision), 'decision');
@@ -104,6 +109,7 @@ for (const file of readdirSync(VECTORS).filter((f) => f.endsWith('.json')).sort(
           const got = canon({
             requestor: e.requestor, action: e.action,
             ...('intent' in want ? { intent: e.intent ?? null } : {}),
+            ...('verb_contract' in want ? { verb_contract: e.verb_contract ?? null } : {}),
           }) as Record<string, unknown>;
           assert.deepEqual(got, canon(want), 'audit denormalization');
         }

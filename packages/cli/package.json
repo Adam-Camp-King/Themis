@@ -1,0 +1,45 @@
+{
+  "name": "themis-policy-cli",
+  "version": "0.1.0",
+  "description": "The themis command: lint verb contracts, convert MCP tools to contracts, and report on intent records from Themis audit logs.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "bin": {
+    "themis": "./dist/bin.js"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "tsx --test \"test/**/*.test.ts\"",
+    "clean": "rm -rf dist *.tsbuildinfo"
+  },
+  "dependencies": {
+    "themis-policy": "^0.2.1"
+  },
+  "keywords": ["llm", "agents", "policy", "audit", "verb-contract", "intent", "cli"],
+  "engines": {
+    "node": ">=20"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Adam-Camp-King/Themis.git",
+    "directory": "packages/cli"
+  },
+  "homepage": "https://github.com/Adam-Camp-King/Themis#readme",
+  "bugs": {
+    "url": "https://github.com/Adam-Camp-King/Themis/issues"
+  }
+}

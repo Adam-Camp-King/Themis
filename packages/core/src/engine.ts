@@ -26,10 +26,12 @@
 
 import { uuidV4 } from './internal/crypto.js';
 import { recordableIntent } from './internal/intent.js';
+import { recordableContract } from './internal/verb_contract.js';
 import type {
   IAuditEvent,
   IAuditSink,
   IIntent,
+  IVerbContractSnapshot,
   IPolicy,
   IPolicyConfig,
   IPolicyContext,
@@ -178,7 +180,13 @@ export function buildAuditEvent(
     latency_ms,
     metadata: ctx.action.metadata,
     ...withIntent(ctx.action.intent),
+    ...withContract(ctx.verb_contract),
   };
+}
+
+function withContract(contract: unknown): { verb_contract?: IVerbContractSnapshot } {
+  const snapshot = recordableContract(contract);
+  return snapshot ? { verb_contract: snapshot } : {};
 }
 
 function withIntent(intent: unknown): { intent?: IIntent } {

@@ -14,6 +14,8 @@ This is the reference TypeScript implementation. Conforms to Themis RFC v0 / v0.
 
 **Intent (RFC v0.3 draft).** Every action can state why it is happening: a one-line `summary` in the agent's words, where the goal came from, the request and tool call it traces to. The engine copies it, detached, into the audit event of every evaluation, so the record pairs what an agent *said* it was doing with what it was *allowed* to do. `DefaultIntentPolicy` makes stating one mandatory for agents. See [Intent](#intent).
 
+**Verb contracts (RFC v0.3 draft).** Policies used to guess what an action does from its name. A verb contract declares it: whether it writes, whether it can be undone, whether it moves money, reaches someone outside the business, changes access or deletes data. Verb IDs are namespaced by their owner (`com.solidnumber:payment_link.send`, `acme:refund.issue`, `mcp:github/create_issue`, `skill:pdf-fill`), so anyone's verbs, any MCP server's tools and any skill are governed by the same engine. Every audit event carries a snapshot of the contract next to the agent's stated intent: an *intent record*. See [`spec/verb-contract.md`](./spec/verb-contract.md).
+
 **Runs anywhere JavaScript does.** The core has no `node:` imports and no `Buffer`: Node 20+, Deno, Bun, Cloudflare Workers and the browser.
 
 ## Implementations and conformance
@@ -42,6 +44,7 @@ The four primitives are reinvented, inconsistently, in every agent framework and
 | [`themis-policy-langchain`](./packages/langchain) | gate LangChain tools |
 | [`themis-policy-mcp`](./packages/mcp) | gate MCP tool handlers |
 | [`themis-policy-dsl`](./packages/policy-dsl) | YAML → policy bundle |
+| [`themis-policy-cli`](./packages/cli) | the `themis` command: lint verb contracts, convert MCP tools, report on intent records |
 | [`themis-policy` (PyPI)](./python) | the Python reference implementation, same vectors |
 
 Every adapter takes a `policyMetadataFrom` hook so the firewall policies receive their per-call inputs (limiter result, reputation, risk score) from your stores.

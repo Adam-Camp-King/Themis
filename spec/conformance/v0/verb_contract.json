@@ -1,0 +1,1257 @@
+{
+  "version": "v0",
+  "note": "RFC v0.3 (draft) § 2.8 / § 5.8 / § 9.6. A case's top-level `verb_contract` is placed on the context as ctx.verb_contract; `expect.audit.verb_contract` is the snapshot the one audit event must carry (null: none).",
+  "cases": [
+    {
+      "name": "1. an agent action with no contract is denied unknown_verb",
+      "policies": [
+        "verb_contract"
+      ],
+      "requestor": {
+        "id": 100,
+        "kind": "agent",
+        "tenant_id": 7,
+        "scopes": [
+          "*"
+        ]
+      },
+      "action": {
+        "verb": "com.acme:thing.do",
+        "resource_type": "thing",
+        "tenant_id": 7
+      },
+      "entity": null,
+      "expect": {
+        "decision": {
+          "kind": "deny",
+          "policy": "verb_contract",
+          "reason": "unknown_verb",
+          "message": "com.acme:thing.do has no verb contract. Register one so Themis knows what it does.",
+          "detail": {
+            "verb": "com.acme:thing.do"
+          }
+        },
+        "policy_chain": [
+          "verb_contract"
+        ],
+        "audit": {
+          "requestor": {
+            "id": 100,
+            "kind": "agent",
+            "scopes": [
+              "*"
+            ]
+          },
+          "action": {
+            "verb": "com.acme:thing.do",
+            "resource_type": "thing"
+          },
+          "verb_contract": null
+        }
+      }
+    },
+    {
+      "name": "2. a user action with no contract is allowed",
+      "policies": [
+        "verb_contract"
+      ],
+      "requestor": {
+        "id": 10,
+        "kind": "user",
+        "tenant_id": 7,
+        "scopes": []
+      },
+      "action": {
+        "verb": "com.acme:thing.do",
+        "resource_type": "thing",
+        "tenant_id": 7
+      },
+      "entity": null,
+      "expect": {
+        "decision": {
+          "kind": "allow"
+        },
+        "policy_chain": [
+          "verb_contract"
+        ]
+      }
+    },
+    {
+      "name": "3. requireContractFor extends to api keys",
+      "policies": [
+        {
+          "name": "verb_contract",
+          "requireContractFor": [
+            "agent",
+            "api_key"
+          ]
+        }
+      ],
+      "requestor": {
+        "id": 55,
+        "kind": "api_key",
+        "tenant_id": 7,
+        "scopes": [
+          "x"
+        ]
+      },
+      "action": {
+        "verb": "com.acme:thing.do",
+        "resource_type": "thing",
+        "tenant_id": 7
+      },
+      "entity": null,
+      "expect": {
+        "decision": {
+          "kind": "deny",
+          "policy": "verb_contract",
+          "reason": "unknown_verb",
+          "message": "com.acme:thing.do has no verb contract. Register one so Themis knows what it does.",
+          "detail": {
+            "verb": "com.acme:thing.do"
+          }
+        },
+        "policy_chain": [
+          "verb_contract"
+        ]
+      }
+    },
+    {
+      "name": "4. a contract without a string id counts as no contract",
+      "policies": [
+        "verb_contract"
+      ],
+      "requestor": {
+        "id": 100,
+        "kind": "agent",
+        "tenant_id": 7,
+        "scopes": [
+          "*"
+        ]
+      },
+      "action": {
+        "verb": "com.acme:thing.do",
+        "resource_type": "thing",
+        "tenant_id": 7
+      },
+      "entity": null,
+      "expect": {
+        "decision": {
+          "kind": "deny",
+          "policy": "verb_contract",
+          "reason": "unknown_verb",
+          "message": "com.acme:thing.do has no verb contract. Register one so Themis knows what it does.",
+          "detail": {
+            "verb": "com.acme:thing.do"
+          }
+        },
+        "policy_chain": [
+          "verb_contract"
+        ]
+      },
+      "verb_contract": {
+        "side_effects": "read",
+        "provenance": "curated"
+      }
+    },
+    {
+      "name": "5. a contract for another verb is denied contract_mismatch",
+      "policies": [
+        "verb_contract"
+      ],
+      "requestor": {
+        "id": 100,
+        "kind": "agent",
+        "tenant_id": 7,
+        "scopes": [
+          "*"
+        ]
+      },
+      "action": {
+        "verb": "com.acme:invoice.send",
+        "resource_type": "thing",
+        "tenant_id": 7
+      },
+      "entity": null,
+      "expect": {
+        "decision": {
+          "kind": "deny",
+          "policy": "verb_contract",
+          "reason": "contract_mismatch",
+          "message": "The verb contract com.acme:refund.issue does not describe com.acme:invoice.send.",
+          "detail": {
+            "verb": "com.acme:invoice.send",
+            "contract_id": "com.acme:refund.issue"
+          }
+        },
+        "policy_chain": [
+          "verb_contract"
+        ]
+      },
+      "verb_contract": {
+        "id": "com.acme:refund.issue",
+        "side_effects": "write",
+        "reversibility": "reversible",
+        "provenance": "curated"
+      }
+    },
+    {
+      "name": "6. an unqualified verb matches its namespaced contract",
+      "policies": [
+        "verb_contract"
+      ],
+      "requestor": {
+        "id": 100,
+        "kind": "agent",
+        "tenant_id": 7,
+        "scopes": [
+          "*"
+        ]
+      },
+      "action": {
+        "verb": "contacts.search",
+        "resource_type": "thing",
+        "tenant_id": 7
+      },
+      "entity": null,
+      "expect": {
+        "decision": {
+          "kind": "allow"
+        },
+        "policy_chain": [
+          "verb_contract"
+        ]
+      },
+      "verb_contract": {
+        "id": "com.acme:contacts.search",
+        "side_effects": "read",
+        "provenance": "curated"
+      }
+    },
+    {
+      "name": "6b. a qualified verb is never matched by suffix",
+      "policies": [
+        "verb_contract"
+      ],
+      "requestor": {
+        "id": 100,
+        "kind": "agent",
+        "tenant_id": 7,
+        "scopes": [
+          "*"
+        ]
+      },
+      "action": {
+        "verb": "com.acme:pay",
+        "resource_type": "thing",
+        "tenant_id": 7
+      },
+      "entity": null,
+      "verb_contract": {
+        "id": "evil:com.acme:pay",
+        "side_effects": "read",
+        "provenance": "curated"
+      },
+      "expect": {
+        "decision": {
+          "kind": "deny",
+          "policy": "verb_contract",
+          "reason": "contract_mismatch",
+          "message": "The verb contract evil:com.acme:pay does not describe com.acme:pay.",
+          "detail": {
+            "verb": "com.acme:pay",
+            "contract_id": "evil:com.acme:pay"
+          }
+        },
+        "policy_chain": [
+          "verb_contract"
+        ]
+      }
+    },
+    {
+      "name": "7. a read is allowed, even when declared",
+      "policies": [
+        "verb_contract"
+      ],
+      "requestor": {
+        "id": 100,
+        "kind": "agent",
+        "tenant_id": 7,
+        "scopes": [
+          "*"
+        ]
+      },
+      "action": {
+        "verb": "mcp:github/search_issues",
+        "resource_type": "thing",
+        "tenant_id": 7
+      },
+      "entity": null,
+      "expect": {
+        "decision": {
+          "kind": "allow"
+        },
+        "policy_chain": [
+          "verb_contract"
+        ]
+      },
+      "verb_contract": {
+        "id": "mcp:github/search_issues",
+        "side_effects": "read",
+        "provenance": "declared"
+      }
+    },
+    {
+      "name": "8. a curated reversible write with no risky impacts is allowed",
+      "policies": [
+        "verb_contract"
+      ],
+      "requestor": {
+        "id": 100,
+        "kind": "agent",
+        "tenant_id": 7,
+        "scopes": [
+          "*"
+        ]
+      },
+      "action": {
+        "verb": "com.acme:note.add",
+        "resource_type": "thing",
+        "tenant_id": 7
+      },
+      "entity": null,
+      "expect": {
+        "decision": {
+          "kind": "allow"
+        },
+        "policy_chain": [
+          "verb_contract"
+        ]
+      },
+      "verb_contract": {
+        "id": "com.acme:note.add",
+        "side_effects": "write",
+        "reversibility": "reversible",
+        "provenance": "curated"
+      }
+    },
+    {
+      "name": "9. requires_consent, irreversible and money all need approval, reasons in order",
+      "policies": [
+        "verb_contract"
+      ],
+      "requestor": {
+        "id": 100,
+        "kind": "agent",
+        "tenant_id": 7,
+        "scopes": [
+          "*"
+        ]
+      },
+      "action": {
+        "verb": "com.solidnumber:payment_link.send",
+        "resource_type": "thing",
+        "tenant_id": 7
+      },
+      "entity": null,
+      "expect": {
+        "decision": {
+          "kind": "require_approval",
+          "policy": "verb_contract",
+          "approval_ref": "verb:com.solidnumber:payment_link.send",
+          "message": "Needs approval before com.solidnumber:payment_link.send runs: requires_consent, irreversible, impact:money."
+        },
+        "policy_chain": [
+          "verb_contract"
+        ],
+        "audit": {
+          "requestor": {
+            "id": 100,
+            "kind": "agent",
+            "scopes": [
+              "*"
+            ]
+          },
+          "action": {
+            "verb": "com.solidnumber:payment_link.send",
+            "resource_type": "thing"
+          },
+          "verb_contract": {
+            "id": "com.solidnumber:payment_link.send",
+            "version": "2026-10-01",
+            "summary": "Send a payment link.",
+            "side_effects": "write",
+            "reversibility": "irreversible",
+            "impacts": [
+              "money",
+              "outbound"
+            ],
+            "requires_consent": true,
+            "provenance": "curated"
+          }
+        }
+      },
+      "verb_contract": {
+        "id": "com.solidnumber:payment_link.send",
+        "version": "2026-10-01",
+        "summary": "Send a payment link.",
+        "side_effects": "write",
+        "reversibility": "irreversible",
+        "impacts": [
+          "money",
+          "outbound"
+        ],
+        "requires_consent": true,
+        "required_scope": "payments:write",
+        "acts_on": {
+          "noun": "payment_link",
+          "party": "tenant_customer"
+        },
+        "refuses": [
+          {
+            "code": "invalid_amount",
+            "when": "amount must be positive"
+          }
+        ],
+        "provenance": "curated",
+        "extensions": {
+          "com.solidnumber": {
+            "coordinate": "533"
+          }
+        }
+      }
+    },
+    {
+      "name": "10. impacts are reported in approvalImpacts order, not contract order",
+      "policies": [
+        "verb_contract"
+      ],
+      "requestor": {
+        "id": 100,
+        "kind": "agent",
+        "tenant_id": 7,
+        "scopes": [
+          "*"
+        ]
+      },
+      "action": {
+        "verb": "com.acme:user.purge",
+        "resource_type": "thing",
+        "tenant_id": 7
+      },
+      "entity": null,
+      "expect": {
+        "decision": {
+          "kind": "require_approval",
+          "policy": "verb_contract",
+          "approval_ref": "verb:com.acme:user.purge",
+          "message": "Needs approval before com.acme:user.purge runs: impact:access, impact:deletion, impact:data_export."
+        },
+        "policy_chain": [
+          "verb_contract"
+        ]
+      },
+      "verb_contract": {
+        "id": "com.acme:user.purge",
+        "side_effects": "write",
+        "reversibility": "reversible",
+        "provenance": "curated",
+        "impacts": [
+          "deletion",
+          "outbound",
+          "access",
+          "data_export"
+        ]
+      }
+    },
+    {
+      "name": "11. outbound and publish are not approval impacts by default",
+      "policies": [
+        "verb_contract"
+      ],
+      "requestor": {
+        "id": 100,
+        "kind": "agent",
+        "tenant_id": 7,
+        "scopes": [
+          "*"
+        ]
+      },
+      "action": {
+        "verb": "com.acme:post.publish",
+        "resource_type": "thing",
+        "tenant_id": 7
+      },
+      "entity": null,
+      "expect": {
+        "decision": {
+          "kind": "allow"
+        },
+        "policy_chain": [
+          "verb_contract"
+        ]
+      },
+      "verb_contract": {
+        "id": "com.acme:post.publish",
+        "side_effects": "write",
+        "reversibility": "reversible",
+        "provenance": "curated",
+        "impacts": [
+          "outbound",
+          "publish"
+        ]
+      }
+    },
+    {
+      "name": "12. approvalImpacts is configurable",
+      "policies": [
+        {
+          "name": "verb_contract",
+          "approvalImpacts": [
+            "publish"
+          ]
+        }
+      ],
+      "requestor": {
+        "id": 100,
+        "kind": "agent",
+        "tenant_id": 7,
+        "scopes": [
+          "*"
+        ]
+      },
+      "action": {
+        "verb": "com.acme:post.publish",
+        "resource_type": "thing",
+        "tenant_id": 7
+      },
+      "entity": null,
+      "expect": {
+        "decision": {
+          "kind": "require_approval",
+          "policy": "verb_contract",
+          "approval_ref": "verb:com.acme:post.publish",
+          "message": "Needs approval before com.acme:post.publish runs: impact:publish."
+        },
+        "policy_chain": [
+          "verb_contract"
+        ]
+      },
+      "verb_contract": {
+        "id": "com.acme:post.publish",
+        "side_effects": "write",
+        "reversibility": "reversible",
+        "provenance": "curated",
+        "impacts": [
+          "outbound",
+          "publish"
+        ]
+      }
+    },
+    {
+      "name": "13. compensable is not irreversible",
+      "policies": [
+        "verb_contract"
+      ],
+      "requestor": {
+        "id": 100,
+        "kind": "agent",
+        "tenant_id": 7,
+        "scopes": [
+          "*"
+        ]
+      },
+      "action": {
+        "verb": "com.acme:charge.capture",
+        "resource_type": "thing",
+        "tenant_id": 7
+      },
+      "entity": null,
+      "expect": {
+        "decision": {
+          "kind": "require_approval",
+          "policy": "verb_contract",
+          "approval_ref": "verb:com.acme:charge.capture",
+          "message": "Needs approval before com.acme:charge.capture runs: impact:money."
+        },
+        "policy_chain": [
+          "verb_contract"
+        ]
+      },
+      "verb_contract": {
+        "id": "com.acme:charge.capture",
+        "side_effects": "write",
+        "reversibility": "compensable",
+        "provenance": "curated",
+        "impacts": [
+          "money"
+        ]
+      }
+    },
+    {
+      "name": "14. a write with no reversibility is reversibility_unknown",
+      "policies": [
+        "verb_contract"
+      ],
+      "requestor": {
+        "id": 100,
+        "kind": "agent",
+        "tenant_id": 7,
+        "scopes": [
+          "*"
+        ]
+      },
+      "action": {
+        "verb": "com.acme:thing.do",
+        "resource_type": "thing",
+        "tenant_id": 7
+      },
+      "entity": null,
+      "expect": {
+        "decision": {
+          "kind": "require_approval",
+          "policy": "verb_contract",
+          "approval_ref": "verb:com.acme:thing.do",
+          "message": "Needs approval before com.acme:thing.do runs: reversibility_unknown."
+        },
+        "policy_chain": [
+          "verb_contract"
+        ]
+      },
+      "verb_contract": {
+        "id": "com.acme:thing.do",
+        "side_effects": "write",
+        "provenance": "curated"
+      }
+    },
+    {
+      "name": "15. an unrecognised reversibility is reversibility_unknown",
+      "policies": [
+        "verb_contract"
+      ],
+      "requestor": {
+        "id": 100,
+        "kind": "agent",
+        "tenant_id": 7,
+        "scopes": [
+          "*"
+        ]
+      },
+      "action": {
+        "verb": "com.acme:thing.do",
+        "resource_type": "thing",
+        "tenant_id": 7
+      },
+      "entity": null,
+      "expect": {
+        "decision": {
+          "kind": "require_approval",
+          "policy": "verb_contract",
+          "approval_ref": "verb:com.acme:thing.do",
+          "message": "Needs approval before com.acme:thing.do runs: reversibility_unknown."
+        },
+        "policy_chain": [
+          "verb_contract"
+        ]
+      },
+      "verb_contract": {
+        "id": "com.acme:thing.do",
+        "side_effects": "write",
+        "reversibility": "mostly",
+        "provenance": "curated"
+      }
+    },
+    {
+      "name": "16. approveIrreversible false drops only the irreversible reason",
+      "policies": [
+        {
+          "name": "verb_contract",
+          "approveIrreversible": false
+        }
+      ],
+      "requestor": {
+        "id": 100,
+        "kind": "agent",
+        "tenant_id": 7,
+        "scopes": [
+          "*"
+        ]
+      },
+      "action": {
+        "verb": "com.acme:sms.send",
+        "resource_type": "thing",
+        "tenant_id": 7
+      },
+      "entity": null,
+      "expect": {
+        "decision": {
+          "kind": "allow"
+        },
+        "policy_chain": [
+          "verb_contract"
+        ]
+      },
+      "verb_contract": {
+        "id": "com.acme:sms.send",
+        "side_effects": "write",
+        "reversibility": "irreversible",
+        "provenance": "curated",
+        "impacts": [
+          "outbound"
+        ]
+      }
+    },
+    {
+      "name": "17. a declared write needs approval whatever it claims",
+      "policies": [
+        "verb_contract"
+      ],
+      "requestor": {
+        "id": 100,
+        "kind": "agent",
+        "tenant_id": 7,
+        "scopes": [
+          "*"
+        ]
+      },
+      "action": {
+        "verb": "mcp:github/create_issue",
+        "resource_type": "thing",
+        "tenant_id": 7
+      },
+      "entity": null,
+      "expect": {
+        "decision": {
+          "kind": "require_approval",
+          "policy": "verb_contract",
+          "approval_ref": "verb:mcp:github/create_issue",
+          "message": "Needs approval before mcp:github/create_issue runs: declared_write."
+        },
+        "policy_chain": [
+          "verb_contract"
+        ]
+      },
+      "verb_contract": {
+        "id": "mcp:github/create_issue",
+        "side_effects": "write",
+        "reversibility": "reversible",
+        "provenance": "declared"
+      }
+    },
+    {
+      "name": "18. a missing provenance is treated as declared",
+      "policies": [
+        "verb_contract"
+      ],
+      "requestor": {
+        "id": 100,
+        "kind": "agent",
+        "tenant_id": 7,
+        "scopes": [
+          "*"
+        ]
+      },
+      "action": {
+        "verb": "com.acme:thing.do",
+        "resource_type": "thing",
+        "tenant_id": 7
+      },
+      "entity": null,
+      "expect": {
+        "decision": {
+          "kind": "require_approval",
+          "policy": "verb_contract",
+          "approval_ref": "verb:com.acme:thing.do",
+          "message": "Needs approval before com.acme:thing.do runs: declared_write."
+        },
+        "policy_chain": [
+          "verb_contract"
+        ]
+      },
+      "verb_contract": {
+        "id": "com.acme:thing.do",
+        "side_effects": "mixed",
+        "reversibility": "reversible"
+      }
+    },
+    {
+      "name": "19. declaredWrites trust lets a declared reversible write through",
+      "policies": [
+        {
+          "name": "verb_contract",
+          "declaredWrites": "trust"
+        }
+      ],
+      "requestor": {
+        "id": 100,
+        "kind": "agent",
+        "tenant_id": 7,
+        "scopes": [
+          "*"
+        ]
+      },
+      "action": {
+        "verb": "mcp:github/create_issue",
+        "resource_type": "thing",
+        "tenant_id": 7
+      },
+      "entity": null,
+      "expect": {
+        "decision": {
+          "kind": "allow"
+        },
+        "policy_chain": [
+          "verb_contract"
+        ]
+      },
+      "verb_contract": {
+        "id": "mcp:github/create_issue",
+        "side_effects": "write",
+        "reversibility": "reversible",
+        "provenance": "declared"
+      }
+    },
+    {
+      "name": "20. a verified approval lets the action through",
+      "policies": [
+        "verb_contract"
+      ],
+      "requestor": {
+        "id": 100,
+        "kind": "agent",
+        "tenant_id": 7,
+        "scopes": [
+          "*"
+        ]
+      },
+      "action": {
+        "verb": "com.solidnumber:payment_link.send",
+        "resource_type": "thing",
+        "tenant_id": 7
+      },
+      "entity": null,
+      "expect": {
+        "decision": {
+          "kind": "allow"
+        },
+        "policy_chain": [
+          "verb_contract"
+        ]
+      },
+      "verb_contract": {
+        "id": "com.solidnumber:payment_link.send",
+        "version": "2026-10-01",
+        "summary": "Send a payment link.",
+        "side_effects": "write",
+        "reversibility": "irreversible",
+        "impacts": [
+          "money",
+          "outbound"
+        ],
+        "requires_consent": true,
+        "required_scope": "payments:write",
+        "acts_on": {
+          "noun": "payment_link",
+          "party": "tenant_customer"
+        },
+        "refuses": [
+          {
+            "code": "invalid_amount",
+            "when": "amount must be positive"
+          }
+        ],
+        "provenance": "curated",
+        "extensions": {
+          "com.solidnumber": {
+            "coordinate": "533"
+          }
+        }
+      },
+      "policy_metadata": {
+        "verb_contract": {
+          "approved": true
+        }
+      }
+    },
+    {
+      "name": "21. approved must be exactly true",
+      "policies": [
+        "verb_contract"
+      ],
+      "requestor": {
+        "id": 100,
+        "kind": "agent",
+        "tenant_id": 7,
+        "scopes": [
+          "*"
+        ]
+      },
+      "action": {
+        "verb": "com.solidnumber:payment_link.send",
+        "resource_type": "thing",
+        "tenant_id": 7
+      },
+      "entity": null,
+      "expect": {
+        "decision": {
+          "kind": "require_approval",
+          "policy": "verb_contract",
+          "approval_ref": "verb:com.solidnumber:payment_link.send",
+          "message": "Needs approval before com.solidnumber:payment_link.send runs: requires_consent, irreversible, impact:money."
+        },
+        "policy_chain": [
+          "verb_contract"
+        ]
+      },
+      "verb_contract": {
+        "id": "com.solidnumber:payment_link.send",
+        "version": "2026-10-01",
+        "summary": "Send a payment link.",
+        "side_effects": "write",
+        "reversibility": "irreversible",
+        "impacts": [
+          "money",
+          "outbound"
+        ],
+        "requires_consent": true,
+        "required_scope": "payments:write",
+        "acts_on": {
+          "noun": "payment_link",
+          "party": "tenant_customer"
+        },
+        "refuses": [
+          {
+            "code": "invalid_amount",
+            "when": "amount must be positive"
+          }
+        ],
+        "provenance": "curated",
+        "extensions": {
+          "com.solidnumber": {
+            "coordinate": "533"
+          }
+        }
+      },
+      "policy_metadata": {
+        "verb_contract": {
+          "approved": "yes"
+        }
+      }
+    },
+    {
+      "name": "22. approval_ref comes from policy metadata when given",
+      "policies": [
+        "verb_contract"
+      ],
+      "requestor": {
+        "id": 100,
+        "kind": "agent",
+        "tenant_id": 7,
+        "scopes": [
+          "*"
+        ]
+      },
+      "action": {
+        "verb": "com.solidnumber:payment_link.send",
+        "resource_type": "thing",
+        "tenant_id": 7
+      },
+      "entity": null,
+      "expect": {
+        "decision": {
+          "kind": "require_approval",
+          "policy": "verb_contract",
+          "approval_ref": "apr_9001",
+          "message": "Needs approval before com.solidnumber:payment_link.send runs: requires_consent, irreversible, impact:money."
+        },
+        "policy_chain": [
+          "verb_contract"
+        ]
+      },
+      "verb_contract": {
+        "id": "com.solidnumber:payment_link.send",
+        "version": "2026-10-01",
+        "summary": "Send a payment link.",
+        "side_effects": "write",
+        "reversibility": "irreversible",
+        "impacts": [
+          "money",
+          "outbound"
+        ],
+        "requires_consent": true,
+        "required_scope": "payments:write",
+        "acts_on": {
+          "noun": "payment_link",
+          "party": "tenant_customer"
+        },
+        "refuses": [
+          {
+            "code": "invalid_amount",
+            "when": "amount must be positive"
+          }
+        ],
+        "provenance": "curated",
+        "extensions": {
+          "com.solidnumber": {
+            "coordinate": "533"
+          }
+        }
+      },
+      "policy_metadata": {
+        "verb_contract": {
+          "approval_ref": "apr_9001"
+        }
+      }
+    },
+    {
+      "name": "23. the snapshot keeps only typed fields; a mixed impacts list is ignored by policy and snapshot alike",
+      "policies": [
+        "verb_contract"
+      ],
+      "requestor": {
+        "id": 100,
+        "kind": "agent",
+        "tenant_id": 7,
+        "scopes": [
+          "*"
+        ]
+      },
+      "action": {
+        "verb": "com.acme:thing.do",
+        "resource_type": "thing",
+        "tenant_id": 7
+      },
+      "entity": null,
+      "expect": {
+        "decision": {
+          "kind": "allow"
+        },
+        "policy_chain": [
+          "verb_contract"
+        ],
+        "audit": {
+          "requestor": {
+            "id": 100,
+            "kind": "agent",
+            "scopes": [
+              "*"
+            ]
+          },
+          "action": {
+            "verb": "com.acme:thing.do",
+            "resource_type": "thing"
+          },
+          "verb_contract": {
+            "id": "com.acme:thing.do",
+            "summary": "Do it",
+            "side_effects": "write",
+            "reversibility": "reversible",
+            "provenance": "curated"
+          }
+        }
+      },
+      "verb_contract": {
+        "id": "com.acme:thing.do",
+        "version": 3,
+        "summary": "Do it",
+        "side_effects": "write",
+        "reversibility": "reversible",
+        "impacts": [
+          "money",
+          7
+        ],
+        "requires_consent": "yes",
+        "provenance": "curated",
+        "required_scope": "x",
+        "extensions": {
+          "a": {}
+        }
+      }
+    },
+    {
+      "name": "24. the snapshot is recorded when another policy decides",
+      "policies": [
+        {
+          "stub": "deny",
+          "name": "A",
+          "reason": "nope"
+        }
+      ],
+      "requestor": {
+        "id": 100,
+        "kind": "agent",
+        "tenant_id": 7,
+        "scopes": [
+          "*"
+        ]
+      },
+      "action": {
+        "verb": "com.solidnumber:payment_link.send",
+        "resource_type": "thing",
+        "tenant_id": 7
+      },
+      "entity": null,
+      "expect": {
+        "decision": {
+          "kind": "deny",
+          "policy": "A",
+          "reason": "nope"
+        },
+        "policy_chain": [
+          "A"
+        ],
+        "audit": {
+          "requestor": {
+            "id": 100,
+            "kind": "agent",
+            "scopes": [
+              "*"
+            ]
+          },
+          "action": {
+            "verb": "com.solidnumber:payment_link.send",
+            "resource_type": "thing"
+          },
+          "verb_contract": {
+            "id": "com.solidnumber:payment_link.send",
+            "version": "2026-10-01",
+            "summary": "Send a payment link.",
+            "side_effects": "write",
+            "reversibility": "irreversible",
+            "impacts": [
+              "money",
+              "outbound"
+            ],
+            "requires_consent": true,
+            "provenance": "curated"
+          }
+        }
+      },
+      "verb_contract": {
+        "id": "com.solidnumber:payment_link.send",
+        "version": "2026-10-01",
+        "summary": "Send a payment link.",
+        "side_effects": "write",
+        "reversibility": "irreversible",
+        "impacts": [
+          "money",
+          "outbound"
+        ],
+        "requires_consent": true,
+        "required_scope": "payments:write",
+        "acts_on": {
+          "noun": "payment_link",
+          "party": "tenant_customer"
+        },
+        "refuses": [
+          {
+            "code": "invalid_amount",
+            "when": "amount must be positive"
+          }
+        ],
+        "provenance": "curated",
+        "extensions": {
+          "com.solidnumber": {
+            "coordinate": "533"
+          }
+        }
+      }
+    },
+    {
+      "name": "25. intent and contract together make the intent record",
+      "policies": [
+        "intent",
+        "verb_contract"
+      ],
+      "requestor": {
+        "id": 100,
+        "kind": "agent",
+        "tenant_id": 7,
+        "scopes": [
+          "*"
+        ]
+      },
+      "action": {
+        "verb": "com.solidnumber:payment_link.send",
+        "resource_type": "thing",
+        "tenant_id": 7,
+        "intent": {
+          "summary": "Send Dana the deposit link she asked for",
+          "source": "user_request"
+        }
+      },
+      "entity": null,
+      "expect": {
+        "decision": {
+          "kind": "require_approval",
+          "policy": "verb_contract",
+          "approval_ref": "verb:com.solidnumber:payment_link.send",
+          "message": "Needs approval before com.solidnumber:payment_link.send runs: requires_consent, irreversible, impact:money."
+        },
+        "policy_chain": [
+          "intent",
+          "verb_contract"
+        ],
+        "audit": {
+          "requestor": {
+            "id": 100,
+            "kind": "agent",
+            "scopes": [
+              "*"
+            ]
+          },
+          "action": {
+            "verb": "com.solidnumber:payment_link.send",
+            "resource_type": "thing"
+          },
+          "intent": {
+            "summary": "Send Dana the deposit link she asked for",
+            "source": "user_request"
+          },
+          "verb_contract": {
+            "id": "com.solidnumber:payment_link.send",
+            "version": "2026-10-01",
+            "summary": "Send a payment link.",
+            "side_effects": "write",
+            "reversibility": "irreversible",
+            "impacts": [
+              "money",
+              "outbound"
+            ],
+            "requires_consent": true,
+            "provenance": "curated"
+          }
+        }
+      },
+      "verb_contract": {
+        "id": "com.solidnumber:payment_link.send",
+        "version": "2026-10-01",
+        "summary": "Send a payment link.",
+        "side_effects": "write",
+        "reversibility": "irreversible",
+        "impacts": [
+          "money",
+          "outbound"
+        ],
+        "requires_consent": true,
+        "required_scope": "payments:write",
+        "acts_on": {
+          "noun": "payment_link",
+          "party": "tenant_customer"
+        },
+        "refuses": [
+          {
+            "code": "invalid_amount",
+            "when": "amount must be positive"
+          }
+        ],
+        "provenance": "curated",
+        "extensions": {
+          "com.solidnumber": {
+            "coordinate": "533"
+          }
+        }
+      }
+    }
+  ]
+}

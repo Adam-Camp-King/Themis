@@ -48,6 +48,8 @@ import type {
   IPolicyContext,
   IPolicyEngine,
   IRequestor,
+  IVerbRegistry,
+  IVerbContract,
 } from 'themis-policy';
 import { isAllow, isDeny, isRedirect, isRequireApproval } from 'themis-policy';
 
@@ -86,6 +88,11 @@ export interface WithThemisOptions<Input> {
 
   /** Optional: override the clock. Default Date.now. */
   readonly now?: () => number;
+  /**
+   * Resolve `action.verb` to its verb contract (RFC v0.3 § 2.8) and put it on
+   * the context for DefaultVerbContractPolicy and the audit snapshot.
+   */
+  readonly verbRegistry?: IVerbRegistry;
 
   /**
    * Optional: customize the denial outcome. Default throws MCPPolicyDenied.
@@ -153,6 +160,8 @@ export function withThemis<Input, Output>(
     const correlation_id =
       opts.correlationIdFrom?.(input) ?? defaultCorrelationId();
 
+    const verb_contract = await resolveContract(opts.verbRegistry, action.verb);
+
     const ctx: IPolicyContext = {
       requestor,
       action,
@@ -160,6 +169,7 @@ export function withThemis<Input, Output>(
       now: now(),
       correlation_id,
       ...(policy_metadata ? { policy_metadata } : {}),
+      ...(verb_contract ? { verb_contract } : {}),
     };
 
     const decision = await opts.engine.evaluate(ctx);
@@ -204,4 +214,17 @@ function defaultCorrelationId(): string {
     out += hex[(Math.random() * 16) | 0];
   }
   return out;
+}
+
+/**
+ * A registry that fails resolves to no contract. With DefaultVerbContractPolicy
+ * that fails closed for agents (unknown_verb) instead of failing the call.
+ */
+async function resolveContract(registry: IVerbRegistry | undefined, verb: string): Promise<IVerbContract | null> {
+  if (!registry) return null;
+  try {
+    return (await registry.resolve(verb)) ?? null;
+  } catch {
+    return null;
+  }
 }

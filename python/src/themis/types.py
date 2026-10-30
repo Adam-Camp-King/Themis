@@ -79,6 +79,8 @@ class PolicyContext:
     now: int
     correlation_id: str
     entity: Optional[Entity] = None
+    #: What ``action.verb`` does, resolved by the caller from a verb registry (RFC v0.3 § 2.8).
+    verb_contract: Optional[Mapping[str, Any]] = None
     policy_metadata: Optional[Mapping[str, Mapping[str, Any]]] = None
 
 
@@ -163,6 +165,7 @@ class AuditEvent:
     latency_ms: float
     metadata: Optional[Mapping[str, Any]] = None
     intent: Optional[Mapping[str, Any]] = None
+    verb_contract: Optional[Mapping[str, Any]] = None
 
     def to_dict(self) -> dict[str, Any]:
         return _drop_none({
@@ -177,6 +180,7 @@ class AuditEvent:
             "latency_ms": self.latency_ms,
             "metadata": dict(self.metadata) if self.metadata is not None else None,
             "intent": dict(self.intent) if self.intent is not None else None,
+            "verb_contract": dict(self.verb_contract) if self.verb_contract is not None else None,
         })
 
 
@@ -251,6 +255,8 @@ class AnomalyInput:
     now: int  # epoch ms
     baseline: Optional[BehaviorBaseline] = None
     today_count: Optional[int] = None
+    #: The verb's contract, when known (RFC v0.3 § 5.8).
+    contract: Optional[Mapping[str, Any]] = None
 
 
 @dataclass(frozen=True)

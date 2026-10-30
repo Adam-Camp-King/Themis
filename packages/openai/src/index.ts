@@ -21,6 +21,8 @@ import type {
   IPolicyContext,
   IPolicyEngine,
   IRequestor,
+  IVerbRegistry,
+  IVerbContract,
 } from 'themis-policy';
 import { isAllow, isDeny, isRedirect, isRequireApproval } from 'themis-policy';
 
@@ -60,6 +62,11 @@ export interface GateOpenAIOptions {
     | Promise<IPolicyContext['policy_metadata']>
     | IPolicyContext['policy_metadata'];
   readonly now?: () => number;
+  /**
+   * Resolve `action.verb` to its verb contract (RFC v0.3 § 2.8) and put it on
+   * the context for DefaultVerbContractPolicy and the audit snapshot.
+   */
+  readonly verbRegistry?: IVerbRegistry;
 }
 
 export interface GatedOpenAIHandlers {
@@ -94,6 +101,8 @@ export function gateToolCalls(
     const correlation_id =
       opts.correlationIdFrom?.(toolCall) ?? toolCall.id;
 
+    const verb_contract = await resolveContract(opts.verbRegistry, action.verb);
+
     const ctx: IPolicyContext = {
       requestor,
       action,
@@ -101,6 +110,7 @@ export function gateToolCalls(
       now: now(),
       correlation_id,
       ...(policy_metadata ? { policy_metadata } : {}),
+      ...(verb_contract ? { verb_contract } : {}),
     };
 
     const decision = await opts.engine.evaluate(ctx);
@@ -176,4 +186,17 @@ function withToolCallId(action: IAction, id: string): IAction {
   if (intent === null || typeof intent !== 'object' || Array.isArray(intent)) return action;
   if (Object.keys(intent).length === 0 || action.intent?.tool_call_id) return action;
   return { ...action, intent: { ...action.intent, tool_call_id: id } };
+}
+
+/**
+ * A registry that fails resolves to no contract. With DefaultVerbContractPolicy
+ * that fails closed for agents (unknown_verb) instead of failing the call.
+ */
+async function resolveContract(registry: IVerbRegistry | undefined, verb: string): Promise<IVerbContract | null> {
+  if (!registry) return null;
+  try {
+    return (await registry.resolve(verb)) ?? null;
+  } catch {
+    return null;
+  }
 }

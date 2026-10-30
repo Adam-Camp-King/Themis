@@ -1,0 +1,65 @@
+{
+  "contracts": [
+    {
+      "id": "acme:refund.issue",
+      "summary": "Refund all or part of a captured charge.",
+      "side_effects": "write",
+      "reversibility": "compensable",
+      "impacts": [
+        "money"
+      ],
+      "requires_consent": true,
+      "idempotent": true,
+      "required_scope": "payments:write",
+      "provenance": "curated"
+    },
+    {
+      "id": "acme:charge.capture",
+      "summary": "Capture an authorised charge.",
+      "side_effects": "write",
+      "reversibility": "compensable",
+      "undone_by": "acme:refund.issue",
+      "impacts": [
+        "money"
+      ],
+      "requires_consent": true,
+      "required_scope": "payments:write",
+      "provenance": "curated"
+    },
+    {
+      "id": "acme:user.grant_role",
+      "summary": "Give a user a role.",
+      "side_effects": "write",
+      "reversibility": "reversible",
+      "undone_by": "acme:user.revoke_role",
+      "impacts": [
+        "access"
+      ],
+      "required_scope": "team:write",
+      "provenance": "curated"
+    },
+    {
+      "id": "acme:user.revoke_role",
+      "summary": "Take a role away from a user.",
+      "side_effects": "write",
+      "reversibility": "reversible",
+      "undone_by": "acme:user.grant_role",
+      "impacts": [
+        "access"
+      ],
+      "required_scope": "team:write",
+      "provenance": "curated"
+    },
+    {
+      "id": "skill:quarterly-report",
+      "summary": "Build the quarterly report from the books and email it to the owner.",
+      "side_effects": "mixed",
+      "reversibility": "irreversible",
+      "impacts": [
+        "outbound",
+        "data_export"
+      ],
+      "provenance": "curated"
+    }
+  ]
+}

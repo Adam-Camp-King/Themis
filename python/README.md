@@ -34,6 +34,11 @@ Actions can state why they are happening — `Action(..., intent={"summary": "..
 The engine copies intent, detached, into every audit event, and `DefaultIntentPolicy()`
 denies agent actions that state none (RFC v0.3 draft).
 
+Verb contracts declare what a verb does (RFC v0.3 draft): pass the resolved contract as
+`PolicyContext(..., verb_contract=registry.resolve(action.verb))` and register
+`DefaultVerbContractPolicy()`. `StaticVerbRegistry`, `ChainVerbRegistry` and
+`contract_from_mcp_tool` ship with the package.
+
 The engine is synchronous (every core policy is pure CPU); `evaluate_async`
 exists for callers already inside an event loop. Stores (`LockStore`,
 `DraftStore`) are ports you implement against your persistence; audit sinks

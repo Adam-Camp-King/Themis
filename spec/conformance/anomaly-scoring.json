@@ -659,6 +659,198 @@
         "baseline_sample": 1000,
         "baseline_used": true
       }
+    },
+    {
+      "name": "contract: a deletion by any name is a bulk delete",
+      "input": {
+        "trust_tier": "platform",
+        "recent_deletes": 9,
+        "recent_writes": 0,
+        "local_hour": 12,
+        "payload_bytes": 10,
+        "now": 1700000000000,
+        "verb": "acme:contact.merge",
+        "side_effects": "write",
+        "contract": {
+          "id": "acme:contact.merge",
+          "side_effects": "write",
+          "reversibility": "irreversible",
+          "impacts": [
+            "deletion"
+          ],
+          "provenance": "curated"
+        }
+      },
+      "expect": {
+        "risk": 0.97,
+        "reasons": [
+          "bulk_delete:10_in_10m"
+        ],
+        "baseline_sample": 0,
+        "baseline_used": false
+      }
+    },
+    {
+      "name": "contract: a verb named delete with no deletion impact is not a bulk delete",
+      "input": {
+        "trust_tier": "platform",
+        "recent_deletes": 9,
+        "recent_writes": 0,
+        "local_hour": 12,
+        "payload_bytes": 10,
+        "now": 1700000000000,
+        "verb": "acme:draft.delete",
+        "side_effects": "write",
+        "contract": {
+          "id": "acme:draft.delete",
+          "side_effects": "write",
+          "reversibility": "reversible",
+          "provenance": "curated"
+        }
+      },
+      "expect": {
+        "risk": 0.0,
+        "reasons": [],
+        "baseline_sample": 0,
+        "baseline_used": false
+      }
+    },
+    {
+      "name": "contract: side_effects comes from the contract",
+      "input": {
+        "trust_tier": "platform",
+        "recent_deletes": 9,
+        "recent_writes": 0,
+        "local_hour": 12,
+        "payload_bytes": 10,
+        "now": 1700000000000,
+        "verb": "acme:contact.merge",
+        "side_effects": "read",
+        "contract": {
+          "id": "acme:contact.merge",
+          "side_effects": "write",
+          "reversibility": "irreversible",
+          "impacts": [
+            "deletion"
+          ],
+          "provenance": "curated"
+        }
+      },
+      "expect": {
+        "risk": 0.97,
+        "reasons": [
+          "bulk_delete:10_in_10m"
+        ],
+        "baseline_sample": 0,
+        "baseline_used": false
+      }
+    },
+    {
+      "name": "contract: a read contract scores zero even if the caller says write",
+      "input": {
+        "trust_tier": "platform",
+        "recent_deletes": 9,
+        "recent_writes": 0,
+        "local_hour": 12,
+        "payload_bytes": 10,
+        "now": 1700000000000,
+        "verb": "acme:contact.export",
+        "side_effects": "write",
+        "contract": {
+          "id": "acme:contact.export",
+          "side_effects": "read",
+          "provenance": "curated"
+        }
+      },
+      "expect": {
+        "risk": 0.0,
+        "reasons": [],
+        "baseline_sample": 0,
+        "baseline_used": false
+      }
+    },
+    {
+      "name": "contract: custom tier reaching for money is an escalation by impact",
+      "input": {
+        "trust_tier": "custom",
+        "recent_deletes": 0,
+        "recent_writes": 0,
+        "local_hour": 12,
+        "payload_bytes": 10,
+        "now": 1700000000000,
+        "verb": "acme:payout.release",
+        "side_effects": "write",
+        "contract": {
+          "id": "acme:payout.release",
+          "side_effects": "write",
+          "reversibility": "irreversible",
+          "impacts": [
+            "outbound",
+            "money",
+            "access"
+          ],
+          "provenance": "curated"
+        }
+      },
+      "expect": {
+        "risk": 0.9,
+        "reasons": [
+          "scope_escalation:access"
+        ],
+        "baseline_sample": 0,
+        "baseline_used": false
+      }
+    },
+    {
+      "name": "contract: a team.* verb with no risky impact is not an escalation",
+      "input": {
+        "trust_tier": "custom",
+        "recent_deletes": 0,
+        "recent_writes": 0,
+        "local_hour": 12,
+        "payload_bytes": 10,
+        "now": 1700000000000,
+        "verb": "team.note_add",
+        "side_effects": "write",
+        "contract": {
+          "id": "acme:team.note_add",
+          "side_effects": "write",
+          "reversibility": "reversible",
+          "provenance": "curated"
+        }
+      },
+      "expect": {
+        "risk": 0.0,
+        "reasons": [],
+        "baseline_sample": 0,
+        "baseline_used": false
+      }
+    },
+    {
+      "name": "contract: a non-array impacts list counts as no impacts",
+      "input": {
+        "trust_tier": "platform",
+        "recent_deletes": 9,
+        "recent_writes": 0,
+        "local_hour": 12,
+        "payload_bytes": 10,
+        "now": 1700000000000,
+        "verb": "acme:contact.merge",
+        "side_effects": "write",
+        "contract": {
+          "id": "acme:contact.merge",
+          "side_effects": "write",
+          "reversibility": "irreversible",
+          "impacts": "deletion",
+          "provenance": "curated"
+        }
+      },
+      "expect": {
+        "risk": 0.0,
+        "reasons": [],
+        "baseline_sample": 0,
+        "baseline_used": false
+      }
     }
   ]
 }

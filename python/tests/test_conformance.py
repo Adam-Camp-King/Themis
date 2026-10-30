@@ -13,7 +13,7 @@ from typing import Any
 import pytest
 
 from themis import (
-    Action, Allow, DefaultAnomalyPolicy, DefaultIntentPolicy, DefaultDraftPolicy, DefaultLockPolicy, DefaultQuarantinePolicy,
+    Action, Allow, DefaultAnomalyPolicy, DefaultIntentPolicy, DefaultVerbContractPolicy, DefaultDraftPolicy, DefaultLockPolicy, DefaultQuarantinePolicy,
     DefaultRateLimitPolicy, DefaultScopePolicy, Deny, DraftableEntity, LockableEntity, MemorySink, PolicyContext,
     PolicyEngine, Redirect, RequireApproval, Requestor,
 )
@@ -56,10 +56,16 @@ def _build(spec: Any):
         return DefaultAnomalyPolicy()
     if spec == "intent":
         return DefaultIntentPolicy()
+    if spec == "verb_contract":
+        return DefaultVerbContractPolicy()
     if "stub" in spec:
         return _Stub(spec)
     if spec.get("name") == "intent":
         return DefaultIntentPolicy(kinds=spec.get("kinds", ("agent",)))
+    if spec.get("name") == "verb_contract":
+        o = {"requireContractFor": "require_contract_for", "approvalImpacts": "approval_impacts",
+             "approveIrreversible": "approve_irreversible", "declaredWrites": "declared_writes"}
+        return DefaultVerbContractPolicy(**{o[k]: v for k, v in spec.items() if k in o})
     p = DefaultScopePolicy()
     for r in spec.get("rules", []):
         p.add_rule((r["method"], r["path"]), r["required_scope"])
@@ -109,6 +115,7 @@ def test_vector(c: dict[str, Any]) -> None:
         now=1_700_000_000_000,
         correlation_id=f"conf-{c['name']}",
         policy_metadata=c.get("policy_metadata"),
+        verb_contract=c.get("verb_contract"),
     )
     decision = engine.evaluate(ctx)
     assert _canon(decision.to_dict()) == _canon(c["expect"]["decision"])
@@ -126,6 +133,8 @@ def test_vector(c: dict[str, Any]) -> None:
         got = {"requestor": dict(e.requestor), "action": dict(e.action)}
         if "intent" in audit:
             got["intent"] = dict(e.intent) if e.intent is not None else None
+        if "verb_contract" in audit:
+            got["verb_contract"] = dict(e.verb_contract) if e.verb_contract is not None else None
         assert _canon(got) == _canon(audit)
 
 

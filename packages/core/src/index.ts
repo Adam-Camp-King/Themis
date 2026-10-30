@@ -21,6 +21,11 @@ export { DefaultScopePolicy } from './policies/scope.js';
 export { DefaultDraftPolicy } from './policies/draft.js';
 export { DefaultQuarantinePolicy } from './policies/quarantine.js';
 export { DefaultIntentPolicy, type IntentPolicyOptions } from './policies/intent.js';
+export { DefaultVerbContractPolicy, DEFAULT_APPROVAL_IMPACTS, type VerbContractPolicyOptions } from './policies/verb_contract.js';
+export {
+  StaticVerbRegistry, ChainVerbRegistry, contractFromMcpTool, isVerbId,
+  type StaticVerbRegistryOptions, type McpToolLike,
+} from './registry.js';
 export {
   DefaultRateLimitPolicy, MemoryRateLimiter, MemoryReputationStore, effectiveLimit,
   TIER_LIMITS_PER_MIN, DEDUCTIONS, REPUTATION_FLOOR, REPUTATION_CEILING, RECOVERY_PER_CLEAN_WRITE,
@@ -28,6 +33,6 @@ export {
 export {
   DefaultAnomalyPolicy, scoreAction, isDeleteVerb, namespaceOf, escalationNamespaceOf,
   SOFT_BLOCK, HARD_BLOCK, BULK_DELETE_THRESHOLD, BURST_THRESHOLD, OFF_HOURS, PAYLOAD_SOFT_BYTES,
-  MIN_BASELINE_SAMPLE, MIN_BASELINE_DAYS, BASELINE_MAX_AGE_MS, Z_TRIGGER, Z_MAX_CONTRIBUTION, ESCALATION_NAMESPACES,
+  MIN_BASELINE_SAMPLE, MIN_BASELINE_DAYS, BASELINE_MAX_AGE_MS, Z_TRIGGER, Z_MAX_CONTRIBUTION, ESCALATION_NAMESPACES, ESCALATION_IMPACTS,
 } from './policies/anomaly.js';
 export { ConsoleSink, NoOpSink, MultiSink } from './sinks.js';

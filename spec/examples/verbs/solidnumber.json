@@ -1,0 +1,148 @@
+{
+  "contracts": [
+    {
+      "id": "com.solidnumber:payment_link.send",
+      "version": "2026-10-01",
+      "summary": "Create a payment link and send it to a contact by SMS or email. The customer enters their card on the processor's hosted page.",
+      "side_effects": "write",
+      "reversibility": "irreversible",
+      "impacts": [
+        "money",
+        "outbound"
+      ],
+      "requires_consent": true,
+      "required_scope": "payments:write",
+      "acts_on": {
+        "noun": "payment_link",
+        "party": "tenant_customer"
+      },
+      "refuses": [
+        {
+          "code": "contact_not_found",
+          "when": "That contact isn't in this company."
+        },
+        {
+          "code": "invalid_amount",
+          "when": "amount_cents must be positive"
+        },
+        {
+          "code": "contact_no_phone",
+          "when": "Contact has no phone for SMS."
+        }
+      ],
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "contact_id": {
+            "type": "integer"
+          },
+          "amount_cents": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "channel": {
+            "type": "string",
+            "enum": [
+              "sms",
+              "email"
+            ]
+          }
+        },
+        "required": [
+          "contact_id",
+          "amount_cents"
+        ]
+      },
+      "provenance": "curated",
+      "extensions": {
+        "com.solidnumber": {
+          "coordinate": "533",
+          "tier_floor": "starter",
+          "shape": "transaction",
+          "surfaces": [
+            "cli",
+            "http",
+            "mcp_stdio"
+          ]
+        }
+      }
+    },
+    {
+      "id": "com.solidnumber:proposals.send",
+      "version": "2026-10-01",
+      "summary": "Send a proposal, estimate, quote or invoice to the customer by email, text or both, with their link to review and approve it.",
+      "side_effects": "write",
+      "reversibility": "irreversible",
+      "impacts": [
+        "outbound"
+      ],
+      "requires_consent": true,
+      "required_scope": "crm:write",
+      "acts_on": {
+        "noun": "estimate",
+        "party": "tenant_customer"
+      },
+      "refuses": [
+        {
+          "code": "not_sendable",
+          "when": "The document is accepted, expired, cancelled or superseded."
+        },
+        {
+          "code": "empty_document",
+          "when": "The document has no line items."
+        }
+      ],
+      "provenance": "curated",
+      "extensions": {
+        "com.solidnumber": {
+          "coordinate": "360",
+          "tier_floor": "starter",
+          "shape": "receipt"
+        }
+      }
+    },
+    {
+      "id": "com.solidnumber:audit.revert",
+      "version": "2026-10-01",
+      "summary": "Revert a single agent action by its audit id, from the before-state recorded at action time.",
+      "side_effects": "write",
+      "reversibility": "reversible",
+      "requires_consent": true,
+      "required_scope": "ops:write",
+      "acts_on": {
+        "noun": "ai_action_log",
+        "party": "tenant_internal"
+      },
+      "refuses": [
+        {
+          "code": "cannot_unsend_email",
+          "when": "The action was a sent email; it cannot be undone."
+        },
+        {
+          "code": "use_refund_not_revert",
+          "when": "The action was a charge or capture; refund it instead."
+        }
+      ],
+      "provenance": "curated",
+      "extensions": {
+        "com.solidnumber": {
+          "coordinate": "041",
+          "tier_floor": "starter",
+          "shape": "revert"
+        }
+      }
+    },
+    {
+      "id": "com.solidnumber:crm.contacts.search",
+      "version": "2026-10-01",
+      "summary": "Check whether someone is already a customer.",
+      "side_effects": "read",
+      "required_scope": "crm:read",
+      "acts_on": {
+        "noun": "contact",
+        "party": "tenant_customer"
+      },
+      "provenance": "curated"
+    }
+  ]
+}
