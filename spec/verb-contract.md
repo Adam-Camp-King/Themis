@@ -263,7 +263,9 @@ Solid#'s verb library already describes each verb (`library.describe`). Its fiel
 | `refuses_when[].code`, `.when` | `refuses` |
 | `input_schema`, `output_schema` | `input_schema`, `output_schema` |
 | `coordinate`, `tier_floor`, `surfaces`, `shape` | `extensions["com.solidnumber"]` |
-| — | `impacts`: not a Solid# field today; derive from the noun's domain (Taking payment → `money`; Texts, Email, Calls → `outbound`) or add it to the library |
+| risk-ladder reasons (`money_movement`, `deletion`, `identity_and_access`, `external_message`, `public_change`, `personal_data_transfer`, …) | `impacts`, translated reason by reason; Solid#-only reasons as `com.solidnumber:<reason>` |
 | — | `provenance: curated` |
+
+Solid# does not guess impacts from verb names or catalog areas. Its risk ladder already decides, rule by rule with reviewed overrides, which verbs move money, change access, send messages, delete, export or publish; `impacts` is that decision in this spec's vocabulary. An override that lowers a verb drops the impact its rule implied. That is the pattern for any catalog: publish the facts you already enforce, don't derive new ones.
 
 The catalog stays Solid#'s. The contract shape is the open part, so the same engine governs Solid# verbs, a customer's own verbs and any MCP tool together.
