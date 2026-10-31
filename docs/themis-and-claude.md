@@ -2,7 +2,7 @@
 
 > **One-page architecture for deploying Claude-powered agents with Themis as the run-time safety layer.**
 >
-> Status: Themis 0.2.1 is on npm and PyPI, with RFC v0.2 (agent firewall) and the RFC v0.3 draft (action intent).
+> Status: Themis 0.3.0 is on npm and PyPI, with RFC v0.2 (agent firewall) and RFC v0.3 (draft): intent and verb contracts.
 > Audience: engineers building Claude agents for production; Anthropic BD / research.
 
 ## The problem Themis solves for Claude

@@ -27,7 +27,7 @@
     "clean": "rm -rf dist *.tsbuildinfo"
   },
   "dependencies": {
-    "themis-policy": "^0.2.1"
+    "themis-policy": "^0.3.0"
   },
   "keywords": ["llm", "agents", "policy", "audit", "verb-contract", "intent", "cli"],
   "engines": {

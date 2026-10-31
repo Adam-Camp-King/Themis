@@ -2,7 +2,7 @@
 
 Policy kernel for bounded-autonomy LLM agents. One engine, pluggable policies, four decisions, one audit event per evaluation, zero runtime dependencies.
 
-> Status: 0.2.1 on npm. Ships the engine, eight default policies, verb registries, sinks and guards. Conforms to Themis RFC v0.2 and the RFC v0.3 draft (action intent) through the shared [`spec/conformance`](../../spec/conformance) vectors, which the Python implementation also passes. Runs on Node 20+, Deno, Bun, Cloudflare Workers and in the browser: no `node:` imports.
+> Status: 0.3.0 on npm. Ships the engine, eight default policies, verb registries, sinks and guards. Conforms to Themis RFC v0.2 and the RFC v0.3 draft (intent and verb contracts) through the shared [`spec/conformance`](../../spec/conformance) vectors, which the Python implementation also passes. Runs on Node 20+, Deno, Bun, Cloudflare Workers and in the browser: no `node:` imports.
 
 ## Install
 
