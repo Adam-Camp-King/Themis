@@ -38,6 +38,8 @@ import type {
   IPolicyContext,
   IPolicyEngine,
   IRequestor,
+  IVerbRegistry,
+  IVerbContract,
 } from 'themis-policy';
 import { isAllow, isDeny, isRedirect, isRequireApproval } from 'themis-policy';
 
@@ -73,6 +75,11 @@ export interface GateToolOptions {
     | Promise<IPolicyContext['policy_metadata']>
     | IPolicyContext['policy_metadata'];
   readonly now?: () => number;
+  /**
+   * Resolve `action.verb` to its verb contract (RFC v0.3 § 2.8) and put it on
+   * the context for DefaultVerbContractPolicy and the audit snapshot.
+   */
+  readonly verbRegistry?: IVerbRegistry;
   /**
    * How to surface a denial. Default: throw. Callers may return a string
    * (becomes the tool output so the agent can see the reason).
@@ -117,6 +124,8 @@ export function gateTool<T extends LangChainToolLike>(
     const correlation_id =
       opts.correlationIdFrom?.(args, toolName) ?? defaultCorrelationId();
 
+    const verb_contract = await resolveContract(opts.verbRegistry, action.verb);
+
     const ctx: IPolicyContext = {
       requestor,
       action,
@@ -124,6 +133,7 @@ export function gateTool<T extends LangChainToolLike>(
       now: now(),
       correlation_id,
       ...(policy_metadata ? { policy_metadata } : {}),
+      ...(verb_contract ? { verb_contract } : {}),
     };
 
     const decision = await opts.engine.evaluate(ctx);
@@ -171,4 +181,17 @@ function defaultCorrelationId(): string {
   let out = '';
   for (let i = 0; i < 32; i++) out += hex[(Math.random() * 16) | 0];
   return out;
+}
+
+/**
+ * A registry that fails resolves to no contract. With DefaultVerbContractPolicy
+ * that fails closed for agents (unknown_verb) instead of failing the call.
+ */
+async function resolveContract(registry: IVerbRegistry | undefined, verb: string): Promise<IVerbContract | null> {
+  if (!registry) return null;
+  try {
+    return (await registry.resolve(verb)) ?? null;
+  } catch {
+    return null;
+  }
 }

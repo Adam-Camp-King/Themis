@@ -659,6 +659,345 @@
         "baseline_sample": 1000,
         "baseline_used": true
       }
+    },
+    {
+      "name": "contract: a deletion by any name is a bulk delete",
+      "input": {
+        "trust_tier": "platform",
+        "recent_deletes": 9,
+        "recent_writes": 0,
+        "local_hour": 12,
+        "payload_bytes": 10,
+        "now": 1700000000000,
+        "verb": "acme:contact.merge",
+        "side_effects": "write",
+        "contract": {
+          "id": "acme:contact.merge",
+          "side_effects": "write",
+          "reversibility": "irreversible",
+          "impacts": [
+            "deletion"
+          ],
+          "provenance": "curated"
+        }
+      },
+      "expect": {
+        "risk": 0.97,
+        "reasons": [
+          "bulk_delete:10_in_10m"
+        ],
+        "baseline_sample": 0,
+        "baseline_used": false
+      }
+    },
+    {
+      "name": "contract: the name heuristic still applies; a contract can only add risk",
+      "input": {
+        "trust_tier": "platform",
+        "recent_deletes": 9,
+        "recent_writes": 0,
+        "local_hour": 12,
+        "payload_bytes": 10,
+        "now": 1700000000000,
+        "verb": "acme:draft.delete",
+        "side_effects": "write",
+        "contract": {
+          "id": "acme:draft.delete",
+          "side_effects": "write",
+          "reversibility": "reversible",
+          "provenance": "curated"
+        }
+      },
+      "expect": {
+        "risk": 0.97,
+        "reasons": [
+          "bulk_delete:10_in_10m"
+        ],
+        "baseline_sample": 0,
+        "baseline_used": false
+      }
+    },
+    {
+      "name": "contract: side_effects comes from the contract",
+      "input": {
+        "trust_tier": "platform",
+        "recent_deletes": 9,
+        "recent_writes": 0,
+        "local_hour": 12,
+        "payload_bytes": 10,
+        "now": 1700000000000,
+        "verb": "acme:contact.merge",
+        "side_effects": "read",
+        "contract": {
+          "id": "acme:contact.merge",
+          "side_effects": "write",
+          "reversibility": "irreversible",
+          "impacts": [
+            "deletion"
+          ],
+          "provenance": "curated"
+        }
+      },
+      "expect": {
+        "risk": 0.97,
+        "reasons": [
+          "bulk_delete:10_in_10m"
+        ],
+        "baseline_sample": 0,
+        "baseline_used": false
+      }
+    },
+    {
+      "name": "contract: a read contract scores zero even if the caller says write",
+      "input": {
+        "trust_tier": "platform",
+        "recent_deletes": 9,
+        "recent_writes": 0,
+        "local_hour": 12,
+        "payload_bytes": 10,
+        "now": 1700000000000,
+        "verb": "acme:contact.export",
+        "side_effects": "write",
+        "contract": {
+          "id": "acme:contact.export",
+          "side_effects": "read",
+          "provenance": "curated"
+        }
+      },
+      "expect": {
+        "risk": 0.0,
+        "reasons": [],
+        "baseline_sample": 0,
+        "baseline_used": false
+      }
+    },
+    {
+      "name": "contract: custom tier reaching for money is an escalation by impact",
+      "input": {
+        "trust_tier": "custom",
+        "recent_deletes": 0,
+        "recent_writes": 0,
+        "local_hour": 12,
+        "payload_bytes": 10,
+        "now": 1700000000000,
+        "verb": "acme:payout.release",
+        "side_effects": "write",
+        "contract": {
+          "id": "acme:payout.release",
+          "side_effects": "write",
+          "reversibility": "irreversible",
+          "impacts": [
+            "outbound",
+            "money",
+            "access"
+          ],
+          "provenance": "curated"
+        }
+      },
+      "expect": {
+        "risk": 0.9,
+        "reasons": [
+          "scope_escalation:access"
+        ],
+        "baseline_sample": 0,
+        "baseline_used": false
+      }
+    },
+    {
+      "name": "contract: a team.* verb is still an escalation by name",
+      "input": {
+        "trust_tier": "custom",
+        "recent_deletes": 0,
+        "recent_writes": 0,
+        "local_hour": 12,
+        "payload_bytes": 10,
+        "now": 1700000000000,
+        "verb": "team.note_add",
+        "side_effects": "write",
+        "contract": {
+          "id": "acme:team.note_add",
+          "side_effects": "write",
+          "reversibility": "reversible",
+          "provenance": "curated"
+        }
+      },
+      "expect": {
+        "risk": 0.9,
+        "reasons": [
+          "scope_escalation:team"
+        ],
+        "baseline_sample": 0,
+        "baseline_used": false
+      }
+    },
+    {
+      "name": "contract: a non-array impacts list counts as no impacts",
+      "input": {
+        "trust_tier": "platform",
+        "recent_deletes": 9,
+        "recent_writes": 0,
+        "local_hour": 12,
+        "payload_bytes": 10,
+        "now": 1700000000000,
+        "verb": "acme:contact.merge",
+        "side_effects": "write",
+        "contract": {
+          "id": "acme:contact.merge",
+          "side_effects": "write",
+          "reversibility": "irreversible",
+          "impacts": "deletion",
+          "provenance": "curated"
+        }
+      },
+      "expect": {
+        "risk": 0.0,
+        "reasons": [],
+        "baseline_sample": 0,
+        "baseline_used": false
+      }
+    },
+    {
+      "name": "contract: an MCP delete tool keeps the bulk-delete hard block",
+      "input": {
+        "trust_tier": "platform",
+        "recent_deletes": 9,
+        "recent_writes": 0,
+        "local_hour": 12,
+        "payload_bytes": 10,
+        "now": 1700000000000,
+        "verb": "mcp:github/delete_repo",
+        "side_effects": "write",
+        "contract": {
+          "id": "mcp:github/delete_repo",
+          "side_effects": "write",
+          "reversibility": "irreversible",
+          "impacts": [
+            "outbound"
+          ],
+          "idempotent": false,
+          "provenance": "declared",
+          "extensions": {
+            "mcp": {
+              "server": "github",
+              "tool": "delete_repo"
+            }
+          }
+        }
+      },
+      "expect": {
+        "risk": 0.97,
+        "reasons": [
+          "bulk_delete:10_in_10m"
+        ],
+        "baseline_sample": 0,
+        "baseline_used": false
+      }
+    },
+    {
+      "name": "contract: a declared read claim cannot zero a write",
+      "input": {
+        "trust_tier": "platform",
+        "recent_deletes": 9,
+        "recent_writes": 0,
+        "local_hour": 12,
+        "payload_bytes": 10,
+        "now": 1700000000000,
+        "verb": "mcp:github/delete_repo",
+        "side_effects": "write",
+        "contract": {
+          "id": "mcp:github/delete_repo",
+          "side_effects": "read",
+          "provenance": "declared"
+        }
+      },
+      "expect": {
+        "risk": 0.97,
+        "reasons": [
+          "bulk_delete:10_in_10m"
+        ],
+        "baseline_sample": 0,
+        "baseline_used": false
+      }
+    },
+    {
+      "name": "contract: an unrecognised side_effects scores as a write",
+      "input": {
+        "trust_tier": "platform",
+        "recent_deletes": 9,
+        "recent_writes": 0,
+        "local_hour": 12,
+        "payload_bytes": 10,
+        "now": 1700000000000,
+        "verb": "acme:contact.merge",
+        "side_effects": "read",
+        "contract": {
+          "id": "acme:contact.merge",
+          "side_effects": "delete",
+          "impacts": [
+            "deletion"
+          ],
+          "provenance": "curated"
+        }
+      },
+      "expect": {
+        "risk": 0.97,
+        "reasons": [
+          "bulk_delete:10_in_10m"
+        ],
+        "baseline_sample": 0,
+        "baseline_used": false
+      }
+    },
+    {
+      "name": "qualified verb: the heuristics read the name after the namespace",
+      "input": {
+        "trust_tier": "custom",
+        "recent_deletes": 0,
+        "recent_writes": 0,
+        "local_hour": 12,
+        "payload_bytes": 10,
+        "now": 1700000000000,
+        "verb": "com.acme:team.update_role",
+        "side_effects": "write"
+      },
+      "expect": {
+        "risk": 0.9,
+        "reasons": [
+          "scope_escalation:team"
+        ],
+        "baseline_sample": 0,
+        "baseline_used": false
+      }
+    },
+    {
+      "name": "contract: a risky impact names the escalation before the verb name does",
+      "input": {
+        "trust_tier": "custom",
+        "recent_deletes": 0,
+        "recent_writes": 0,
+        "local_hour": 12,
+        "payload_bytes": 10,
+        "now": 1700000000000,
+        "verb": "billing.payout",
+        "side_effects": "write",
+        "contract": {
+          "id": "acme:billing.payout",
+          "side_effects": "write",
+          "reversibility": "irreversible",
+          "impacts": [
+            "money"
+          ],
+          "provenance": "curated"
+        }
+      },
+      "expect": {
+        "risk": 0.9,
+        "reasons": [
+          "scope_escalation:money"
+        ],
+        "baseline_sample": 0,
+        "baseline_used": false
+      }
     }
   ]
 }

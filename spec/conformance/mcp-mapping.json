@@ -1,0 +1,185 @@
+{
+  "version": "v0.3",
+  "note": "contractFromMcpTool / contract_from_mcp_tool (RFC v0.3 draft \u00a7 2.8.4). MCP hint defaults: readOnlyHint false, destructiveHint true, idempotentHint false, openWorldHint true. A case with expect_error: true must be refused (TypeError).",
+  "cases": [
+    {
+      "name": "read-only tool",
+      "server": "github",
+      "tool": {
+        "name": "search_issues",
+        "description": "Search issues.",
+        "inputSchema": {
+          "type": "object"
+        },
+        "annotations": {
+          "readOnlyHint": true,
+          "openWorldHint": true
+        }
+      },
+      "expect": {
+        "id": "mcp:github/search_issues",
+        "summary": "Search issues.",
+        "side_effects": "read",
+        "input_schema": {
+          "type": "object"
+        },
+        "provenance": "declared",
+        "extensions": {
+          "mcp": {
+            "server": "github",
+            "tool": "search_issues"
+          }
+        }
+      }
+    },
+    {
+      "name": "no annotations: MCP defaults make it an irreversible, open-world write",
+      "server": "github",
+      "tool": {
+        "name": "delete_branch"
+      },
+      "expect": {
+        "id": "mcp:github/delete_branch",
+        "side_effects": "write",
+        "reversibility": "irreversible",
+        "impacts": [
+          "outbound"
+        ],
+        "idempotent": false,
+        "provenance": "declared",
+        "extensions": {
+          "mcp": {
+            "server": "github",
+            "tool": "delete_branch"
+          }
+        }
+      }
+    },
+    {
+      "name": "additive, idempotent, closed-world write",
+      "server": "notes",
+      "tool": {
+        "name": "tag",
+        "description": "Tag a note.",
+        "annotations": {
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false
+        }
+      },
+      "expect": {
+        "id": "mcp:notes/tag",
+        "summary": "Tag a note.",
+        "side_effects": "write",
+        "reversibility": "reversible",
+        "idempotent": true,
+        "provenance": "declared",
+        "extensions": {
+          "mcp": {
+            "server": "notes",
+            "tool": "tag"
+          }
+        }
+      }
+    },
+    {
+      "name": "title is the summary when there is no description; outputSchema is kept",
+      "server": "db",
+      "tool": {
+        "name": "drop",
+        "annotations": {
+          "title": "Drop a table"
+        },
+        "outputSchema": {
+          "type": "object"
+        }
+      },
+      "expect": {
+        "id": "mcp:db/drop",
+        "summary": "Drop a table",
+        "side_effects": "write",
+        "reversibility": "irreversible",
+        "impacts": [
+          "outbound"
+        ],
+        "idempotent": false,
+        "output_schema": {
+          "type": "object"
+        },
+        "provenance": "declared",
+        "extensions": {
+          "mcp": {
+            "server": "db",
+            "tool": "drop"
+          }
+        }
+      }
+    },
+    {
+      "name": "non-boolean hints fall back to MCP defaults",
+      "server": "s",
+      "tool": {
+        "name": "t",
+        "annotations": {
+          "readOnlyHint": "true",
+          "destructiveHint": 0
+        }
+      },
+      "expect": {
+        "id": "mcp:s/t",
+        "side_effects": "write",
+        "reversibility": "irreversible",
+        "impacts": [
+          "outbound"
+        ],
+        "idempotent": false,
+        "provenance": "declared",
+        "extensions": {
+          "mcp": {
+            "server": "s",
+            "tool": "t"
+          }
+        }
+      }
+    },
+    {
+      "name": "a tool with no name is refused",
+      "server": "s",
+      "tool": {
+        "description": "x"
+      },
+      "expect_error": true
+    },
+    {
+      "name": "a tool whose name is not a string is refused",
+      "server": "s",
+      "tool": {
+        "name": true
+      },
+      "expect_error": true
+    },
+    {
+      "name": "schemas that are not objects are dropped",
+      "server": "s",
+      "tool": {
+        "name": "t",
+        "inputSchema": [],
+        "outputSchema": "x",
+        "annotations": {
+          "readOnlyHint": true
+        }
+      },
+      "expect": {
+        "id": "mcp:s/t",
+        "side_effects": "read",
+        "provenance": "declared",
+        "extensions": {
+          "mcp": {
+            "server": "s",
+            "tool": "t"
+          }
+        }
+      }
+    }
+  ]
+}

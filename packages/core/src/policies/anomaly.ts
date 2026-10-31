@@ -25,6 +25,7 @@
  * `anomaly_hard_block`; risk > SOFT_BLOCK → require_approval; else allow.
  */
 
+import { impactsOf, usableContract, verbName } from '../internal/verb_contract.js';
 import type { IAnomalyInput, IAnomalyMetadata, IPolicy, IPolicyContext, IPolicyDecision, IRiskScore } from '../types.js';
 
 export const SOFT_BLOCK = 0.8;
@@ -45,6 +46,9 @@ export const ESCALATION_NAMESPACES: ReadonlySet<string> = new Set([
   'team', 'gdpr', 'billing', 'subscription', 'subscriptions', 'security', 'audit',
   'ai_employee', 'ai_employees',
 ]);
+/** With a contract, a custom-tier verb with any of these impacts is an escalation. First match names it. */
+export const ESCALATION_IMPACTS: readonly string[] = ['access', 'money', 'data_export'];
+
 const DELETE_WORDS = ['delete', 'remove', 'purge', 'destroy'];
 
 export function isDeleteVerb(verb: string): boolean {
@@ -89,16 +93,28 @@ export function scoreAction(input: IAnomalyInput): IRiskScore {
   let baselineSample = 0;
   let baselineUsed = false;
 
-  if (input.side_effects !== 'write' && input.side_effects !== 'mixed') {
+  // A contract (RFC v0.3 § 5.6) can only add risk. Only a *curated* read lowers
+  // a write to zero; a declared read claim cannot. Anything that is not 'read'
+  // scores as a write. The name heuristics still apply alongside it.
+  const contract = usableContract(input.contract);
+  const impacts = contract ? impactsOf(contract) : [];
+  let sideEffects: unknown = input.side_effects;
+  if (contract) {
+    if (contract['side_effects'] !== 'read') sideEffects = 'write';
+    else if (contract['provenance'] === 'curated') sideEffects = 'read';
+  }
+  if (sideEffects !== 'write' && sideEffects !== 'mixed') {
     return { risk: 0, reasons: [], baseline_sample: 0, baseline_used: false };
   }
 
-  if (isDeleteVerb(input.verb) && input.recent_deletes + 1 >= BULK_DELETE_THRESHOLD) {
+  const name = verbName(input.verb);
+  const isDelete = impacts.includes('deletion') || isDeleteVerb(name);
+  if (isDelete && input.recent_deletes + 1 >= BULK_DELETE_THRESHOLD) {
     add(0.97, `bulk_delete:${input.recent_deletes + 1}_in_10m`);
   }
-  const ns = escalationNamespaceOf(input.verb);
-  if (input.trust_tier === 'custom' && ns !== null) {
-    add(0.9, `scope_escalation:${ns}`);
+  const escalation = ESCALATION_IMPACTS.find((i) => impacts.includes(i)) ?? escalationNamespaceOf(name);
+  if (input.trust_tier === 'custom' && escalation !== null) {
+    add(0.9, `scope_escalation:${escalation}`);
   }
   if (input.local_hour >= OFF_HOURS[0] && input.local_hour < OFF_HOURS[1] && input.recent_writes + 1 >= BURST_THRESHOLD) {
     add(0.85, `off_hours_burst:${input.recent_writes + 1}_in_5m@${String(input.local_hour).padStart(2, '0')}h`);

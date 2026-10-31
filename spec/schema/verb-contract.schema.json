@@ -1,0 +1,163 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Adam-Camp-King/Themis/spec/schema/verb-contract.schema.json",
+  "title": "Themis verb contract (RFC v0.3 draft \u00a7 2.8)",
+  "type": "object",
+  "required": [
+    "id",
+    "side_effects",
+    "provenance"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^(?!.*\\n)[a-z0-9][a-z0-9._-]*:[^\\x00-\\x20\\x7f-\\x9f\\u00a0\\u1680\\u2000-\\u200a\\u2028\\u2029\\u202f\\u205f\\u3000\\ufeff]+$"
+    },
+    "version": {
+      "type": "string"
+    },
+    "summary": {
+      "type": "string"
+    },
+    "side_effects": {
+      "enum": [
+        "read",
+        "write",
+        "mixed"
+      ]
+    },
+    "reversibility": {
+      "enum": [
+        "reversible",
+        "compensable",
+        "irreversible"
+      ]
+    },
+    "undone_by": {
+      "type": "string",
+      "pattern": "^(?!.*\\n)[a-z0-9][a-z0-9._-]*:[^\\x00-\\x20\\x7f-\\x9f\\u00a0\\u1680\\u2000-\\u200a\\u2028\\u2029\\u202f\\u205f\\u3000\\ufeff]+$"
+    },
+    "impacts": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "anyOf": [
+          {
+            "enum": [
+              "money",
+              "access",
+              "outbound",
+              "deletion",
+              "data_export",
+              "publish"
+            ]
+          },
+          {
+            "type": "string",
+            "pattern": "^(?!.*\\n)[a-z0-9][a-z0-9._-]*:[^\\x00-\\x20\\x7f-\\x9f\\u00a0\\u1680\\u2000-\\u200a\\u2028\\u2029\\u202f\\u205f\\u3000\\ufeff]+$"
+          }
+        ]
+      }
+    },
+    "requires_consent": {
+      "type": "boolean"
+    },
+    "idempotent": {
+      "type": "boolean"
+    },
+    "required_scope": {
+      "type": "string"
+    },
+    "acts_on": {
+      "type": "object",
+      "required": [
+        "noun"
+      ],
+      "properties": {
+        "noun": {
+          "type": "string"
+        },
+        "party": {
+          "type": "string"
+        }
+      }
+    },
+    "refuses": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "code"
+        ],
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "when": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "input_schema": {
+      "type": "object"
+    },
+    "output_schema": {
+      "type": "object"
+    },
+    "provenance": {
+      "enum": [
+        "curated",
+        "declared"
+      ]
+    },
+    "extensions": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object"
+      }
+    }
+  },
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "side_effects": {
+            "enum": [
+              "write",
+              "mixed"
+            ]
+          }
+        },
+        "required": [
+          "side_effects"
+        ]
+      },
+      "then": {
+        "required": [
+          "reversibility"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "reversibility": {
+            "const": "irreversible"
+          }
+        },
+        "required": [
+          "reversibility"
+        ]
+      },
+      "then": {
+        "not": {
+          "required": [
+            "undone_by"
+          ]
+        }
+      }
+    }
+  ]
+}

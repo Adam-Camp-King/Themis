@@ -33,7 +33,11 @@ export class DefaultIntentPolicy implements IPolicy {
   private readonly kinds: ReadonlySet<string>;
 
   constructor(opts: IntentPolicyOptions = {}) {
-    this.kinds = new Set(opts.kinds ?? ['agent']);
+    const kinds: unknown = opts.kinds ?? ['agent'];
+    if (!Array.isArray(kinds) || !kinds.every((k) => typeof k === 'string')) {
+      throw new TypeError('DefaultIntentPolicy: kinds must be an array of strings');
+    }
+    this.kinds = new Set(kinds);
   }
 
   async evaluate(ctx: IPolicyContext): Promise<IPolicyDecision> {

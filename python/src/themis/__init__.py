@@ -19,10 +19,12 @@ from .types import (
 )
 from .engine import PolicyEngine, EmitPolicy, build_audit_event
 from .guards import is_allow, is_deny, is_redirect, is_require_approval
+from .registry import is_verb_id, VerbRegistry, StaticVerbRegistry, ChainVerbRegistry, contract_from_mcp_tool
 from .sinks import ConsoleSink, MemorySink, MultiSink, NoOpSink
 from .policies import (
     DefaultDraftPolicy, DefaultLockPolicy, DefaultScopePolicy,
     DefaultQuarantinePolicy, DefaultRateLimitPolicy, DefaultAnomalyPolicy, DefaultIntentPolicy,
+    DefaultVerbContractPolicy, DEFAULT_APPROVAL_IMPACTS,
     MemoryRateLimiter, MemoryReputationStore, effective_limit, score_action,
     TIER_LIMITS_PER_MIN, DEDUCTIONS, SOFT_BLOCK, HARD_BLOCK,
 )
@@ -38,6 +40,8 @@ __all__ = [
     "TrustTier", "AgentIdentity", "BehaviorBaseline", "AnomalyInput", "RiskScore", "RateCheck",
     "ReputationStore", "RateLimiter", "AgentIdentityStore",
     "DefaultQuarantinePolicy", "DefaultRateLimitPolicy", "DefaultAnomalyPolicy", "DefaultIntentPolicy",
+    "DefaultVerbContractPolicy", "DEFAULT_APPROVAL_IMPACTS",
+    "is_verb_id", "VerbRegistry", "StaticVerbRegistry", "ChainVerbRegistry", "contract_from_mcp_tool",
     "MemoryRateLimiter", "MemoryReputationStore", "effective_limit", "score_action",
     "TIER_LIMITS_PER_MIN", "DEDUCTIONS", "SOFT_BLOCK", "HARD_BLOCK", "__version__",
 ]

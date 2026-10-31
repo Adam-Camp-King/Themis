@@ -100,6 +100,8 @@ export interface IPolicyContext {
   readonly requestor: IRequestor;
   readonly action: IAction;
   readonly entity?: ILockableEntity | IDraftableEntity | null;
+  /** What `action.verb` does, resolved by the caller from a verb registry (RFC v0.3 § 2.8). */
+  readonly verb_contract?: IVerbContract | null;
   readonly now: number;
   readonly correlation_id: string;
   readonly policy_metadata?: Readonly<Record<string, Readonly<Record<string, unknown>>>>;
@@ -170,6 +172,8 @@ export interface IAuditEvent {
   readonly metadata?: Readonly<Record<string, unknown>>;
   /** A detached copy of `action.intent`, when the action stated one (RFC v0.3 § 9.5). */
   readonly intent?: IIntent;
+  /** A snapshot of the verb contract at decision time (RFC v0.3 § 9.6). */
+  readonly verb_contract?: IVerbContractSnapshot;
 }
 
 // ============================================================================
@@ -372,6 +376,11 @@ export interface IAnomalyInput {
   readonly today_count?: number;
   /** epoch ms — used only to judge baseline freshness. */
   readonly now: number;
+  /**
+   * The verb's contract, when known (RFC v0.3 § 5.8). With it, side effects,
+   * deletion and escalation come from the contract instead of the verb name.
+   */
+  readonly contract?: IVerbContract | null;
 }
 
 export interface IRiskScore {
@@ -428,4 +437,61 @@ export interface IRateLimitMetadata extends IRateCheck {}
 
 export interface IAnomalyMetadata extends IRiskScore {
   readonly approval_ref?: string | null;
+}
+
+// ============================================================================
+// Verb contracts (RFC v0.3 draft § 2.8)
+// ============================================================================
+
+/** Well-known impacts. Any value containing ':' is an owner-namespaced extension. */
+export type VerbImpact =
+  | 'money' | 'access' | 'outbound' | 'deletion' | 'data_export' | 'publish'
+  | (string & {});
+
+/**
+ * What a verb does, declared once and read by policies instead of the verb's
+ * name. IDs are `<namespace>:<name>`; Themis never interprets the name.
+ * Schema: spec/schema/verb-contract.schema.json.
+ */
+export interface IVerbContract {
+  readonly id: string;
+  readonly version?: string;
+  readonly summary?: string;
+  readonly side_effects: 'read' | 'write' | 'mixed';
+  readonly reversibility?: 'reversible' | 'compensable' | 'irreversible';
+  readonly undone_by?: string;
+  readonly impacts?: readonly VerbImpact[];
+  readonly requires_consent?: boolean;
+  readonly idempotent?: boolean;
+  readonly required_scope?: string;
+  readonly acts_on?: { readonly noun: string; readonly party?: string };
+  readonly refuses?: readonly { readonly code: string; readonly when?: string }[];
+  readonly input_schema?: Readonly<Record<string, unknown>>;
+  readonly output_schema?: Readonly<Record<string, unknown>>;
+  /** `curated`: the deployer's own fact. `declared`: the governed tool's own claim. */
+  readonly provenance: 'curated' | 'declared';
+  readonly extensions?: Readonly<Record<string, Readonly<Record<string, unknown>>>>;
+}
+
+/** The part of a contract an audit event records (RFC v0.3 § 9.6). */
+export interface IVerbContractSnapshot {
+  readonly id: string;
+  readonly version?: string;
+  readonly summary?: string;
+  readonly side_effects?: string;
+  readonly reversibility?: string;
+  readonly impacts?: readonly string[];
+  readonly requires_consent?: boolean;
+  readonly provenance?: string;
+}
+
+/** Resolves a verb to its contract. Implement it against your own catalog. */
+export interface IVerbRegistry {
+  resolve(verb: string): IVerbContract | null | Promise<IVerbContract | null>;
+}
+
+/** policy_metadata['verb_contract'] — set by the deployer after verifying an approval. */
+export interface IVerbContractMetadata {
+  readonly approved?: boolean;
+  readonly approval_ref?: string;
 }

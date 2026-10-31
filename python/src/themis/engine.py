@@ -25,6 +25,7 @@ import uuid
 from typing import Any, Literal, Mapping, Optional, Sequence
 
 from ._intent import recordable_intent
+from ._verb_contract import recordable_contract
 from .types import (
     Allow, AuditEvent, AuditSink, Decision, Deny, Policy, PolicyContext, Redirect, RequireApproval,
 )
@@ -65,6 +66,7 @@ def build_audit_event(
         latency_ms=latency_ms,
         metadata=ctx.action.metadata,
         intent=recordable_intent(ctx.action.intent),
+        verb_contract=recordable_contract(ctx.verb_contract),
     )
 
 
