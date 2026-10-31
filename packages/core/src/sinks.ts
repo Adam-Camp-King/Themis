@@ -23,9 +23,7 @@ import type { IAuditEvent, IAuditSink } from './types.js';
 /** NDJSON-to-stdout sink. Synchronous writes. */
 export class ConsoleSink implements IAuditSink {
   constructor(
-    private readonly out: (line: string) => void = (s) => {
-      process.stdout.write(s);
-    },
+    private readonly out: (line: string) => void = defaultOut,
   ) {}
 
   emit(event: IAuditEvent): void {
@@ -74,4 +72,14 @@ export class MultiSink implements IAuditSink {
   async flush(): Promise<void> {
     await Promise.all(this.children.map((c) => c.flush?.()));
   }
+}
+
+/** stdout where there is one (Node, Bun, Deno's process shim), else console. */
+function defaultOut(line: string): void {
+  const proc = (globalThis as { process?: { stdout?: { write?: (s: string) => unknown } } }).process;
+  if (proc?.stdout?.write) {
+    proc.stdout.write(line);
+    return;
+  }
+  console.log(line.endsWith('\n') ? line.slice(0, -1) : line);
 }

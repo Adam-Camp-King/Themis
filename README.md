@@ -3,7 +3,7 @@
 [![ci](https://github.com/Adam-Camp-King/Themis/actions/workflows/ci.yml/badge.svg)](https://github.com/Adam-Camp-King/Themis/actions/workflows/ci.yml) [![npm](https://img.shields.io/npm/v/themis-policy)](https://www.npmjs.com/package/themis-policy) [![PyPI](https://img.shields.io/pypi/v/themis-policy)](https://pypi.org/project/themis-policy/)
 
 > A policy kernel for bounded-autonomy LLM agents.
-> **Status:** 0.2.0 on npm and PyPI. RFC v0.2 (draft) adds the agent firewall.
+> **Status:** 0.2.1 on npm and PyPI. RFC v0.2 adds the agent firewall; the RFC v0.3 draft adds action intent.
 
 Themis is a small, framework-agnostic policy engine that decides what an LLM agent can do against a production system. It formalizes four primitives — **locks**, **drafts**, **scopes**, **audit** — and composes them into a single evaluation that returns `allow`, `deny`, `redirect`, or `require_approval`.
 
@@ -11,6 +11,10 @@ Themis is a small, framework-agnostic policy engine that decides what an LLM age
 
 This is the reference TypeScript implementation. Conforms to Themis RFC v0 / v0.2 (the RFC lives upstream in the design notes for now; the [conformance vectors](spec/conformance) are the executable spec).
 
+
+**Intent (RFC v0.3 draft).** Every action can state why it is happening: a one-line `summary` in the agent's words, where the goal came from, the request and tool call it traces to. The engine copies it, detached, into the audit event of every evaluation, so the record pairs what an agent *said* it was doing with what it was *allowed* to do. `DefaultIntentPolicy` makes stating one mandatory for agents. See [Intent](#intent).
+
+**Runs anywhere JavaScript does.** The core has no `node:` imports and no `Buffer`: Node 20+, Deno, Bun, Cloudflare Workers and the browser.
 
 ## Implementations and conformance
 
@@ -32,7 +36,7 @@ The four primitives are reinvented, inconsistently, in every agent framework and
 
 | Package | What |
 |---------|------|
-| [`themis-policy`](./packages/core) | engine, the seven default policies (lock, draft, scope, quarantine, rate_limit, anomaly + scoring), sinks, in-memory stores |
+| [`themis-policy`](./packages/core) | engine, the seven default policies (intent, quarantine, rate_limit, anomaly + scoring, scope, lock, draft), sinks, in-memory stores |
 | [`themis-policy-anthropic`](./packages/anthropic) | gate Claude `tool_use` blocks |
 | [`themis-policy-openai`](./packages/openai) | gate OpenAI tool calls |
 | [`themis-policy-langchain`](./packages/langchain) | gate LangChain tools |
@@ -41,6 +45,24 @@ The four primitives are reinvented, inconsistently, in every agent framework and
 | [`themis-policy` (PyPI)](./python) | the Python reference implementation, same vectors |
 
 Every adapter takes a `policyMetadataFrom` hook so the firewall policies receive their per-call inputs (limiter result, reputation, risk score) from your stores.
+
+## Intent
+
+```ts
+engine.addPolicy(new DefaultIntentPolicy());            // register first: agents must say why
+
+await engine.evaluate({
+  requestor: { id: 100, kind: 'agent', tenant_id: 7, scopes: ['*'] },
+  action: {
+    verb: 'invoice.send', resource_type: 'invoice', tenant_id: 7,
+    intent: { summary: 'Send the March invoice the owner asked for', source: 'user_request', request_ref: 'msg_31' },
+  },
+  now: Date.now(), correlation_id: 'req-123',
+});
+// audit event → { …, decision: { kind: 'allow' }, intent: { summary: 'Send the March invoice…', … } }
+```
+
+An agent that states nothing is denied with `intent_missing`. Your adapter's `actionFrom` supplies the intent; to have the model state it, add a required `intent` field to each tool's input schema and map it to `summary`. Intent is declared, not verified. Its value is the pairing: an approved `team.update_role` whose stated purpose was "send an invoice" is exactly what an auditor, or an anomaly model, should look at. Persisting events to Postgres? Store `decision`, `intent` and `metadata` as `jsonb` and index `intent` with GIN.
 
 ## Development
 

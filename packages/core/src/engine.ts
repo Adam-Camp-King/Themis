@@ -24,10 +24,12 @@
  *   6. Emit exactly one IAuditEvent per evaluation (when emit_policy != off).
  */
 
-import { randomUUID } from 'node:crypto';
+import { uuidV4 } from './internal/crypto.js';
+import { recordableIntent } from './internal/intent.js';
 import type {
   IAuditEvent,
   IAuditSink,
+  IIntent,
   IPolicy,
   IPolicyConfig,
   IPolicyContext,
@@ -127,8 +129,10 @@ export class PolicyEngine implements IPolicyEngine {
     if (this.emit_policy === 'denials_only' && decision.kind === 'allow') {
       return;
     }
-    const event = buildAuditEvent(ctx, decision, chain, latency_ms);
     try {
+      // Building the event is inside the try too: nothing on the audit path —
+      // event construction, id generation, the sink — may fail the evaluation.
+      const event = buildAuditEvent(ctx, decision, chain, latency_ms);
       await this.auditSink.emit(event);
     } catch {
       // Audit failures MUST NOT fail the evaluation (RFC v0 § 9.4).
@@ -163,7 +167,7 @@ export function buildAuditEvent(
     required_scope: ctx.action.required_scope,
   };
   return {
-    id: randomUUID(),
+    id: uuidV4(),
     timestamp: ctx.now || nowMs(),
     correlation_id: ctx.correlation_id,
     tenant_id: ctx.action.tenant_id,
@@ -173,7 +177,13 @@ export function buildAuditEvent(
     policy_chain: [...policy_chain],
     latency_ms,
     metadata: ctx.action.metadata,
+    ...withIntent(ctx.action.intent),
   };
+}
+
+function withIntent(intent: unknown): { intent?: IIntent } {
+  const recorded = recordableIntent(intent);
+  return recorded ? { intent: recorded } : {};
 }
 
 function nowMs(): number {

@@ -31,9 +31,11 @@
  */
 
 import {
-  createHmac,
-  timingSafeEqual,
-} from 'node:crypto';
+  constantTimeHexEquals,
+  fromBase64Url,
+  hmacSha256Hex,
+  toBase64Url,
+} from '../internal/crypto.js';
 import type {
   IDraftPolicy,
   IDraftableEntity,
@@ -179,33 +181,7 @@ function clampTtl(hours: number): number {
 }
 
 function hmac(secret: string, payload: string): string {
-  return createHmac('sha256', secret).update(payload, 'utf8').digest('hex');
-}
-
-function constantTimeHexEquals(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
-  try {
-    const ab = Buffer.from(a, 'hex');
-    const bb = Buffer.from(b, 'hex');
-    if (ab.length !== bb.length) return false;
-    return timingSafeEqual(ab, bb);
-  } catch {
-    return false;
-  }
-}
-
-function toBase64Url(s: string): string {
-  return Buffer.from(s, 'utf8')
-    .toString('base64')
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=+$/, '');
-}
-
-function fromBase64Url(s: string): string {
-  const pad = (4 - (s.length % 4)) % 4;
-  const b64 = s.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat(pad);
-  return Buffer.from(b64, 'base64').toString('utf8');
+  return hmacSha256Hex(secret, payload);
 }
 
 function toIdMaybeNumeric(s: string): number | string {

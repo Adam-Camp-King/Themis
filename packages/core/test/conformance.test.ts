@@ -13,14 +13,15 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { IAuditEvent, IAuditSink, IPolicy, IPolicyContext, IPolicyDecision, IRequestor, IAction } from '../src/index.js';
-import { PolicyEngine, DefaultLockPolicy, DefaultScopePolicy, DefaultDraftPolicy, DefaultQuarantinePolicy, DefaultRateLimitPolicy, DefaultAnomalyPolicy } from '../src/index.js';
+import { PolicyEngine, DefaultLockPolicy, DefaultScopePolicy, DefaultDraftPolicy, DefaultQuarantinePolicy, DefaultRateLimitPolicy, DefaultAnomalyPolicy, DefaultIntentPolicy } from '../src/index.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const VECTORS = join(here, '..', '..', '..', 'spec', 'conformance', 'v0');
 
 interface StubSpec { stub: 'allow' | 'deny' | 'redirect' | 'require_approval'; name: string; [k: string]: unknown }
 interface ScopeSpec { name: 'scope'; rules?: Array<{ method: string; path: string; required_scope: string }> }
-type PolicySpec = 'lock' | 'scope' | 'draft' | 'quarantine' | 'rate_limit' | 'anomaly' | StubSpec | ScopeSpec;
+interface IntentSpec { name: 'intent'; kinds?: IRequestor['kind'][] }
+type PolicySpec = 'lock' | 'scope' | 'draft' | 'quarantine' | 'rate_limit' | 'anomaly' | 'intent' | StubSpec | ScopeSpec | IntentSpec;
 
 interface Case {
   name: string;
@@ -56,7 +57,9 @@ function build(spec: PolicySpec): IPolicy {
   if (spec === 'quarantine') return new DefaultQuarantinePolicy();
   if (spec === 'rate_limit') return new DefaultRateLimitPolicy();
   if (spec === 'anomaly') return new DefaultAnomalyPolicy();
+  if (spec === 'intent') return new DefaultIntentPolicy();
   if ('stub' in spec) return stub(spec);
+  if (spec.name === 'intent') return new DefaultIntentPolicy({ kinds: spec.kinds });
   const p = new DefaultScopePolicy();
   for (const r of spec.rules ?? []) p.addRule({ method: r.method, path_pattern: r.path }, r.required_scope);
   return p;
@@ -97,8 +100,12 @@ for (const file of readdirSync(VECTORS).filter((f) => f.endsWith('.json')).sort(
         assert.equal(e.tenant_id, c.action.tenant_id);
         assert.equal(e.correlation_id, ctx.correlation_id);
         if (c.expect.audit && typeof c.expect.audit === 'object') {
-          const got = canon({ requestor: e.requestor, action: e.action }) as Record<string, unknown>;
-          assert.deepEqual(got, canon(c.expect.audit), 'audit denormalization');
+          const want = c.expect.audit as Record<string, unknown>;
+          const got = canon({
+            requestor: e.requestor, action: e.action,
+            ...('intent' in want ? { intent: e.intent ?? null } : {}),
+          }) as Record<string, unknown>;
+          assert.deepEqual(got, canon(want), 'audit denormalization');
         }
       }
     });

@@ -2,7 +2,7 @@
 
 > **One-page architecture for deploying Claude-powered agents with Themis as the run-time safety layer.**
 >
-> Status: v0 draft. Themis itself is pre-alpha.
+> Status: Themis 0.2.1 is on npm and PyPI, with RFC v0.2 (agent firewall) and the RFC v0.3 draft (action intent).
 > Audience: engineers building Claude agents for production; Anthropic BD / research.
 
 ## The problem Themis solves for Claude
@@ -75,7 +75,7 @@ import {
 } from 'themis-policy';
 import { gateToolHandlers } from 'themis-policy-anthropic';
 
-// 1. Build an engine with the three default policies
+// 1. Build an engine with the core policies (the firewall policies are optional)
 const engine = new PolicyEngine({ auditSink: new ConsoleSink() });
 const scope = new DefaultScopePolicy();
 scope.addRule({ method: 'POST', path_pattern: '/wires' }, 'payments:write');
@@ -124,6 +124,22 @@ That's it. Every tool call now produces an audit event. Denials, redirects, and 
 
 Claude **sees** every denial, redirect, and approval. This is critical: the model isn't blind to the safety layer. It can explain to the user *why* an action didn't execute, and suggest the right follow-up (e.g., "I tried to send the wire but the system requires approval for amounts over $10k — I've queued it").
 
+## Intent: what Claude meant, next to what it was allowed
+
+Claude already explains its tool calls. Themis can keep that explanation. Build the action with an `intent` and the adapter stamps the `tool_use` id onto it:
+
+```ts
+actionFrom: (toolUse) => ({
+  verb: 'invoke', resource_type: 'wire_transfer', tenant_id: currentTenantId,
+  required_scope: 'payments:write', payload: toolUse.input,
+  intent: { summary: lastAssistantRationale, source: 'user_request', request_ref: currentMessageId },
+}),
+```
+
+Every audit event then carries the intent, detached, whatever the decision. Register `DefaultIntentPolicy` first and an agent action with no stated intent is denied with `intent_missing`.
+
+The intent comes from your `actionFrom`, not from Claude directly. To have the model state it, add a required `intent` string to each tool's `input_schema` ("why you are making this call, in one sentence") and map `toolUse.input.intent` to `intent.summary`. A missing reason then reaches Claude as an error `tool_result`, and Claude can call again with one. Intent is declared, not verified. The pairing of stated purpose and permitted action is the governance record.
+
 ## Why this fits Anthropic's deployment story
 
 Anthropic's messaging around Claude emphasizes helpful, harmless, honest. Constitutional AI (training-time) covers *harmless*. Themis (deploy-time) covers what Constitutional AI can't structurally guarantee: **that a model which might still "want" to do the wrong thing cannot actually do it** in a multi-tenant production system.
@@ -149,7 +165,7 @@ Solid# is public-source (Tier 2 licensing for CLI/SDK; Tier 1 proprietary for th
 | Profile | How Themis runs | Audit sink |
 |---------|------------------|------------|
 | Solo dev / prototype | In-process, `DefaultScopePolicy` + `ConsoleSink` | stdout NDJSON |
-| Single-tenant SaaS | In-process, all three policies, SQL sink | table in app DB |
+| Single-tenant SaaS | In-process, core policies, SQL sink | table in app DB |
 | Multi-tenant SaaS | In-process per request; tenancy gate enforced from JWT claims | partitioned table per tenant / per-region |
 | Claude Code / workstation | Wraps each MCP tool handler; per-user sink | local NDJSON + optional cloud fan-out |
 | Anthropic research corpus | Fan-out via `MultiSink`; one sink redacts + forwards to a shared bucket | custom research sink |

@@ -43,6 +43,10 @@ class Action:
     required_scope: Optional[str] = None
     payload: Any = None
     metadata: Optional[Mapping[str, Any]] = None
+    #: Why the requestor says it is acting (RFC v0.3 § 2.7). Keys mirror
+    #: ``IIntent``: summary, source, request_ref, tool_call_id, attributes.
+    #: Declared, not verified; copied detached into the audit event.
+    intent: Optional[Mapping[str, Any]] = None
 
 
 # ── 6/7 — Entities ─────────────────────────────────────────────────────────
@@ -158,6 +162,7 @@ class AuditEvent:
     policy_chain: tuple[str, ...]
     latency_ms: float
     metadata: Optional[Mapping[str, Any]] = None
+    intent: Optional[Mapping[str, Any]] = None
 
     def to_dict(self) -> dict[str, Any]:
         return _drop_none({
@@ -171,6 +176,7 @@ class AuditEvent:
             "policy_chain": list(self.policy_chain),
             "latency_ms": self.latency_ms,
             "metadata": dict(self.metadata) if self.metadata is not None else None,
+            "intent": dict(self.intent) if self.intent is not None else None,
         })
 
 

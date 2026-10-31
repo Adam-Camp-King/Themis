@@ -54,6 +54,37 @@ export interface IAction {
   readonly required_scope?: string;
   readonly payload?: unknown;
   readonly metadata?: Readonly<Record<string, unknown>>;
+  /** Why the requestor says it is acting (RFC v0.3 § 2.7). Copied into the audit event. */
+  readonly intent?: IIntent;
+}
+
+// ============================================================================
+// 2a — IIntent (RFC v0.3 draft § 2.7)
+// ============================================================================
+
+/**
+ * The requestor's own statement of what an action is for.
+ *
+ * Intent is declared, not verified: it records what the agent *said* it was
+ * doing next to what the engine *let* it do. That pairing is the governance
+ * record — an approved action whose intent does not match its verb is the
+ * signal an auditor or an anomaly model looks for.
+ *
+ * The engine never reads intent. It is copied, verbatim and detached, into
+ * the one IAuditEvent of the evaluation, whatever the decision. Policies may
+ * read it (see DefaultIntentPolicy). Every field must be JSON-serialisable.
+ */
+export interface IIntent {
+  /** One line, in the agent's words: what this action is for. */
+  readonly summary?: string;
+  /** Where the goal came from. Well-known values are listed; others are allowed. */
+  readonly source?: 'user_request' | 'agent_plan' | 'schedule' | 'system' | (string & {});
+  /** The request that started this work: a message id, ticket, conversation turn. */
+  readonly request_ref?: string;
+  /** The model's tool call that produced this action, e.g. a Claude `tool_use` id. */
+  readonly tool_call_id?: string;
+  /** Anything else worth keeping with the decision (plan step, confidence, ...). */
+  readonly attributes?: Readonly<Record<string, unknown>>;
 }
 
 // ============================================================================
@@ -137,6 +168,8 @@ export interface IAuditEvent {
   readonly policy_chain: readonly string[];
   readonly latency_ms: number;
   readonly metadata?: Readonly<Record<string, unknown>>;
+  /** A detached copy of `action.intent`, when the action stated one (RFC v0.3 § 9.5). */
+  readonly intent?: IIntent;
 }
 
 // ============================================================================
