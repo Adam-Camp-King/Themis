@@ -3,13 +3,13 @@
 [![ci](https://github.com/Adam-Camp-King/Themis/actions/workflows/ci.yml/badge.svg)](https://github.com/Adam-Camp-King/Themis/actions/workflows/ci.yml) [![npm](https://img.shields.io/npm/v/themis-policy)](https://www.npmjs.com/package/themis-policy) [![PyPI](https://img.shields.io/pypi/v/themis-policy)](https://pypi.org/project/themis-policy/)
 
 > A policy kernel for bounded-autonomy LLM agents.
-> **Status:** 0.2.1 on npm and PyPI. RFC v0.2 adds the agent firewall; the RFC v0.3 draft adds action intent.
+> **Status:** 0.3.0 on npm and PyPI. RFC v0.2 adds the agent firewall; RFC v0.3 (draft) adds intent and verb contracts.
 
 Themis is a small, framework-agnostic policy engine that decides what an LLM agent can do against a production system. It formalizes four primitives — **locks**, **drafts**, **scopes**, **audit** — and composes them into a single evaluation that returns `allow`, `deny`, `redirect`, or `require_approval`.
 
 **0.2 adds the agent firewall** — chess, not a cage: a revocable **agent identity** (who acted, not just which token), **quarantine** (a hard stop an owner lifts), **rate limits scaled by reputation** (an agent that misbehaves gets less of everything; a stolen key cannot exfiltrate at full speed), and **anomaly detection** with hard heuristics that fire from day one and a statistical baseline that switches itself on once there is enough history. See [`docs/agent-firewall.md`](./docs/agent-firewall.md) and [`examples/agent-firewall`](./examples/agent-firewall) — an Anthropic-style agent running under the firewall in about fifty lines.
 
-This is the reference TypeScript implementation. Conforms to Themis RFC v0 / v0.2 (the RFC lives upstream in the design notes for now; the [conformance vectors](spec/conformance) are the executable spec).
+This is the reference TypeScript implementation. Conforms to Themis RFC v0 / v0.2 and the RFC v0.3 draft (the RFC lives upstream in the design notes for now; the [conformance vectors](spec/conformance) are the executable spec).
 
 
 **Intent (RFC v0.3 draft).** Every action can state why it is happening: a one-line `summary` in the agent's words, where the goal came from, the request and tool call it traces to. The engine copies it, detached, into the audit event of every evaluation, so the record pairs what an agent *said* it was doing with what it was *allowed* to do. `DefaultIntentPolicy` makes stating one mandatory for agents. See [Intent](#intent).

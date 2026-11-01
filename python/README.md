@@ -1,6 +1,6 @@
 # themis-policy
 
-Python reference implementation of **Themis RFC v0.2** (and the v0.3 intent draft) — a policy kernel for
+Python reference implementation of **Themis RFC v0.2** (and the RFC v0.3 draft: intent and verb contracts) — a policy kernel for
 LLM agents that act on production systems. Four primitives — **locks**,
 **drafts**, **scopes**, **audit** — composed by one engine into a single
 decision per attempted action: `allow`, `deny`, `redirect`, or
